@@ -22,7 +22,7 @@ class Annotation(enum.Enum):
     """Annotation types, along with their (keyboard) key."""
 
     # Multiple pieces handling:
-    cut = "c"  # Between pieces
+    cut = "c"  # Between pieces   #!!!! how to indicate silent intervals? maybe better: start (automatic if starting at 0?) and end.
 
     # Musicality:
     uninspired = "u"  # Musically uninspired
@@ -31,6 +31,15 @@ class Annotation(enum.Enum):
     # Technical correctness:
     small_tech_glitch = "s"  # Small technical glitch
     big_tech_glitch = "b"  # Big technical glitch
+
+
+# !!!!!!!!!!!! I guess that the best interface would actually be a 
+# shell. The shell command would be: start annotating (at zero time by 
+# default, at time settable by the user otherwise) [which runs an 
+# annotation loop that can be quit and returns to the shell]; edit 
+# annotations (probably stored as a text file, then, maybe in YAML); 
+# save annotations (with an automatic prompted save a the end). Load an 
+# annotation file (can also be given in the command line) for update.
 
 def annotate():
     """
