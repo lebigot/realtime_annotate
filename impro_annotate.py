@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.2
+#!/usr/bin/env python3.4
 
 """
 Annotations tagged with a timestamp.
@@ -9,28 +9,28 @@ Ad hoc annotations for judging a long string of pieces.
 import collections
 import enum
 
-# Timestamped annotation:
-TimedAnnotation = collections.namedtuple("TimedAnnotation", "time annotation")
-
 # !!!!!!!!! Ideally, I would check my listening notes for my CD and
 # also for 2014-6-21, to know what kind of annotations I make. For
 # instance, maybe adding some level indication (optional) would be
 # good, like inspired 2 (meaning "a lot", or something), or "glitch 1"
-# (small) or "glitch 2" (big).
+# (small) or "glitch 2" (big). OR MAYBE simply adding "adjectives"
+# would be enough: small and big (big glitch, very much uninspired,
+# etc.).
 
-class Annotation(enum.Enum):
-    """Annotation types, along with their (keyboard) key."""
+# Mapping from keyboard keys to the corresponding enumeration name
+# (which must be a valid Python attribute name):
+annotation_keys = {
+    "s": "start",
+    "e": "end",
+    "i": "inspired",
+    "u": "uninspired",
+    "g": "glitch"
+    }
+    
+Annotation = enum.Enum(annotation_keys.values())
 
-    # Multiple pieces handling:
-    cut = "c"  # Between pieces   #!!!! how to indicate silent intervals? maybe better: start (automatic if starting at 0?) and end.
-
-    # Musicality:
-    uninspired = "u"  # Musically uninspired
-    inspired = "i"  # Musically inspired
-
-    # Technical correctness:
-    small_tech_glitch = "s"  # Small technical glitch
-    big_tech_glitch = "b"  # Big technical glitch
+# Timestamped annotation:
+TimedAnnotation = collections.namedtuple("TimedAnnotation", "time annotation")
 
 
 # !!!!!!!!!!!! I guess that the best interface would actually be a 
