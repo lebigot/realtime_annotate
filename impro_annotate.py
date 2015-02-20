@@ -87,7 +87,8 @@ def annotate_loop(args):
     
     # Real-time annotation commands:
     # - stop counting time & annotating (return to shell commands)
-    # - delete last annotation    
+    # - delete last annotation
+    # - commands from annotation_keys
 
     # Real-time display (curses module?):
     # - Annotations before the current point.
