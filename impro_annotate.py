@@ -3,7 +3,7 @@
 """
 Annotations tagged with a timestamp.
 
-Ad hoc annotations for judging a long string of pieces.
+Ad hoc annotations for judging a long string of recordings.
 """
 
 import collections
@@ -13,7 +13,7 @@ import cmd
 
 import yaml
 
-# File that contains the annotations. It contains a mapping from piece
+# File that contains the annotations. It contains a mapping from recording
 # references to their annotations.
 ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
@@ -79,34 +79,41 @@ class AnnotationList:
     """
     def __init__(self):
         self.annotations = []
+
+    def __len__(self):
+        return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
 class AnnotateShell(cmd.Cmd):
     # !!!!! How do I handle reading and writing changes? do I send the
-    # reference of the piece upon construction? do I use a closure?
+    # reference of the recording upon construction? do I use a closure?
     """
-    Shell for launching a real-time piece annotation loop.
+    Shell for launching a real-time recording annotation loop.
     """
     intro = "Welcome to the annotation shell. Type help or ? to list commands."
     prompt = "> "
 
-    def __init__(self, piece_ref):
+    def __init__(self, recording_ref):
         """
-        piece_ref -- reference of the piece to be annotated (in
+        recording_ref -- reference of the recording to be annotated (in
         file ANNOTATIONS_PATH).
         """
 
         super().__init__()
     
-        print("Piece to be annotated: {}.".format(args.piece_ref))
-        self.piece_ref = piece_ref
+        print("Recording to be annotated: {}.".format(args.recording_ref))
+        self.recording_ref = recording_ref
         
         # Reading of the existing annotations:
         with ANNOTATIONS_PATH.open("rb") as annotations_file:
-            self.annotations = yaml.load(annotations_file)[piece_ref]
+            annotations = yaml.load(annotations_file)[recording_ref]
         print("{} annotations loaded for {}.".format(
-            len(self.annotations, piece_ref)))
-            
+            len(annotations), recording_ref))
+        self.annotations = annotations
+
+        # !!!!!! The current recording time should be set
+        
+    
     def do_exit(self, arg):
         """
         Exit this program.
@@ -144,20 +151,20 @@ def annotate_loop(args):
     # - Current, running time    
     # - Next annotation
 
-    AnnotateShell(args.piece_ref).cmdloop()
+    AnnotateShell(args.recording_ref).cmdloop()
 
-def list_pieces(args):
+def list_recordings(args):
     """
-    List pieces that are already annotated.
+    List recordings that are already annotated.
 
     args -- command-line arguments of the list command (ignored).
     """
     with ANNOTATIONS_PATH.open("r") as annotations_file:
         annotations = yaml.load(annotations_file)
     if annotations:
-        print("Annotated pieces (by sorted reference):")
-        for piece_ref in sorted(annotations):
-            print("- {}".format(piece_ref))
+        print("Annotated recordings (by sorted reference):")
+        for recording_ref in sorted(annotations):
+            print("- {}".format(recording_ref))
     else:
         print("No annotation found.")
 
@@ -171,15 +178,16 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers()
 
-    parser_annotate = subparsers.add_parser("annotate", help="annotate piece")
+    parser_annotate = subparsers.add_parser(
+        "annotate", help="annotate recording")
     parser_annotate.add_argument(
-        "piece_ref",
-        help="Reference to the piece to be annotated")
+        "recording_ref",
+        help="Reference to the recording to be annotated")
     parser_annotate.set_defaults(func=annotate_loop)
     
     parser_list = subparsers.add_parser(
-        "list", help="list references of annotated pieces")
-    parser_list.set_defaults(func=list_pieces)
+        "list", help="list references of annotated recordings")
+    parser_list.set_defaults(func=list_recordings)
     
     args = parser.parse_args()
 
@@ -192,7 +200,7 @@ if __name__ == "__main__":
     if not ANNOTATIONS_PATH.exists():
         # An empty annotation database is created:
         with ANNOTATIONS_PATH.open("w") as annotations_file:
-            # Annotations for unknown pieces are empty lists by default:
+            # Annotations for unknown recordings are empty lists by default:
             yaml.dump(collections.defaultdict(AnnotationList),
                       annotations_file)
 
