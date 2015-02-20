@@ -11,6 +11,7 @@ import enum
 import pathlib
 import cmd
 import datetime
+import shutil
 
 import yaml
 
@@ -104,9 +105,9 @@ class AnnotateShell(cmd.Cmd):
         self.recording_ref = recording_ref
         
         # Reading of the existing annotations:
-        with ANNOTATIONS_PATH.open("rb") as annotations_file:
+        with ANNOTATIONS_PATH.open("r") as annotations_file:
             annotations = yaml.load(annotations_file)[recording_ref]
-        print("{} annotations loaded for {}.".format(
+        print("{} annotations found for {}.".format(
             len(annotations), recording_ref))
         self.annotations = annotations
 
@@ -121,13 +122,33 @@ class AnnotateShell(cmd.Cmd):
     
     def do_exit(self, arg):
         """
-        Exit this program.
+        Exit this program and optionally save the annotations.
         """
+
+        if input("Do you want to save the annotations (y/n)? [y] ") != "n":
+
+            # The old annotations are backed up:
+            backup_path = str(ANNOTATIONS_PATH)+".bak"
+            shutil.copyfile(str(ANNOTATIONS_PATH), backup_path)
+            print("Previous annotations copied to {}.".format(backup_path))
+
+            
+            # Update of the annotations database:
+            with ANNOTATIONS_PATH.open("r") as annotations_file:
+                all_annotations = yaml.load(annotations_file)
+            all_annotations[self.recording_ref] = self.annotations
+            
+            # Dump of the new annotations database:
+            with ANNOTATIONS_PATH.open("w") as annotations_file:
+                yaml.dump(all_annotations, annotations_file)
+            print("Updated annotations for {} saved in {}.".format(
+                self.recording_ref, ANNOTATIONS_PATH))
+            
         return True  # Quit
 
-    ## def do_EOF(self, arg):
-    ##     return self.do_exit(arg)
-    ## do_EOF.__doc__ = do_exit.__doc__
+    def do_EOF(self, arg):
+        return self.do_exit(arg)
+    do_EOF.__doc__ = do_exit.__doc__
 
     # !!!!!! Shell commands:
     # - set the counter time (default = last annotation, or 0)    
