@@ -131,7 +131,7 @@ class AnnotateShell(cmd.Cmd):
         
     def do_save(self, arg=None):
         """
-        Save the current the annotations to file.
+        Save the current annotations to file.
         """
 
         # The old annotations are backed up:
