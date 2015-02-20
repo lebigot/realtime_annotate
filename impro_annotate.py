@@ -8,12 +8,14 @@ Ad hoc annotations for judging a long string of pieces.
 
 import collections
 import enum
-import pickle
 import pathlib
+import cmd
+
+import yaml
 
 # File that contains the annotations. It contains a mapping from piece
 # references to their annotations.
-ANNOTATIONS_PATH = pathlib.Path("annotations.pickle")
+ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
 # !!!!!!!!! Ideally, I would check my listening notes for my CD and
 # also for 2014-6-21, to know what kind of annotations I make. For
@@ -67,8 +69,59 @@ class TimeStampedAnnotation:
         Set the annotation's value.
         """
         self.value = value
-        
 
+class AnnotationList:
+    """
+    List of annotations sorted by timestamp.
+
+    Main attributes:
+    - annotations: list of annotations, sorted by increasing timestamp.
+    """
+    def __init__(self):
+        self.annotations = []
+    # !!!!! Will be populated as the needs arise
+
+class AnnotateShell(cmd.Cmd):
+    # !!!!! How do I handle reading and writing changes? do I send the
+    # reference of the piece upon construction? do I use a closure?
+    """
+    Shell for launching a real-time piece annotation loop.
+    """
+    intro = "Welcome to the annotation shell. Type help or ? to list commands."
+    prompt = "> "
+
+    def __init__(self, piece_ref):
+        """
+        piece_ref -- reference of the piece to be annotated (in
+        file ANNOTATIONS_PATH).
+        """
+
+        super().__init__()
+    
+        print("Piece to be annotated: {}.".format(args.piece_ref))
+        self.piece_ref = piece_ref
+        
+        # Reading of the existing annotations:
+        with ANNOTATIONS_PATH.open("rb") as annotations_file:
+            self.annotations = yaml.load(annotations_file)[piece_ref]
+        print("{} annotations loaded for {}.".format(
+            len(self.annotations, piece_ref)))
+            
+    def do_exit(self, arg):
+        """
+        Exit this program.
+        """
+        return True  # Quit
+
+    ## def do_EOF(self, arg):
+    ##     return self.do_exit(arg)
+    ## do_EOF.__doc__ = do_exit.__doc__
+
+    # !!!!!! Shell commands:
+    # - set the counter time (default = last annotation, or 0)    
+    # - start counting time & annotating    
+    # - quit annotating (and save annotations to file)
+    
 def annotate_loop(args):
     """
     Display a time counter and records timestamped annotations.
@@ -80,10 +133,6 @@ def annotate_loop(args):
     # [in shell?], with information setting and display? and
     # annotating in real-time)?
 
-    # Shell commands (cmd module?):
-    # - start counting time & annotating    
-    # - set the counter time (default = last annotation, or 0)
-    # - quit annotating (and save annotations to file)
     
     # Real-time annotation commands:
     # - stop counting time & annotating (return to shell commands)
@@ -95,8 +144,7 @@ def annotate_loop(args):
     # - Current, running time    
     # - Next annotation
 
-    # !!!!!! Implement
-    return
+    AnnotateShell(args.piece_ref).cmdloop()
 
 def list_pieces(args):
     """
@@ -104,15 +152,19 @@ def list_pieces(args):
 
     args -- command-line arguments of the list command (ignored).
     """
-    with ANNOTATIONS_PATH.open("rb") as annotations_file:
-        annotations = pickle.load(annotations_file)
-    print("Annotated pieces (by sorted reference):")
-    for piece_ref in sorted(annotations):
-        print("- {}".format(piece_ref))
+    with ANNOTATIONS_PATH.open("r") as annotations_file:
+        annotations = yaml.load(annotations_file)
+    if annotations:
+        print("Annotated pieces (by sorted reference):")
+        for piece_ref in sorted(annotations):
+            print("- {}".format(piece_ref))
+    else:
+        print("No annotation found.")
 
 if __name__ == "__main__":
     
     import argparse
+    import collections
     
     parser = argparse.ArgumentParser(
         description="Timestamped musical annotations.")
@@ -139,11 +191,13 @@ if __name__ == "__main__":
     # The annotation file is created if it does not exist:
     if not ANNOTATIONS_PATH.exists():
         # An empty annotation database is created:
-        with ANNOTATIONS_PATH.open("wb") as annotations_file:
-            pickle.dump({}, annotations_file)
+        with ANNOTATIONS_PATH.open("w") as annotations_file:
+            # Annotations for unknown pieces are empty lists by default:
+            yaml.dump(collections.defaultdict(AnnotationList),
+                      annotations_file)
 
-    # Execution of the function set for the chosen command:
     try:
+        # Execution of the function set for the chosen command:
         args.func(args)
     except AttributeError:
         # No command given
