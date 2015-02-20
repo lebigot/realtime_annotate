@@ -177,33 +177,40 @@ class AnnotateShell(cmd.Cmd):
             if len(time_parts) == 2:
                 time_parts.insert(0, 0)  # 0 hours
             self.time = datetime.time(*time_parts)
+
+            # !!! Ideally, the time would be set automatically in
+            # Logic Pro as well, but I'm not sure how to do this.
+        
             print("Time in recording set to {}.".format(self.time))
 
-    # !!!!!! Add more shell commands:
-    # - start counting time & annotating    
-    
-def annotate_loop(args):
+    def do_play(self, arg):
+        """
+        Start playing the recording in Logic Pro, and record annotations.
+        """
+
+        # !!!! Display list of annotations (last ones before the timer, next
+        # one after the timer)
+        
+        # !!!!! Send *play* command
+        
+        # !!!! Loop: display timer, get and execute annotation command
+
+            # Real-time annotation commands:
+            # - stop counting time & annotating (return to shell commands)
+            # - delete last annotation
+            # - commands from annotation_keys
+
+            # Real-time display (curses module?):
+            # - Annotations before the current point.
+            # - Current, running time    
+            # - Next annotation
+        
+def annotate_shell(args):
     """
-    Display a time counter and records timestamped annotations.
+    Launch a shell for annotating a recording.
 
     args -- command-line arguments of the annotate command.
     """
-
-    # !!!!!! Think about the interface structure: two modes (command
-    # [in shell?], with information setting and display? and
-    # annotating in real-time)?
-
-    
-    # Real-time annotation commands:
-    # - stop counting time & annotating (return to shell commands)
-    # - delete last annotation
-    # - commands from annotation_keys
-
-    # Real-time display (curses module?):
-    # - Annotations before the current point.
-    # - Current, running time    
-    # - Next annotation
-
     shell = AnnotateShell(args.recording_ref)
     shell.cmdloop()
 
@@ -237,7 +244,7 @@ if __name__ == "__main__":
     parser_annotate.add_argument(
         "recording_ref",
         help="Reference to the recording to be annotated")
-    parser_annotate.set_defaults(func=annotate_loop)
+    parser_annotate.set_defaults(func=annotate_shell)
     
     parser_list = subparsers.add_parser(
         "list", help="list references of annotated recordings")
