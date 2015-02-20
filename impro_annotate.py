@@ -114,7 +114,7 @@ def list_pieces(args):
     with ANNOTATIONS_PATH.open("rb") as annotations_file:
         annotations = pickle.load(annotations_file)
     print("Annotated pieces (by sorted reference):")
-    for piece_ref in annotations:
+    for piece_ref in sorted(annotations):
         print("- {}".format(piece_ref))
 
 if __name__ == "__main__":
