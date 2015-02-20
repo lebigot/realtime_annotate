@@ -12,6 +12,7 @@ import pathlib
 import cmd
 import datetime
 import shutil
+import atexit
 
 import yaml
 
@@ -116,7 +117,7 @@ class AnnotateShell(cmd.Cmd):
         except IndexError:
             self.time = datetime.time()  # Start
         print("Time in recording set to {}.".format(self.time))
-        
+
     def do_exit(self, arg):
         """
         Exit this program and optionally save the annotations.
@@ -147,8 +148,24 @@ class AnnotateShell(cmd.Cmd):
         return self.do_exit(arg)
     do_EOF.__doc__ = do_exit.__doc__
 
+    def do_set_time(self, time):
+        """
+        Set the current time in the recording to the given time.
+
+        time -- time in M:S or H:M:S format.
+        """
+        try:
+            # The program must not crash, or the annotations are lost.
+            time_parts = list(map(int, time.split(":")))
+        except ValueError:
+            print("Incorrect time format. Use M:S or H:M:S.")
+        else:
+            if len(time_parts) == 2:
+                time_parts.insert(0, 0)  # 0 hours
+            self.time = datetime.time(*time_parts)
+            print("Time in recording set to {}.".format(self.time))
+
     # !!!!!! Add more shell commands:
-    # - set the counter time (default = last annotation, or 0)    
     # - start counting time & annotating    
     
 def annotate_loop(args):
@@ -173,7 +190,10 @@ def annotate_loop(args):
     # - Current, running time    
     # - Next annotation
 
-    AnnotateShell(args.recording_ref).cmdloop()
+    shell = AnnotateShell(args.recording_ref)
+    # Precaution against crashes:
+    atexit.register(shell.do_exit, None)
+    shell.cmdloop()
 
 def list_recordings(args):
     """
