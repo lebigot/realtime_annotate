@@ -10,6 +10,7 @@ import collections
 import enum
 import pathlib
 import cmd
+import datetime
 
 import yaml
 
@@ -109,6 +110,12 @@ class AnnotateShell(cmd.Cmd):
             len(annotations), recording_ref))
         self.annotations = annotations
 
+        try:
+            self.time = annotations.annotations[-1].time
+        except IndexError:
+            self.time = datetime.time()  # Start
+        print("Time in recording set to {}.".format(self.time))
+        
         # !!!!!! The current recording time should be set
         
     
