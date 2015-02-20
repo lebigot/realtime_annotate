@@ -69,43 +69,33 @@ class TimeStampedAnnotation:
         self.value = value
         
 
-def annotate_loop():
-    # !!!!!!! Check/update this function
+def annotate_loop(args):
     """
     Display a time counter and records timestamped annotations.
 
-    Returns a list of TimedAnnotations, where the annotations are of
-    the Annotations class.
+    args -- command-line arguments of the annotate command.
     """
 
+    # !!!!!! Think about the interface structure: two modes (command
+    # [in shell?], with information setting and display? and
+    # annotating in real-time)?
+
+    # Shell commands (cmd module?):
+    # - start counting time & annotating    
+    # - set the counter time (default = last annotation, or 0)
+    # - quit annotating (and save annotations to file)
+    
+    # Real-time annotation commands:
+    # - stop counting time & annotating (return to shell commands)
+    # - delete last annotation    
+
+    # Real-time display (curses module?):
+    # - Annotations before the current point.
+    # - Current, running time    
+    # - Next annotation
+
+    # !!!!!! Implement
     return
-
-    # !!!!!!!!!!!! I guess that the best interface would actually be a 
-    # shell. The shell command would be: start annotating (at zero time by 
-    # default, at time settable by the user otherwise) [which runs an 
-    # annotation loop that can be quit and returns to the shell]; edit 
-    # annotations (probably stored as a text file, then, maybe in YAML); 
-    # save annotations (with an automatic prompted save a the end). Load an 
-    # annotation file (can also be given in the command line) for update.
-
-
-    # !!!!!!! Offer to add annotations to existing file (an
-    # interactive display of the next annotation to come would be
-    # great, in order to avoid duplicates)
-
-    # !!!!! Having a command to jump to a certain timestamp would be
-    # useful (e.g. for completing work)
-    
-    annotations = []
-
-    commands = {annotation.value: annotation for annotation in Annotation}
-
-    print("* Available annotations:")
-    for key in sorted(commands):
-        print("{}: {}".format(key, commands[key].name))
-
-    
-    #!!!!!!!!
 
 def list_pieces(args):
     """
