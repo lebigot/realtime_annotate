@@ -8,6 +8,10 @@ Ad hoc annotations for judging a long string of pieces.
 
 import collections
 import enum
+import pickle
+import pathlib
+
+ANNOTATIONS_PATH = pathlib.Path("annotations.pickle")
 
 # !!!!!!!!! Ideally, I would check my listening notes for my CD and
 # also for 2014-6-21, to know what kind of annotations I make. For
@@ -100,41 +104,53 @@ def annotate_loop():
 
     
     #!!!!!!!!
-    
+
+def list_pieces(args):
+    """
+    List pieces that are already annotated.
+
+    args -- command-line arguments of the list command (ignored).
+    """
+    with ANNOTATIONS_PATH.open("rb") as annotations_file:
+        annotations = pickle.load(annotations_file)
+    print("Annotated pieces (by sorted reference):")
+    for piece_ref in annotations:
+        print("- {}".format(piece_ref))
+
 if __name__ == "__main__":
     
-    import pathlib
     import argparse
-    import pickle
     
     parser = argparse.ArgumentParser(
         description="Timestamped musical annotations.")
 
     subparsers = parser.add_subparsers()
 
-    subparsers.add_parser(
-        "list", help="list references of annotated pieces")
-
     parser_annotate = subparsers.add_parser("annotate", help="annotate piece")
     parser_annotate.add_argument(
         "piece_ref",
         help="Reference to the piece to be annotated")
+    parser_annotate.set_defaults(func=annotate_loop)
+    
+    parser_list = subparsers.add_parser(
+        "list", help="list references of annotated pieces")
+    parser_list.set_defaults(func=list_pieces)
     
     args = parser.parse_args()
 
     ####################
 
     # The annotations file is created, if it does not already exist:
-    annotation_file_path = pathlib.Path("annotations.pickle")
-    print("Annotations stored in file {}.".format(annotation_file_path))
+    print("Annotations stored in file {}.".format(ANNOTATIONS_PATH))
     
     # The annotation file is created if it does not exist:
-    if not annotation_file_path.exists():
+    if not ANNOTATIONS_PATH.exists():
         # An empty annotation database is created:
-        with annotation_file_path.open("wb") as annotations_file:
+        with ANNOTATIONS_PATH.open("wb") as annotations_file:
             pickle.dump({}, annotations_file)
 
-    annotate_loop()
+    # Execution of the function set for the chosen command:
+    args.func(args)
 
 
 
