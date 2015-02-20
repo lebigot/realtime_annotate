@@ -27,21 +27,44 @@ annotation_keys = {
     "g": "glitch"
     }
     
-Annotation = enum.Enum(annotation_keys.values())
+Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
 
-# Timestamped annotation:
-TimedAnnotation = collections.namedtuple("TimedAnnotation", "time annotation")
+#!!!!!!!! There is a problem, here: there is no room for adding a
+#level for inspired/etc. How to cleanly handle these?
 
+class TimeStampedAnnotation:
+    """
+    Annotation made at a specific time.
 
-# !!!!!!!!!!!! I guess that the best interface would actually be a 
-# shell. The shell command would be: start annotating (at zero time by 
-# default, at time settable by the user otherwise) [which runs an 
-# annotation loop that can be quit and returns to the shell]; edit 
-# annotations (probably stored as a text file, then, maybe in YAML); 
-# save annotations (with an automatic prompted save a the end). Load an 
-# annotation file (can also be given in the command line) for update.
+    Main attributes:
+    - time (datetime.time)
+    - annotation (Annotation)
 
-def annotate():
+    An value can be added to the annotation. It is stored in the
+    optional 'value' attribute. This is typically used for indicating
+    an intensity (such as a small glitch, or a very uninspired part).
+    """
+    def __init__(self, time, key):
+        """
+        Annotation represented by the given keyboard key.
+
+        time -- timestamp for the annotation, as a datetime.time
+        object.
+        
+        key -- keyboard key. Must be present in annotation_keys.
+        """
+        self.time = time
+        self.annotation = Annotation[annotation_keys[key]]
+
+    def set_value(self, value):
+        """
+        Set the annotation's value.
+        """
+        self.value = value
+        
+
+def annotate_loop():
+    # !!!!!!! Check/update this function
     """
     Display a time counter and records timestamped annotations.
 
@@ -49,6 +72,24 @@ def annotate():
     the Annotations class.
     """
 
+    return
+
+    # !!!!!!!!!!!! I guess that the best interface would actually be a 
+    # shell. The shell command would be: start annotating (at zero time by 
+    # default, at time settable by the user otherwise) [which runs an 
+    # annotation loop that can be quit and returns to the shell]; edit 
+    # annotations (probably stored as a text file, then, maybe in YAML); 
+    # save annotations (with an automatic prompted save a the end). Load an 
+    # annotation file (can also be given in the command line) for update.
+
+
+    # !!!!!!! Offer to add annotations to existing file (an
+    # interactive display of the next annotation to come would be
+    # great, in order to avoid duplicates)
+
+    # !!!!! Having a command to jump to a certain timestamp would be
+    # useful (e.g. for completing work)
+    
     annotations = []
 
     commands = {annotation.value: annotation for annotation in Annotation}
@@ -61,22 +102,39 @@ def annotate():
     #!!!!!!!!
     
 if __name__ == "__main__":
-
+    
+    import pathlib
     import argparse
     import pickle
+    
+    parser = argparse.ArgumentParser(
+        description="Timestamped musical annotations.")
 
-    parser = argparse.ArgumentParser(description="Timed annotations.")
-    parser.add_argument("annotation_file")
+    subparsers = parser.add_subparsers()
+
+    subparsers.add_parser(
+        "list", help="list references of annotated pieces")
+
+    parser_annotate = subparsers.add_parser("annotate", help="annotate piece")
+    parser_annotate.add_argument(
+        "piece_ref",
+        help="Reference to the piece to be annotated")
+    
     args = parser.parse_args()
 
-    # !!!!!!! Offer to add annotations to existing file (an
-    # interactive display of the next annotation to come would be
-    # great, in order to avoid duplicates)
+    ####################
 
-    # !!!!! Having a command to jump to a certain timestamp would be
-    # useful (e.g. for completing work)
+    # The annotations file is created, if it does not already exist:
+    annotation_file_path = pathlib.Path("annotations.pickle")
+    print("Annotations stored in file {}.".format(annotation_file_path))
+    
+    # The annotation file is created if it does not exist:
+    if not annotation_file_path.exists():
+        # An empty annotation database is created:
+        with annotation_file_path.open("wb") as annotations_file:
+            pickle.dump({}, annotations_file)
 
-    annotations = annotate()
+    annotate_loop()
 
-    with open(args.annotation_file, "wb") as out_file:
-        pickle.dump(annotations, out_file)
+
+
