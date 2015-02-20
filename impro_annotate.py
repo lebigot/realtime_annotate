@@ -118,30 +118,44 @@ class AnnotateShell(cmd.Cmd):
             self.time = datetime.time()  # Start
         print("Time in recording set to {}.".format(self.time))
 
-    def do_exit(self, arg):
+        # Automatic (optional) saving of the annotations, both for
+        # regular quitting and for exceptions:
+        def save_if_needed():
+            """
+            Save the updated annotations if wanted.
+            """
+            if input("Do you want to save the annotations (y/n)? [y] ") != "n":
+                self.do_save()
+
+        atexit.register(save_if_needed)
+        
+    def do_save(self, arg=None):
+        """
+        Save the current the annotations to file.
+        """
+
+        # The old annotations are backed up:
+        backup_path = str(ANNOTATIONS_PATH)+".bak"
+        shutil.copyfile(str(ANNOTATIONS_PATH), backup_path)
+        print("Previous annotations copied to {}.".format(backup_path))
+
+        # Update of the annotations database:
+        with ANNOTATIONS_PATH.open("r") as annotations_file:
+            all_annotations = yaml.load(annotations_file)
+        all_annotations[self.recording_ref] = self.annotations
+
+        # Dump of the new annotations database:
+        with ANNOTATIONS_PATH.open("w") as annotations_file:
+            yaml.dump(all_annotations, annotations_file)
+        print("Updated annotations for {} saved in {}.".format(
+            self.recording_ref, ANNOTATIONS_PATH))
+    
+    def do_exit(self, arg=None):
         """
         Exit this program and optionally save the annotations.
         """
-
-        if input("Do you want to save the annotations (y/n)? [y] ") != "n":
-
-            # The old annotations are backed up:
-            backup_path = str(ANNOTATIONS_PATH)+".bak"
-            shutil.copyfile(str(ANNOTATIONS_PATH), backup_path)
-            print("Previous annotations copied to {}.".format(backup_path))
-
-            
-            # Update of the annotations database:
-            with ANNOTATIONS_PATH.open("r") as annotations_file:
-                all_annotations = yaml.load(annotations_file)
-            all_annotations[self.recording_ref] = self.annotations
-            
-            # Dump of the new annotations database:
-            with ANNOTATIONS_PATH.open("w") as annotations_file:
-                yaml.dump(all_annotations, annotations_file)
-            print("Updated annotations for {} saved in {}.".format(
-                self.recording_ref, ANNOTATIONS_PATH))
-            
+        # The handling of the optional, final saving of the updated
+        # annotations is handled by an atexit handler:
         return True  # Quit
 
     def do_EOF(self, arg):
@@ -154,6 +168,7 @@ class AnnotateShell(cmd.Cmd):
 
         time -- time in M:S or H:M:S format.
         """
+        1/0
         try:
             # The program must not crash, or the annotations are lost.
             time_parts = list(map(int, time.split(":")))
@@ -191,8 +206,6 @@ def annotate_loop(args):
     # - Next annotation
 
     shell = AnnotateShell(args.recording_ref)
-    # Precaution against crashes:
-    atexit.register(shell.do_exit, None)
     shell.cmdloop()
 
 def list_recordings(args):
