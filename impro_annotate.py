@@ -168,9 +168,8 @@ class AnnotateShell(cmd.Cmd):
 
         time -- time in M:S or H:M:S format.
         """
-        1/0
         try:
-            # The program must not crash, or the annotations are lost.
+            # No need to have the program crash and exit for a small error:
             time_parts = list(map(int, time.split(":")))
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
