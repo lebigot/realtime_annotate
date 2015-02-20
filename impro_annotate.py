@@ -85,8 +85,6 @@ class AnnotationList:
     # !!!!! Will be populated as the needs arise
 
 class AnnotateShell(cmd.Cmd):
-    # !!!!! How do I handle reading and writing changes? do I send the
-    # reference of the recording upon construction? do I use a closure?
     """
     Shell for launching a real-time recording annotation loop.
     """
