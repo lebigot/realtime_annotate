@@ -87,6 +87,22 @@ class AnnotationList:
         return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
+class Time(datetime.timedelta):
+    """
+    Timestamp: time since the beginning of a recording.
+    """
+    # ! A datetime.timedelta is used instead of a datetime.time
+    # because the internal timer of this program must be added to the
+    # current recording timestamp so as to update it. This cannot be
+    # done with datetime.time objects (which cannot be added to a
+    # timedelta).
+    def __str__(self):
+        """
+        Same representation as a datetime.timedelta, but without
+        fractional seconds.
+        """
+        return datetime.timedelta.__str__(self).split(".", 1)[0]
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
@@ -115,7 +131,7 @@ class AnnotateShell(cmd.Cmd):
         try:
             self.time = annotations.annotations[-1].time
         except IndexError:
-            self.time = datetime.time()  # Start
+            self.time = Time()  # Start
         print("Time in recording set to {}.".format(self.time))
 
         # Automatic (optional) saving of the annotations, both for
@@ -170,14 +186,15 @@ class AnnotateShell(cmd.Cmd):
         """
         try:
             # No need to have the program crash and exit for a small error:
-            time_parts = list(map(int, time.split(":")))
+            time_parts = list(map(int, time.split(":", 2)))
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            if len(time_parts) == 2:
-                time_parts.insert(0, 0)  # 0 hours
-            self.time = datetime.time(*time_parts)
-
+            time_args = {"seconds": time_parts[-1], "minutes": time_parts[-2]}
+            if len(time_parts) == 3:
+                time_args["hours"] = time_parts[0]
+            self.time = Time(**time_args)
+            
             # !!! Ideally, the time would be set automatically in
             # Logic Pro as well, but I'm not sure how to do this.
         
@@ -188,7 +205,9 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
 
-        # !!!! Display list of annotations (last ones before the timer, next
+        # !!! Display info on screen:
+        # - Recording reference
+        # - Display list of annotations (last ones before the timer, next
         # one after the timer)
         
         # !!!!! Send *play* command to Logic Pro
