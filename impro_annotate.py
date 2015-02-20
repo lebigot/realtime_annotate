@@ -11,6 +11,8 @@ import enum
 import pickle
 import pathlib
 
+# File that contains the annotations. It contains a mapping from piece
+# references to their annotations.
 ANNOTATIONS_PATH = pathlib.Path("annotations.pickle")
 
 # !!!!!!!!! Ideally, I would check my listening notes for my CD and
@@ -141,7 +143,7 @@ if __name__ == "__main__":
     ####################
 
     # The annotations file is created, if it does not already exist:
-    print("Annotations stored in file {}.".format(ANNOTATIONS_PATH))
+    print("Annotations file: {}.".format(ANNOTATIONS_PATH))
     
     # The annotation file is created if it does not exist:
     if not ANNOTATIONS_PATH.exists():
@@ -150,7 +152,11 @@ if __name__ == "__main__":
             pickle.dump({}, annotations_file)
 
     # Execution of the function set for the chosen command:
-    args.func(args)
+    try:
+        args.func(args)
+    except AttributeError:
+        # No command given
+        parser.error("Please provide a command.")
 
 
 
