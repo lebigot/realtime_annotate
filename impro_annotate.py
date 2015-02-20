@@ -191,19 +191,15 @@ class AnnotateShell(cmd.Cmd):
         # !!!! Display list of annotations (last ones before the timer, next
         # one after the timer)
         
-        # !!!!! Send *play* command
+        # !!!!! Send *play* command to Logic Pro
         
         # !!!! Loop: display timer, get and execute annotation command
 
             # Real-time annotation commands:
-            # - stop counting time & annotating (return to shell commands)
+            # - stop playing and return to shell
             # - delete last annotation
             # - commands from annotation_keys
 
-            # Real-time display (curses module?):
-            # - Annotations before the current point.
-            # - Current, running time    
-            # - Next annotation
         
 def annotate_shell(args):
     """
