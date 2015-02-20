@@ -117,9 +117,6 @@ class AnnotateShell(cmd.Cmd):
             self.time = datetime.time()  # Start
         print("Time in recording set to {}.".format(self.time))
         
-        # !!!!!! The current recording time should be set
-        
-    
     def do_exit(self, arg):
         """
         Exit this program and optionally save the annotations.
@@ -150,10 +147,9 @@ class AnnotateShell(cmd.Cmd):
         return self.do_exit(arg)
     do_EOF.__doc__ = do_exit.__doc__
 
-    # !!!!!! Shell commands:
+    # !!!!!! Add more shell commands:
     # - set the counter time (default = last annotation, or 0)    
     # - start counting time & annotating    
-    # - quit annotating (and save annotations to file)
     
 def annotate_loop(args):
     """
