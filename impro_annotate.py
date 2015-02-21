@@ -34,12 +34,16 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
 # Mapping from keyboard keys to the corresponding enumeration name
 # (which must be a valid Python attribute name):
-annotation_keys = {
-    "s": "start",
-    "e": "end",
-    "i": "inspired",
-    "u": "uninspired",
-    "g": "glitch"
+#
+# WARNING: Entries can only be added (not removed, because this would
+# make previous annotation files illegible), and they must be added at
+# the end (because the files data relies on the order).
+annotation_keys = collections.OrderedDict([
+    ("s", "start"),
+    ("e": "end"),
+    ("i", "inspired"),
+    ("u", "uninspired"),
+    ("g", "glitch")
     }
     
 Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
