@@ -90,14 +90,17 @@ class AnnotationList:
         return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
-def real_time_loop(stdscr, annotation_list):
+def real_time_loop(stdscr, start_time, annotation_list):
     """
-    Run the main real-time annotation loop.
+    Run the main real-time annotation loop and return the time in the
+    recording, when exiting.
 
     Displays and updates the given annotation list based on
     user command keys.
 
     stdscr -- curses.WindowObject for displaying information.
+
+    start_time -- time in the recording when play starts (Time object).
     
     annotation_list -- AnnotationList to be updated.
     """
@@ -107,6 +110,7 @@ def real_time_loop(stdscr, annotation_list):
     # For looping without waiting for the user:
     stdscr.nodelay(True)
 
+    # Preparation of the window:
     stdscr.clear()
 
     # !!! Display info on screen:
@@ -133,9 +137,13 @@ def real_time_loop(stdscr, annotation_list):
         # somehow. It currently belongs to an AnnotateShell. Should it
         # belong to the annotation list? not logical.
     
-        # Current time:  #!!!!! test
-        stdscr.addstr(0, 0, str(next_event_time))
+        # Current time:
+        current_time = time.monotonic()
+        stdscr.addstr(0, 0, str(start_time + datetime.timedelta(
+            seconds=current_time-first_event_time)))
+        stdscr.clrtoeol()
 
+    
         # !!!! Loop: display timer
     
         try:
@@ -165,12 +173,11 @@ def real_time_loop(stdscr, annotation_list):
     scheduler.enterabs(next_event_time, 0, handle_key)
     scheduler.run()
 
-    # !!!! Update annotations current time with next_event_time (= time
-    # of pause)
-
     # !!! Resize the terminal during the loop and see the effect
 
-    return next_event_time-first_event_time
+    # The pause key was entered at the last next_event_time:
+    return start_time+datetime.timedelta(
+        seconds=next_event_time-first_event_time)
     
 class Time(datetime.timedelta):
     """
@@ -293,7 +300,7 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
         # The real-time loop displays information in a curses window:
-        print("RETURNED", curses.wrapper(real_time_loop, self))
+        self.time = curses.wrapper(real_time_loop, self.time, self.annotations)
         
 def annotate_shell(args):
     """
