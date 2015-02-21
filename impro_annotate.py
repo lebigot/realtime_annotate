@@ -114,17 +114,15 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     # Preparation of the window:
     stdscr.clear()
-    stdscr.border()
     stdscr.addstr(0, 0, "Recording: {}".format(recording_ref), curses.A_BOLD)
-    
-    # !!! Display info on screen:
-    # - Recording reference
-    # - Display list of annotations (last ones before the timer, next
-    # one after the timer)
 
-    scheduler = sched.scheduler(time.monotonic)
-    first_event_time = time.monotonic()
-    next_event_time = first_event_time
+    # General information (mini-help):
+    # !!!!!! Ideally: print at the bottom of the screen and keep there
+
+    # !!! Display info on screen:
+    # - Display list of annotations (last ones before the timer, next
+    # one after the timer), with an automatic update when the time
+    # comes (to be canceled upon quitting the real-time mode)
 
     # !!!!! Send *play* command to Logic Pro    
 
@@ -139,8 +137,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
         # Current time:
         current_time = time.monotonic()
-        stdscr.addstr(1, 0, str(start_time + datetime.timedelta(
-            seconds=current_time-first_event_time)))
+        stdscr.addstr(2, 0, "Time in recording: {}".format(
+            str(start_time + datetime.timedelta(
+            seconds=current_time-first_event_time))))
         stdscr.clrtoeol()
 
         try:
@@ -167,6 +166,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
             # the loop).
             scheduler.enterabs(next_event_time, 0, handle_key)
 
+    scheduler = sched.scheduler(time.monotonic)
+    first_event_time = time.monotonic()
+    next_event_time = first_event_time            
     scheduler.enterabs(next_event_time, 0, handle_key)
     scheduler.run()
 
