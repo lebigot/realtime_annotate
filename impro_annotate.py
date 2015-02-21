@@ -40,11 +40,11 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 # the end (because the files data relies on the order).
 annotation_keys = collections.OrderedDict([
     ("s", "start"),
-    ("e": "end"),
+    ("e", "end"),
     ("i", "inspired"),
     ("u", "uninspired"),
     ("g", "glitch")
-    }
+    ])
     
 Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
 
@@ -170,7 +170,9 @@ class AnnotationList:
     def insert(self, annotation):
         """
         Insert the given annotation at the cursor location and moves
-        it to after the inserted annotation.
+        it to after the inserted annotation (so that a next insert()
+        on the next annotation in time puts it in the right place in
+        the list).
 
         The cursor must be located so that the insertion is done in
         timestamp order. Using move_cursor(annotation.time) does this
@@ -242,14 +244,28 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
+
     stdscr.scrollok(True)
-    stdscr.setscrreg(6, term_lines-1)  #!!!!! reduce for command list
+    # term_lines-1)  #!!!!! reduce for command list
+    num_prev_annot = 4  # Maximum number of previous annotations in window
+    stdscr.setscrreg(6, 5+num_prev_annot)
+
+    stdscr.addstr(15, 0, str(annotation_list.cursor)) #!!!!!! dbug
+
+    slice_end = annotation_list.cursor-num_prev_annot-1
+    if slice_end < 0:
+        slice_end = None  # For a Python slice
+
     for (line_idx, annotation) in enumerate(
-        annotation_list.annotations[annotation_list.cursor-1::-1], 6):
+        # !!!!!! Limit to height of window!
+        annotation_list.annotations[
+            annotation_list.cursor:slice_end:-1],
+        6):
+        
         stdscr.addstr(line_idx, 0, str(annotation))
     
     # General information (mini-help):
-    # !!!!!! Ideally: print at the bottom of the screen and keep there
+    # !!!!!! Print commands at the bottom of the screen and keep there
 
 
     # !!!!! List of annotations (next one, plus previous one):
