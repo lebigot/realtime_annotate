@@ -246,7 +246,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
 
     stdscr.scrollok(True)
-    # term_lines-1)  #!!!!! reduce for command list
+    # term_lines-1)  #!!!!! Set to full window, minus command list
     num_prev_annot = 4  # Maximum number of previous annotations in window
     stdscr.setscrreg(6, 5+num_prev_annot)
 
@@ -267,18 +267,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # General information (mini-help):
     # !!!!!! Print commands at the bottom of the screen and keep there
 
-
-    # !!!!! List of annotations (next one, plus previous one):
-    # - use window.deleteln() for deleting the last annotation
-    # - maybe use insdelln() for inserting a line, or insertln()
-    # - maybe use scroll()? (after setscrreg())
-    
-
-    # !!! Display info on screen:
-    # - Maybe display lines, with hline()
-    # - Display list of annotations (last ones before the timer, next
-    # one after the timer), with an automatic update when the time
-    # comes (to be canceled upon quitting the real-time mode)
+    # - !!!!!!! Automatic update when the time comes for the next one
+    # to be displayed (sched event to be canceled upon quitting the
+    # real-time mode)
 
     # !!!!! Send *play* command to Logic Pro    
 
@@ -312,20 +303,10 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()
-                
-                # !!!!!! scroll down annotations
-                # !!!!!! Display new one on first line
-                
-            # !!!! Handle annotation command
 
-            # Real-time annotation commands:
-            # - help with all commands (annotation and control)
-            # - commands from annotation_keys        
-            # - delete last annotation
-            
-            pass
+            # !!!!!!! Implement delete last annotation
         
-        if key != "p":  # !!!! document not useable
+        if key != "p":  # !!!! document fact that not useable in annotation_keys
             next_event_time += 0.1  # Seconds
             # Using absolute times makes the counter more
             # regular, in particular when some longer
