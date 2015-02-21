@@ -15,6 +15,7 @@ import shutil
 import atexit
 import curses  # For Windows, maybe UniCurses would work
 import time
+import sched
 
 import yaml
 
@@ -145,7 +146,10 @@ class AnnotateShell(cmd.Cmd):
             if input("Do you want to save the annotations (y/n)? [y] ") != "n":
                 self.do_save()
         atexit.register(save_if_needed)
-        
+
+    def emptyline(self):
+        pass  # No repetition of the last command
+    
     def do_save(self, arg=None):
         """
         Save the current annotations to file.
@@ -225,11 +229,6 @@ class AnnotateShell(cmd.Cmd):
             # one after the timer)
             
             stdscr.clear()
-            stdscr.addstr(0, 0, "Current mode: Typing mode",
-                          curses.A_REVERSE)
-            stdscr.addstr(1, 0, "Current mode: Typing mode")
-            stdscr.refresh()
-
 
             # !!!!! Send *play* command to Logic Pro
 
@@ -243,27 +242,47 @@ class AnnotateShell(cmd.Cmd):
                 # - stop playing and return to shell
                 # - delete last annotation
                 # - commands from annotation_keys
-
-            
-            def handle_key():
-                # !!!!!! docstring
-                nonlocal next_event_time
-                next_event_time += 0.2  # Seconds
-                scheduler.enterabs(next_event_time, 0, handle_key)
-                stdscr.addstr(0, 0, str(next_event_time))
-                try:
-                    stdscr.getkey()
-                except curses.error as err:
-                    pass  # No key pressed
-
-            # A scheduler is more precise, no? #!!!!!!
-            import sched  #!!!! tmp
+                # - help with all commands (annotation and control)
+                
             scheduler = sched.scheduler(time.monotonic)
             next_event_time = time.monotonic()
+            
+            def handle_key():
+                """
+                Get the user key command (if any) and process it.
+
+                Before doing this, refreshes the screen, and schedules
+                the next command key check.
+                """
+                nonlocal next_event_time
+
+                # Current time:  #!!!!! test
+                stdscr.addstr(0, 0, str(next_event_time))
+                
+                try:
+                    key = stdscr.getkey()
+                except curses.error:
+                    key = None  # No key pressed
+                else:
+                    # !!!!! test
+                    stdscr.addstr(1, 0, key)
+                    stdscr.refresh()
+
+                if key != "p":  # !!!!! or "p" like pause?
+                    next_event_time += 0.1  # Seconds
+                    # Using absolute times makes the counter more
+                    # regular, in particular when some longer
+                    # tasks take time (compared to using a
+                    # relative waiting time at each iteration of
+                    # the loop).
+                    scheduler.enterabs(next_event_time, 0, handle_key)
+
+                
             scheduler.enterabs(next_event_time, 0, handle_key)
             scheduler.run()
-            # curses.halfdelay(3)
-            
+
+            # !!!! Update time with next_event_time (= time of quit)
+        
             # !!! Resize the terminal during the loop and see the effect
 
         # The real-time loop displays information in a curses window:
