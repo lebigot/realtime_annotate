@@ -107,30 +107,18 @@ def real_time_loop(stdscr, annotation_list):
     # For looping without waiting for the user:
     stdscr.nodelay(True)
 
+    stdscr.clear()
+
     # !!! Display info on screen:
     # - Recording reference
     # - Display list of annotations (last ones before the timer, next
     # one after the timer)
 
-    stdscr.clear()
-
-    # !!!!! Send *play* command to Logic Pro
-
-    # !!!! Loop: display timer, get and execute annotation command
-
-        # !!!!!Q technique? sched (maybe, but for multiple events
-        # scheduled in advance)? python loop with sleep (simple)?
-        # asyncio/BaseEventLoop (more for multithreading)?
-
-        # Real-time annotation commands:
-        # - stop playing and return to shell
-        # - delete last annotation
-        # - commands from annotation_keys
-        # - help with all commands (annotation and control)
-
     scheduler = sched.scheduler(time.monotonic)
-    start_ref = time.monotonic()
-    next_event_time = start_ref
+    first_event_time = time.monotonic()
+    next_event_time = first_event_time
+
+    # !!!!! Send *play* command to Logic Pro    
 
     def handle_key():
         """
@@ -148,16 +136,24 @@ def real_time_loop(stdscr, annotation_list):
         # Current time:  #!!!!! test
         stdscr.addstr(0, 0, str(next_event_time))
 
+        # !!!! Loop: display timer
+    
         try:
             key = stdscr.getkey()
         except curses.error:
             key = None  # No key pressed
         else:
-            # !!!!! test
-            stdscr.addstr(1, 0, key)
-            stdscr.refresh()
 
-        if key != "p":  # !!!!! or "p" like pause?
+            # !!!! Handle annotation command
+
+            # Real-time annotation commands:
+            # - help with all commands (annotation and control)
+            # - commands from annotation_keys        
+            # - delete last annotation
+            
+            pass
+        
+        if key != "p":  # !!!! document not useable
             next_event_time += 0.1  # Seconds
             # Using absolute times makes the counter more
             # regular, in particular when some longer
@@ -174,6 +170,7 @@ def real_time_loop(stdscr, annotation_list):
 
     # !!! Resize the terminal during the loop and see the effect
 
+    return next_event_time-first_event_time
     
 class Time(datetime.timedelta):
     """
@@ -296,7 +293,7 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
         # The real-time loop displays information in a curses window:
-        curses.wrapper(real_time_loop, self)
+        print("RETURNED", curses.wrapper(real_time_loop, self))
         
 def annotate_shell(args):
     """
