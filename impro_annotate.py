@@ -90,16 +90,16 @@ class AnnotationList:
         return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
-def real_time_loop(annotation_list, stdscr):
+def real_time_loop(stdscr, annotation_list):
     """
     Run the main real-time annotation loop.
 
     Displays and updates the given annotation list based on
     user command keys.
 
-    annotation_list -- AnnotationList to be updated.
-
     stdscr -- curses.WindowObject for displaying information.
+    
+    annotation_list -- AnnotationList to be updated.
     """
 
     # The terminal's default is better than curses's default:
@@ -129,7 +129,8 @@ def real_time_loop(annotation_list, stdscr):
         # - help with all commands (annotation and control)
 
     scheduler = sched.scheduler(time.monotonic)
-    next_event_time = time.monotonic()
+    start_ref = time.monotonic()
+    next_event_time = start_ref
 
     def handle_key():
         """
@@ -140,6 +141,10 @@ def real_time_loop(annotation_list, stdscr):
         """
         nonlocal next_event_time
 
+        # !!!!!! Oops! the time should be passed! and returned,
+        # somehow. It currently belongs to an AnnotateShell. Should it
+        # belong to the annotation list? not logical.
+    
         # Current time:  #!!!!! test
         stdscr.addstr(0, 0, str(next_event_time))
 
@@ -291,7 +296,7 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
         # The real-time loop displays information in a curses window:
-        curses.wrapper(lambda stdscr: real_time_loop(self, stdscr))
+        curses.wrapper(real_time_loop, self)
         
 def annotate_shell(args):
     """
