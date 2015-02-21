@@ -90,6 +90,86 @@ class AnnotationList:
         return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
+def real_time_loop(annotation_list, stdscr):
+    """
+    Run the main real-time annotation loop.
+
+    Displays and updates the given annotation list based on
+    user command keys.
+
+    annotation_list -- AnnotationList to be updated.
+
+    stdscr -- curses.WindowObject for displaying information.
+    """
+
+    # The terminal's default is better than curses's default:
+    curses.use_default_colors()
+    # For looping without waiting for the user:
+    stdscr.nodelay(True)
+
+    # !!! Display info on screen:
+    # - Recording reference
+    # - Display list of annotations (last ones before the timer, next
+    # one after the timer)
+
+    stdscr.clear()
+
+    # !!!!! Send *play* command to Logic Pro
+
+    # !!!! Loop: display timer, get and execute annotation command
+
+        # !!!!!Q technique? sched (maybe, but for multiple events
+        # scheduled in advance)? python loop with sleep (simple)?
+        # asyncio/BaseEventLoop (more for multithreading)?
+
+        # Real-time annotation commands:
+        # - stop playing and return to shell
+        # - delete last annotation
+        # - commands from annotation_keys
+        # - help with all commands (annotation and control)
+
+    scheduler = sched.scheduler(time.monotonic)
+    next_event_time = time.monotonic()
+
+    def handle_key():
+        """
+        Get the user key command (if any) and process it.
+
+        Before doing this, refreshes the screen, and schedules
+        the next command key check.
+        """
+        nonlocal next_event_time
+
+        # Current time:  #!!!!! test
+        stdscr.addstr(0, 0, str(next_event_time))
+
+        try:
+            key = stdscr.getkey()
+        except curses.error:
+            key = None  # No key pressed
+        else:
+            # !!!!! test
+            stdscr.addstr(1, 0, key)
+            stdscr.refresh()
+
+        if key != "p":  # !!!!! or "p" like pause?
+            next_event_time += 0.1  # Seconds
+            # Using absolute times makes the counter more
+            # regular, in particular when some longer
+            # tasks take time (compared to using a
+            # relative waiting time at each iteration of
+            # the loop).
+            scheduler.enterabs(next_event_time, 0, handle_key)
+
+    scheduler.enterabs(next_event_time, 0, handle_key)
+    scheduler.run()
+
+    # !!!! Update annotations current time with next_event_time (= time
+    # of pause)
+
+    # !!! Resize the terminal during the loop and see the effect
+
+    
 class Time(datetime.timedelta):
     """
     Timestamp: time since the beginning of a recording.
@@ -209,84 +289,8 @@ class AnnotateShell(cmd.Cmd):
         """
         Start playing the recording in Logic Pro, and record annotations.
         """
-
-
-        def real_time_loop(stdscr):
-            """
-            Run the main real-time annotation loop.
-            
-            stdscr -- curses.WindowObject for displaying information.
-            """
-            
-            # The terminal's default is better than curses's default:
-            curses.use_default_colors()
-            # For looping without waiting for the user:
-            stdscr.nodelay(True)
-            
-            # !!! Display info on screen:
-            # - Recording reference
-            # - Display list of annotations (last ones before the timer, next
-            # one after the timer)
-            
-            stdscr.clear()
-
-            # !!!!! Send *play* command to Logic Pro
-
-            # !!!! Loop: display timer, get and execute annotation command
-
-                # !!!!!Q technique? sched (maybe, but for multiple events
-                # scheduled in advance)? python loop with sleep (simple)?
-                # asyncio/BaseEventLoop (more for multithreading)?
-
-                # Real-time annotation commands:
-                # - stop playing and return to shell
-                # - delete last annotation
-                # - commands from annotation_keys
-                # - help with all commands (annotation and control)
-                
-            scheduler = sched.scheduler(time.monotonic)
-            next_event_time = time.monotonic()
-            
-            def handle_key():
-                """
-                Get the user key command (if any) and process it.
-
-                Before doing this, refreshes the screen, and schedules
-                the next command key check.
-                """
-                nonlocal next_event_time
-
-                # Current time:  #!!!!! test
-                stdscr.addstr(0, 0, str(next_event_time))
-                
-                try:
-                    key = stdscr.getkey()
-                except curses.error:
-                    key = None  # No key pressed
-                else:
-                    # !!!!! test
-                    stdscr.addstr(1, 0, key)
-                    stdscr.refresh()
-
-                if key != "p":  # !!!!! or "p" like pause?
-                    next_event_time += 0.1  # Seconds
-                    # Using absolute times makes the counter more
-                    # regular, in particular when some longer
-                    # tasks take time (compared to using a
-                    # relative waiting time at each iteration of
-                    # the loop).
-                    scheduler.enterabs(next_event_time, 0, handle_key)
-
-                
-            scheduler.enterabs(next_event_time, 0, handle_key)
-            scheduler.run()
-
-            # !!!! Update time with next_event_time (= time of quit)
-        
-            # !!! Resize the terminal during the loop and see the effect
-
         # The real-time loop displays information in a curses window:
-        curses.wrapper(real_time_loop)
+        curses.wrapper(lambda stdscr: real_time_loop(self, stdscr))
         
 def annotate_shell(args):
     """
