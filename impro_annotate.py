@@ -133,10 +133,6 @@ def real_time_loop(stdscr, start_time, annotation_list):
         """
         nonlocal next_event_time
 
-        # !!!!!! Oops! the time should be passed! and returned,
-        # somehow. It currently belongs to an AnnotateShell. Should it
-        # belong to the annotation list? not logical.
-    
         # Current time:
         current_time = time.monotonic()
         stdscr.addstr(0, 0, str(start_time + datetime.timedelta(
