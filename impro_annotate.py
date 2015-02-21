@@ -223,6 +223,7 @@ class AnnotateShell(cmd.Cmd):
             """
             Save the updated annotations if wanted.
             """
+            print()
             if input("Do you want to save the annotations (y/n)? [y] ") != "n":
                 self.do_save()
         atexit.register(save_if_needed)
