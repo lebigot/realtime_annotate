@@ -183,6 +183,7 @@ class Time(datetime.timedelta):
     """
     Timestamp: time since the beginning of a recording.
     """
+    
     # ! A datetime.timedelta is used instead of a datetime.time
     # because the internal timer of this program must be added to the
     # current recording timestamp so as to update it. This cannot be
@@ -195,6 +196,17 @@ class Time(datetime.timedelta):
         """
         return datetime.timedelta.__str__(self).split(".", 1)[0]
 
+    def __add__(self, other):
+        """
+        other -- object that can be added to a datetime.timedelta.
+        """
+        # ! A datetime.timedelta apparently does not return an element
+        # of the type of self, so this is done manually here:
+        new_time = other+self  # The order is important!
+        # ! The class of the object cannot be changed, because it is a
+        # built-in type:
+        return Time(new_time.days, new_time.seconds, new_time.microseconds)
+    
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
