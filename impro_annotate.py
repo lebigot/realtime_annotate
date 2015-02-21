@@ -194,7 +194,8 @@ class Time(datetime.timedelta):
         Same representation as a datetime.timedelta, but without
         fractional seconds.
         """
-        return datetime.timedelta.__str__(self).split(".", 1)[0]
+        return "{}.{:.0f}".format(
+            super().__str__().split(".", 1)[0], self.microseconds/1e5)
 
     def __add__(self, other):
         """
@@ -313,6 +314,7 @@ class AnnotateShell(cmd.Cmd):
         """
         # The real-time loop displays information in a curses window:
         self.time = curses.wrapper(real_time_loop, self.time, self.annotations)
+        print("New recording timestamp: {}.".format(self.time))
         
 def annotate_shell(args):
     """
