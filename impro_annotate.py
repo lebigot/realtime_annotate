@@ -90,7 +90,7 @@ class AnnotationList:
         return len(self.annotations)
     # !!!!! Will be populated as the needs arise
 
-def real_time_loop(stdscr, start_time, annotation_list):
+def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     """
     Run the main real-time annotation loop and return the time in the
     recording, when exiting.
@@ -100,6 +100,8 @@ def real_time_loop(stdscr, start_time, annotation_list):
 
     stdscr -- curses.WindowObject for displaying information.
 
+    recording_ref -- reference of the recording being annotated.
+    
     start_time -- time in the recording when play starts (Time object).
     
     annotation_list -- AnnotationList to be updated.
@@ -112,7 +114,9 @@ def real_time_loop(stdscr, start_time, annotation_list):
 
     # Preparation of the window:
     stdscr.clear()
-
+    stdscr.border()
+    stdscr.addstr(0, 0, "Recording: {}".format(recording_ref), curses.A_BOLD)
+    
     # !!! Display info on screen:
     # - Recording reference
     # - Display list of annotations (last ones before the timer, next
@@ -135,13 +139,10 @@ def real_time_loop(stdscr, start_time, annotation_list):
 
         # Current time:
         current_time = time.monotonic()
-        stdscr.addstr(0, 0, str(start_time + datetime.timedelta(
+        stdscr.addstr(1, 0, str(start_time + datetime.timedelta(
             seconds=current_time-first_event_time)))
         stdscr.clrtoeol()
 
-    
-        # !!!! Loop: display timer
-    
         try:
             key = stdscr.getkey()
         except curses.error:
@@ -290,7 +291,7 @@ class AnnotateShell(cmd.Cmd):
         """
         try:
             # No need to have the program crash and exit for a small error:
-            time_parts = list(map(int, time.split(":", 2)))
+            time_parts = list(map(float, time.split(":", 2)))
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
@@ -309,7 +310,9 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
         # The real-time loop displays information in a curses window:
-        self.time = curses.wrapper(real_time_loop, self.time, self.annotations)
+        self.time = curses.wrapper(
+            real_time_loop, self.recording_ref, self.time, self.annotations)
+        
         print("New recording timestamp: {}.".format(self.time))
         
 def annotate_shell(args):
