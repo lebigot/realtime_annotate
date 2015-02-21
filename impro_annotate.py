@@ -142,7 +142,6 @@ class AnnotateShell(cmd.Cmd):
             """
             if input("Do you want to save the annotations (y/n)? [y] ") != "n":
                 self.do_save()
-
         atexit.register(save_if_needed)
         
     def do_save(self, arg=None):
@@ -214,11 +213,19 @@ class AnnotateShell(cmd.Cmd):
         
         # !!!! Loop: display timer, get and execute annotation command
 
+            # !!!!!Q technique? sched (maybe, but for multiple events
+            # scheduled in advance)? python loop with sleep (simple)?
+            # asyncio/BaseEventLoop (more for multithreading)?
+    
             # Real-time annotation commands:
             # - stop playing and return to shell
             # - delete last annotation
             # - commands from annotation_keys
 
+        # !!! Resize the terminal during the loop and see the effect
+
+        # !!!!! Terminal character grabbing:
+        
         
 def annotate_shell(args):
     """
