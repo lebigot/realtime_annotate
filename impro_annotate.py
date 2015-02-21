@@ -14,6 +14,7 @@ import datetime
 import shutil
 import atexit
 import curses  # For Windows, maybe UniCurses would work
+import time
 
 import yaml
 
@@ -215,7 +216,9 @@ class AnnotateShell(cmd.Cmd):
             
             # The terminal's default is better than curses's default:
             curses.use_default_colors()
-
+            # For looping without waiting for the user:
+            stdscr.nodelay(True)
+            
             # !!! Display info on screen:
             # - Recording reference
             # - Display list of annotations (last ones before the timer, next
@@ -241,8 +244,25 @@ class AnnotateShell(cmd.Cmd):
                 # - delete last annotation
                 # - commands from annotation_keys
 
-            while True:
-                
+            
+            def handle_key():
+                # !!!!!! docstring
+                nonlocal next_event_time
+                next_event_time += 0.2  # Seconds
+                scheduler.enterabs(next_event_time, 0, handle_key)
+                stdscr.addstr(0, 0, str(next_event_time))
+                try:
+                    stdscr.getkey()
+                except curses.error as err:
+                    pass  # No key pressed
+
+            # A scheduler is more precise, no? #!!!!!!
+            import sched  #!!!! tmp
+            scheduler = sched.scheduler(time.monotonic)
+            next_event_time = time.monotonic()
+            scheduler.enterabs(next_event_time, 0, handle_key)
+            scheduler.run()
+            # curses.halfdelay(3)
             
             # !!! Resize the terminal during the loop and see the effect
 
