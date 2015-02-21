@@ -13,6 +13,7 @@ import cmd
 import datetime
 import shutil
 import atexit
+import curses  # For Windows, maybe UniCurses would work
 
 import yaml
 
@@ -224,8 +225,25 @@ class AnnotateShell(cmd.Cmd):
 
         # !!! Resize the terminal during the loop and see the effect
 
-        # !!!!! Terminal character grabbing:
-        
+        def main(stdscr):
+            """
+            Run the main real-time annotation loop.
+            
+            stdscr -- curses.WindowObject for displaying information.
+            """
+            
+            # The terminal's default is better than curses's default:
+            curses.use_default_colors()
+
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Current mode: Typing mode",
+                          curses.A_REVERSE)
+            stdscr.addstr(1, 0, "Current mode: Typing mode")
+            stdscr.refresh()
+            stdscr.getkey()
+            # !!!!! Terminal character grabbing:
+
+        curses.wrapper(main)
         
 def annotate_shell(args):
     """
