@@ -206,7 +206,7 @@ class AnnotateShell(cmd.Cmd):
         """
 
 
-        def main(stdscr):
+        def real_time_loop(stdscr):
             """
             Run the main real-time annotation loop.
             
@@ -241,12 +241,13 @@ class AnnotateShell(cmd.Cmd):
                 # - delete last annotation
                 # - commands from annotation_keys
 
-            
+            while True:
+                
             
             # !!! Resize the terminal during the loop and see the effect
 
         # The real-time loop displays information in a curses window:
-        curses.wrapper(main)
+        curses.wrapper(real_time_loop)
         
 def annotate_shell(args):
     """
