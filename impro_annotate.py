@@ -16,6 +16,7 @@ import atexit
 import curses  # For Windows, maybe UniCurses would work
 import time
 import sched
+import bisect
 
 import yaml
 
@@ -46,137 +47,6 @@ Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
 #!!!!!!!! There is a problem, here: there is no room for adding a
 #level for inspired/etc. How to cleanly handle these?
 
-class TimeStampedAnnotation:
-    """
-    Annotation made at a specific time.
-
-    Main attributes:
-    - time (datetime.time)
-    - annotation (Annotation)
-
-    An value can be added to the annotation. It is stored in the
-    optional 'value' attribute. This is typically used for indicating
-    an intensity (such as a small glitch, or a very uninspired part).
-    """
-    def __init__(self, time, key):
-        """
-        Annotation represented by the given keyboard key.
-
-        time -- timestamp for the annotation, as a datetime.time
-        object.
-        
-        key -- keyboard key. Must be present in annotation_keys.
-        """
-        self.time = time
-        self.annotation = Annotation[annotation_keys[key]]
-
-    def set_value(self, value):
-        """
-        Set the annotation's value.
-        """
-        self.value = value
-
-class AnnotationList:
-    """
-    List of annotations sorted by timestamp.
-
-    Main attributes:
-    - annotations: list of annotations, sorted by increasing timestamp.
-    """
-    def __init__(self):
-        self.annotations = []
-
-    def __len__(self):
-        return len(self.annotations)
-    # !!!!! Will be populated as the needs arise
-
-def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
-    """
-    Run the main real-time annotation loop and return the time in the
-    recording, when exiting.
-
-    Displays and updates the given annotation list based on
-    user command keys.
-
-    stdscr -- curses.WindowObject for displaying information.
-
-    recording_ref -- reference of the recording being annotated.
-    
-    start_time -- time in the recording when play starts (Time object).
-    
-    annotation_list -- AnnotationList to be updated.
-    """
-
-    # The terminal's default is better than curses's default:
-    curses.use_default_colors()
-    # For looping without waiting for the user:
-    stdscr.nodelay(True)
-
-    # Preparation of the window:
-    stdscr.clear()
-    stdscr.addstr(0, 0, "Recording: {}".format(recording_ref), curses.A_BOLD)
-
-    # General information (mini-help):
-    # !!!!!! Ideally: print at the bottom of the screen and keep there
-
-    # !!! Display info on screen:
-    # - Display list of annotations (last ones before the timer, next
-    # one after the timer), with an automatic update when the time
-    # comes (to be canceled upon quitting the real-time mode)
-
-    # !!!!! Send *play* command to Logic Pro    
-
-    def handle_key():
-        """
-        Get the user key command (if any) and process it.
-
-        Before doing this, refreshes the screen, and schedules
-        the next command key check.
-        """
-        nonlocal next_event_time
-
-        # Current time:
-        current_time = time.monotonic()
-        stdscr.addstr(2, 0, "Time in recording: {}".format(
-            str(start_time + datetime.timedelta(
-            seconds=current_time-first_event_time))))
-        stdscr.clrtoeol()
-
-        try:
-            key = stdscr.getkey()
-        except curses.error:
-            key = None  # No key pressed
-        else:
-
-            # !!!! Handle annotation command
-
-            # Real-time annotation commands:
-            # - help with all commands (annotation and control)
-            # - commands from annotation_keys        
-            # - delete last annotation
-            
-            pass
-        
-        if key != "p":  # !!!! document not useable
-            next_event_time += 0.1  # Seconds
-            # Using absolute times makes the counter more
-            # regular, in particular when some longer
-            # tasks take time (compared to using a
-            # relative waiting time at each iteration of
-            # the loop).
-            scheduler.enterabs(next_event_time, 0, handle_key)
-
-    scheduler = sched.scheduler(time.monotonic)
-    first_event_time = time.monotonic()
-    next_event_time = first_event_time            
-    scheduler.enterabs(next_event_time, 0, handle_key)
-    scheduler.run()
-
-    # !!! Resize the terminal during the loop and see the effect
-
-    # The pause key was entered at the last next_event_time:
-    return start_time+datetime.timedelta(
-        seconds=next_event_time-first_event_time)
     
 class Time(datetime.timedelta):
     """
@@ -206,6 +76,253 @@ class Time(datetime.timedelta):
         # ! The class of the object cannot be changed, because it is a
         # built-in type:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
+
+class TimestampedAnnotation:
+    """
+    Annotation made at a specific time.
+
+    Main attributes:
+    - time (datetime.timedelta)
+    - annotation (Annotation)
+
+    An value can be added to the annotation. It is stored in the
+    optional 'value' attribute. This is typically used for indicating
+    an intensity (such as a small glitch, or a very uninspired part).
+    """
+    def __init__(self, time, annotation):
+        """
+        Annotation represented by the given keyboard key.
+
+        time -- timestamp for the annotation, as a datetime.timedelta.
+        
+        annotation -- Annotation to be stored.
+        """
+        self.time = time
+        self.annotation = annotation
+    
+    def set_value(self, value):
+        """
+        Set the annotation's value.
+        """
+        self.value = value
+
+    def __str__(self):
+        
+        result = "{} {}".format(self.time, self.annotation.name)
+        
+        if hasattr(self, "value"):
+            result += " (value {})".format(self.value)
+            
+        return result
+    
+class NoAnnotation(Exception):
+    """
+    Raise when a requested annotation cannot be found.
+    """
+    
+class AnnotationList:
+    """
+    List of annotations sorted by timestamp.
+
+    Main attributes:
+    - annotations: list of Annotations, sorted by increasing timestamp.
+    - cursor: index between annotations (0 = before the first annotation).
+    """
+    def __init__(self):
+        self.annotations = []
+        self.cursor = 0
+
+    def __len__(self):
+        return len(self.annotations)
+
+    def move_cursor(self, time):
+        """
+        Set the internal cursor so that an annotation at the given
+        time would be inserted in timestamp order.
+
+        time -- the cursor is put between two annotations, so that the
+        given time is between their timestamps (datetime.timedelta
+        object).
+        """
+        self.cursor = bisect.bisect(
+            [annotation.time for annotation in self.annotations], time)
+
+    def __getitem__(self, slice):
+        """
+        Return the annotations from the given slice.
+        """
+        return self.annotations[slice]
+    
+    def next_annotation(self):
+        """
+        Return the first annotation after the cursor, or None if there
+        is none.
+        """
+        try:
+            return self[self.cursor]
+        except IndexError:
+            return None
+
+    def insert(self, annotation):
+        """
+        Insert the given annotation at the cursor location and moves
+        it to after the inserted annotation.
+
+        The cursor must be located so that the insertion is done in
+        timestamp order. Using move_cursor(annotation.time) does this
+        (but this call is not required, as the cursor can be set by
+        other means too, including outside of this class).
+        """
+        self.annotations.insert(self.cursor, annotation)
+        self.cursor += 1
+        
+def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
+    """
+    Run the main real-time annotation loop and return the time in the
+    recording, when exiting.
+
+    Displays and updates the given annotation list based on
+    user command keys.
+
+    stdscr -- curses.WindowObject for displaying information.
+
+    recording_ref -- reference of the recording being annotated.
+    
+    start_time -- time in the recording when play starts (Time object).
+    
+    annotation_list -- AnnotationList to be updated.
+    """
+
+    # The terminal's default is better than curses's default:
+    curses.use_default_colors()
+    # For looping without waiting for the user:
+    stdscr.nodelay(True)
+    # No need to see any cursor:
+    curses.curs_set(0)
+    # No need to have a cursor at the correct position:
+    stdscr.leaveok(True)
+
+    # Initializations:
+    
+    ## Terminal size:
+    (term_lines, term_cols) = stdscr.getmaxyx()
+    
+    ## Annotations cursor:
+    annotation_list.move_cursor(start_time)
+    
+    ## Next annotation update:
+    def update_next_annotation():
+        """
+        Update the display of the next annotation with the current
+        next annotation in annoation_list.
+        """
+        next_annotation = annotation_list.next_annotation()
+        stdscr.addstr(
+            2, 17,
+            str(next_annotation) if next_annotation is not None else "<None>")
+        stdscr.clrtoeol()
+
+    # Static information:
+    stdscr.clear()
+    
+    stdscr.addstr(0, 0, "Recording:", curses.A_BOLD)
+    stdscr.addstr(0, 11, recording_ref)
+    
+    stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
+
+    stdscr.addstr(2, 0, "Next annotation:", curses.A_BOLD)
+    update_next_annotation()
+        
+    stdscr.addstr(3, 0, "Time in recording:", curses.A_BOLD)
+
+    stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
+    stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
+    # !!!!!! Display previous annotations    
+    stdscr.scrollok(True)
+    stdscr.setscrreg(6, 10)  #term_lines-1)  #!!!!! reduce for command list
+
+    
+    # General information (mini-help):
+    # !!!!!! Ideally: print at the bottom of the screen and keep there
+
+
+    # !!!!! List of annotations (next one, plus previous one):
+    # - use window.deleteln() for deleting the last annotation
+    # - maybe use insdelln() for inserting a line, or insertln()
+    # - maybe use scroll()? (after setscrreg())
+    
+
+    # !!! Display info on screen:
+    # - Maybe display lines, with hline()
+    # - Display list of annotations (last ones before the timer, next
+    # one after the timer), with an automatic update when the time
+    # comes (to be canceled upon quitting the real-time mode)
+
+    # !!!!! Send *play* command to Logic Pro    
+
+    def handle_key():
+        """
+        Get the user key command (if any) and process it.
+
+        Before doing this, refreshes the screen, and schedules
+        the next command key check.
+        """
+        nonlocal next_event_time
+
+        # Current time in the recording:
+        recording_time = start_time + datetime.timedelta(
+            seconds=time.monotonic()-first_event_time)
+    
+        stdscr.addstr(3, 19, str(recording_time))
+        stdscr.clrtoeol()  # The time can have a varying size
+
+        try:
+            key = stdscr.getkey()
+        except curses.error:
+            key = None  # No key pressed
+        else:
+
+            if key in annotation_keys:  # Annotation
+                annotation = TimestampedAnnotation(
+                    recording_time, Annotation[annotation_keys[key]])
+                annotation_list.insert(annotation)
+                # Display update:
+                stdscr.scroll(1)  #!!!!! undocumented/can be negative?
+                stdscr.addstr(6, 0, str(annotation))
+                stdscr.refresh()
+                
+                # !!!!!! scroll down annotations
+                # !!!!!! Display new one on first line
+                
+            # !!!! Handle annotation command
+
+            # Real-time annotation commands:
+            # - help with all commands (annotation and control)
+            # - commands from annotation_keys        
+            # - delete last annotation
+            
+            pass
+        
+        if key != "p":  # !!!! document not useable
+            next_event_time += 0.1  # Seconds
+            # Using absolute times makes the counter more
+            # regular, in particular when some longer
+            # tasks take time (compared to using a
+            # relative waiting time at each iteration of
+            # the loop).
+            scheduler.enterabs(next_event_time, 0, handle_key)
+
+    scheduler = sched.scheduler(time.monotonic)
+    first_event_time = time.monotonic()
+    next_event_time = first_event_time            
+    scheduler.enterabs(next_event_time, 0, handle_key)
+    scheduler.run()
+
+    # !!! Resize the terminal during the loop and see the effect
+
+    # The pause key was entered at the last next_event_time:
+    return start_time+datetime.timedelta(
+        seconds=next_event_time-first_event_time)
     
 class AnnotateShell(cmd.Cmd):
     """
