@@ -205,25 +205,6 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
 
-        # !!! Display info on screen:
-        # - Recording reference
-        # - Display list of annotations (last ones before the timer, next
-        # one after the timer)
-        
-        # !!!!! Send *play* command to Logic Pro
-        
-        # !!!! Loop: display timer, get and execute annotation command
-
-            # !!!!!Q technique? sched (maybe, but for multiple events
-            # scheduled in advance)? python loop with sleep (simple)?
-            # asyncio/BaseEventLoop (more for multithreading)?
-    
-            # Real-time annotation commands:
-            # - stop playing and return to shell
-            # - delete last annotation
-            # - commands from annotation_keys
-
-        # !!! Resize the terminal during the loop and see the effect
 
         def main(stdscr):
             """
@@ -235,14 +216,36 @@ class AnnotateShell(cmd.Cmd):
             # The terminal's default is better than curses's default:
             curses.use_default_colors()
 
+            # !!! Display info on screen:
+            # - Recording reference
+            # - Display list of annotations (last ones before the timer, next
+            # one after the timer)
+            
             stdscr.clear()
             stdscr.addstr(0, 0, "Current mode: Typing mode",
                           curses.A_REVERSE)
             stdscr.addstr(1, 0, "Current mode: Typing mode")
             stdscr.refresh()
-            stdscr.getkey()
-            # !!!!! Terminal character grabbing:
 
+
+            # !!!!! Send *play* command to Logic Pro
+
+            # !!!! Loop: display timer, get and execute annotation command
+
+                # !!!!!Q technique? sched (maybe, but for multiple events
+                # scheduled in advance)? python loop with sleep (simple)?
+                # asyncio/BaseEventLoop (more for multithreading)?
+
+                # Real-time annotation commands:
+                # - stop playing and return to shell
+                # - delete last annotation
+                # - commands from annotation_keys
+
+            
+            
+            # !!! Resize the terminal during the loop and see the effect
+
+        # The real-time loop displays information in a curses window:
         curses.wrapper(main)
         
 def annotate_shell(args):
