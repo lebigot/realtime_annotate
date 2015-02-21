@@ -236,11 +236,13 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.addstr(3, 0, "Time in recording:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
+    
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
-    # !!!!!! Display previous annotations    
     stdscr.scrollok(True)
-    stdscr.setscrreg(6, 10)  #term_lines-1)  #!!!!! reduce for command list
-
+    stdscr.setscrreg(6, term_lines-1)  #!!!!! reduce for command list
+    for (line_idx, annotation) in enumerate(
+        annotation_list.annotations[annotation_list.cursor-1::-1], 6):
+        stdscr.addstr(line_idx, 0, str(annotation))
     
     # General information (mini-help):
     # !!!!!! Ideally: print at the bottom of the screen and keep there
@@ -287,7 +289,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                     recording_time, Annotation[annotation_keys[key]])
                 annotation_list.insert(annotation)
                 # Display update:
-                stdscr.scroll(1)  #!!!!! undocumented/can be negative?
+                stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()
                 
