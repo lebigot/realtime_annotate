@@ -250,19 +250,19 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     num_prev_annot = 4  # Maximum number of previous annotations in window
     stdscr.setscrreg(6, 5+num_prev_annot)
 
-    stdscr.addstr(15, 0, str(annotation_list.cursor)) #!!!!!! dbug
-
-    slice_end = annotation_list.cursor-num_prev_annot-1
-    if slice_end < 0:
-        slice_end = None  # For a Python slice
-
-    for (line_idx, annotation) in enumerate(
-        # !!!!!! Limit to height of window!
-        annotation_list.annotations[
-            annotation_list.cursor:slice_end:-1],
-        6):
+    # If there is any annotation before the current time:
+    if annotation_list.cursor:  # The slice below is cumbersome otherwise
         
-        stdscr.addstr(line_idx, 0, str(annotation))
+        slice_end = annotation_list.cursor-1-num_prev_annot
+        if slice_end < 0:
+            slice_end = None  # For a Python slice
+
+        for (line_idx, annotation) in enumerate(
+            annotation_list.annotations[
+                annotation_list.cursor-1 : slice_end :-1],
+            6):
+
+            stdscr.addstr(line_idx, 0, str(annotation))
     
     # General information (mini-help):
     # !!!!!! Print commands at the bottom of the screen and keep there
