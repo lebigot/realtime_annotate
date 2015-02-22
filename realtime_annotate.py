@@ -299,14 +299,23 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         the scheduled update for the next annotation might break the
         display).
         """
+        # Coordinate for the display (aligned with the running timer):
+        x_display = 18
+    
         # Display
         next_annotation = annotation_list.next_annotation()
-        stdscr.addstr(
-            2, 18,  # Aligned with the running timer
-            str(next_annotation) if next_annotation is not None else "<None>")
+        next_annotation_text = (str(next_annotation)
+                                if next_annotation is not None else "<None>")
+        stdscr.addstr(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
         if next_annotation is not None:
+            # Visual clue about upcoming annotation:
+            scheduler.enterabs(
+                time_to_counter(next_annotation.time)-1, 0,
+                lambda: stdscr.chgat(
+                2, x_display, len(next_annotation_text), curses.A_STANDOUT))
+
             scheduler.enterabs(time_to_counter(next_annotation.time), 0,
                                transfer_next_annotation)
 
