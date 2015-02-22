@@ -607,7 +607,8 @@ class AnnotateShell(cmd.Cmd):
                                         time_parts[::-1])))
             
             # !!! Ideally, the time would be set automatically in
-            # Logic Pro as well, but I'm not sure how to do this.
+            # Logic Pro as well, but I'm not sure how to do this
+            # (initially) OR read (before recording annotations).
         
             print("Time in recording set to {}.".format(self.time))
 
@@ -710,7 +711,8 @@ if __name__ == "__main__":
               "Settings > Synchronization")
         print("> MIDI > Listen to MMC Input).")
 
-        # ! The initialization code is from the documentation:
+        # ! The initialization code is from the documentation (it is
+        # required):
         midiout = rtmidi.MidiOut()
         if midiout.get_ports():
             midiout.open_port(0)
