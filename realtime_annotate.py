@@ -653,29 +653,6 @@ class AnnotateShell(cmd.Cmd):
         print("Time in recording set to last annotation timestamp: {}."
               .format(self.time))
         
-def annotate_shell(args):
-    """
-    Launch a shell for annotating a recording.
-
-    args -- command-line arguments of the annotate command.
-    """
-    AnnotateShell().cmdloop()
-
-def list_recordings(args):
-    """
-    List recordings that are already annotated.
-
-    args -- command-line arguments of the list command (ignored).
-    """
-    with ANNOTATIONS_PATH.open("r") as annotations_file:
-        annotations = yaml.load(annotations_file)
-    if annotations:
-        print("Annotated recordings (by sorted reference):")
-        for recording_ref in sorted(annotations):
-            print("- {}".format(recording_ref))
-    else:
-        print("No annotation found.")
-
 if __name__ == "__main__":
     
     import argparse
@@ -684,16 +661,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Timestamped musical annotations.")
 
-    subparsers = parser.add_subparsers()
-
-    parser_annotate = subparsers.add_parser(
-        "annotate", help="annotate recording")
-    parser_annotate.set_defaults(func=annotate_shell)
-    
-    parser_list = subparsers.add_parser(
-        "list", help="list references of annotated recordings")
-    parser_list.set_defaults(func=list_recordings)
-    
     args = parser.parse_args()
 
     ####################
@@ -752,14 +719,4 @@ if __name__ == "__main__":
         player_start = lambda: send_MMC_command(2)
         player_stop = lambda: send_MMC_command(1)
 
-
-    # try: args.func() except AttributeError would not work because
-    # the main program is args.func(), and it could raise
-    # AttributeError:
-    if hasattr(args, "func"):
-        # Execution of the function set for the chosen command:
-        args.func(args)
-    else:
-        # No command given
-        parser.error("Please provide a command.")
-
+    AnnotateShell().cmdloop()        
