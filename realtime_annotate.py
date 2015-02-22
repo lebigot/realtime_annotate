@@ -204,16 +204,33 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     scheduler = sched.scheduler(time.monotonic)
 
     # Counters for the event scheduling:
-    first_event_counter = time.monotonic()
-    # !!!!!!! def utility for time conversion
-
+    start_counter = time.monotonic()
 
     # !!!!! Send *play* command to Logic Pro. This is better done
-    # close to setting first_event_counter, so that there is not large
+    # close to setting start_counter, so that there is not large
     # discrepancy between the time in the recording and this time
     # measured by this function.
     
-    
+    # !!!!!!! def utility for time conversion
+    def time_to_counter(time):
+        """
+        Return the scheduler counter corresponding to the given
+        recording time.
+
+        time -- recording time (datetime.timedelta, including Time).
+        """
+        return (time-start_time).total_seconds() + start_counter
+
+    def counter_to_time(counter):
+        """
+        Return the recording time corresponding to the given scheduler
+        counter.
+
+        counter -- scheduler counter (in seconds).
+        """
+        return start_time + datetime.timedelta(seconds=counter-start_counter)
+
+        
     # The terminal's default is better than curses's default:
     curses.use_default_colors()
     # For looping without waiting for the user:
@@ -294,7 +311,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # real-time mode)
 
     # Counter for the next getkey() (see below):
-    next_getkey_counter = first_event_counter
+    next_getkey_counter = start_counter
     
     def getkey():
         """
@@ -309,8 +326,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         nonlocal next_getkey_counter
 
         # Current time in the recording:
-        recording_time = start_time + datetime.timedelta(
-            seconds=next_getkey_counter-first_event_counter)
+        recording_time = counter_to_time(next_getkey_counter)
     
         stdscr.addstr(3, 19, str(recording_time))
         stdscr.clrtoeol()  # The time can have a varying size
@@ -349,8 +365,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # !!! Resize the terminal during the loop and see the effect
 
     # The pause key was entered at the last next_getkey_counter:
-    return start_time+datetime.timedelta(
-        seconds=next_getkey_counter-first_event_counter)
+    return counter_to_time(next_getkey_counter)
     
 class AnnotateShell(cmd.Cmd):
     """
