@@ -403,8 +403,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 if annotation_list.cursor:
                     (annotation_list.annotations[annotation_list.cursor-1]
                      .set_value(int(key)))
-                    # !!! The screen must be updated so as to reflect
-                    # the new value:
+                    # The screen must be updated so as to reflect the
+                    # new value:
                     stdscr.addstr(
                         6, 0,  str(annotation_list.annotations
                                    [annotation_list.cursor-1]))
