@@ -26,23 +26,27 @@ import yaml
 ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
 # Mapping from keyboard keys to the corresponding enumeration name
-# (which must be a valid Python attribute name):
+# (which must be a valid Python attribute name), followed by a blank
+# and help text.
 #
-# WARNING: Entries can only be added (not removed, because this would
-# make previous annotation files illegible), and they must be added at
-# the end (because the files data relies on the order).
+# WARNING: Entries can only be:
+# - extended in their name and help text (previous meanings should not
+# be altered), and
+# - added, and not removed, because this would make previous
+# annotation files illegible.
 #
-# WARNING 2: Some keys are reserved for the control of the real-time
-# interface: space, delete, and digits.
-annotation_keys = collections.OrderedDict([
-    ("s", "start"),
-    ("e", "end"),
-    ("i", "inspired"),
-    ("u", "uninspired"),
-    ("g", "glitch")
-    ])
+# WARNING: Some keys are reserved for the control of the real-time
+# interface: space, delete, and digits, and cannot be present here.
+annotation_keys = {
+    "s": "start (between pieces, before the beginning)",
+    "e": "end (between pieces, after the end)",
+    "i": "inspired (0 = somewhat, 2 = nicely)",
+    "u": "uninspired (0 = a little, 2 = very much)",
+    "g": "glitch (0 = small, 2 = major)"
+    }
     
-Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
+Annotation = enum.Enum("Annotation",
+                       {text: key for (key, text) in annotation_keys.items()})
 
 class Time(datetime.timedelta):
     """
@@ -280,7 +284,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.addstr("<Del>: delete last annotation\n")
     for (key, command) in annotation_keys.items():
         stdscr.addstr("{}: {}\n".format(key, command))
-    
+    stdscr.addstr("0-9: sets the value of the previous annotation")
+        
     ## Previous annotations:
     
     ## Scrolling region (for previous annotations):
