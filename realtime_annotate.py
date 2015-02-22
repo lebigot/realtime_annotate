@@ -316,7 +316,6 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
     
     ## If there is any annotation before the current time:
-    #!!!!!! bug??
     if annotations.cursor:  # The slice below is cumbersome otherwise
         
         slice_end = annotations.cursor-1-num_prev_annot
@@ -589,8 +588,8 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
 
-            # !!! Ideally, the time could be set automatically in the
-            # MIDI instrument as well, to a good precision.
+            # !! The time could be set automatically in the MIDI
+            # instrument as well, to a good precision.
             # midiout.send_message(bytearray.fromhex("F0 7F 7F 06 44
             # 06 01 01 01 10 0C 00 F7")) works in Logic Pro, but there
             # is an offset of 1 hour (here, sets time to 1'16.480")
