@@ -659,6 +659,13 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time()  # Start
         print("Time in recording set to last annotation timestamp: {}."
               .format(self.time))
+
+    def complete_select_recording(self, text, line, begidx, endidx):
+        """
+        Complete recording references with the known references.
+        """
+        return [recording_ref for recording_ref in sorted(self.all_annotations)
+                if recording_ref.startswith(text)]
         
 if __name__ == "__main__":
     
