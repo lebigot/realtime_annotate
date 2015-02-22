@@ -43,10 +43,6 @@ annotation_keys = collections.OrderedDict([
     
 Annotation = enum.Enum("Annotation", list(annotation_keys.values()))
 
-#!!!!!!!! There is a problem, here: there is no room for adding a
-#level for inspired/etc. How to cleanly handle these?
-
-    
 class Time(datetime.timedelta):
     """
     Timestamp: time since the beginning of a recording.
