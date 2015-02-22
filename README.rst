@@ -24,9 +24,9 @@ The program runs directly with Python 3.4 (and maybe earlier Python 3
 versions).
 
 The only required non-standard module is PyYAML_. If necessary, it can
-be replaced in the code by the standard module pickle (this is almost
-a drop-in replacement: the main difference is that files must be
-opened in binary mode, for pickle).
+be replaced in the code by a standard module like pickle or json (this
+is almost a drop-in replacement: the main difference is that files
+must be opened in binary mode, for pickle).
 
 Configuration of the annotations
 ================================
