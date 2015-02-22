@@ -598,8 +598,8 @@ class AnnotateShell(cmd.Cmd):
 
     def do_annotate(self, arg):
         """
-        Start recording annotations for the current recording
-        reference. This recording must first be set with
+        Immediately start recording annotations for the current
+        recording reference. This recording must first be set with
         select_recording.
 
         Also start playing through the MIDI instruments, if available.
