@@ -275,9 +275,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # Help at the bottom of the screen:
     help_start_line = term_lines - (len(annotation_keys)+5)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
-    stdscr.addstr(help_start_line+1, 0, "Commands:\n")
+    stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Enter>: return to shell\n")
-    stdscr.addstr("<Delete>: delete last annotation\n")
+    stdscr.addstr("<Del>: delete last annotation\n")
     for (key, command) in annotation_keys.items():
         stdscr.addstr("{}: {}\n".format(key, command))
 
