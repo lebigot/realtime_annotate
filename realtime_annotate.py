@@ -17,6 +17,7 @@ import curses  # For Windows, maybe UniCurses would work
 import time
 import sched
 import bisect
+import sys
 
 import yaml
 
@@ -112,7 +113,12 @@ class TimestampedAnnotation:
     
 class NoAnnotation(Exception):
     """
-    Raise when a requested annotation cannot be found.
+    Raised when a requested annotation cannot be found.
+    """
+
+class TerminalNotHighEnough(Exception):
+    """
+    Raised when the terminal is not high enough for a proper display.
     """
     
 class AnnotationList:
@@ -238,13 +244,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.nodelay(True)
     ## No need to see any cursor:
     curses.curs_set(0)
-    ## No need to have a cursor at the correct position:
+    ## No need to have a cursor displayed at its position:
     stdscr.leaveok(True)
-    ## Scrolling region (for previous annotations):
-    stdscr.scrollok(True)
-    ## term_lines-1)  #!!!!! Set to full window, minus command list
-    num_prev_annot = 4  # Maximum number of previous annotations in window
-    stdscr.setscrreg(6, 5+num_prev_annot)
 
     ####################    
     # Initializations:
@@ -270,10 +271,35 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.addstr(3, 0, "Time in recording:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
+
+    # Help at the bottom of the screen:
+    help_start_line = term_lines - (len(annotation_keys)+5)
+    stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
+    stdscr.addstr(help_start_line+1, 0, "Commands:\n")
+    stdscr.addstr("<Enter>: return to shell\n")
+    stdscr.addstr("<Delete>: delete last annotation\n")
+    for (key, command) in annotation_keys.items():
+        stdscr.addstr("{}: {}\n".format(key, command))
+
+    # !!!!!!!!!!
+    
+    ## Previous annotations:
+    
+    ## Scrolling region (for previous annotations):
+    stdscr.scrollok(True)
+    # Maximum number of previous annotations in window:
+    num_prev_annot = help_start_line-6
+    if num_prev_annot < 2:
+        # !! If the following is a problem, the help could be
+        # optionally removed OR displayed with a special key, possibly
+        # even as a window that can appear or disappear.
+        raise TerminalNotHighEnough
+
+    stdscr.setscrreg(6, 5+num_prev_annot)
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
     
-    # If there is any annotation before the current time:
+    ## If there is any annotation before the current time:
     if annotation_list.cursor:  # The slice below is cumbersome otherwise
         
         slice_end = annotation_list.cursor-1-num_prev_annot
@@ -287,8 +313,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
             stdscr.addstr(line_idx, 0, str(annotation))
 
-    
-        
     # Now that the previous annotations are listed, the next
     # annotation can be printed and its updates scheduled:
 
@@ -309,7 +333,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         display).
         """
         # Coordinate for the display (aligned with the running timer):
-        x_display = 18
+        x_display = 19
     
         # Display
         next_annotation = annotation_list.next_annotation()
@@ -581,10 +605,14 @@ class AnnotateShell(cmd.Cmd):
         Start playing the recording in Logic Pro, and record annotations.
         """
         # The real-time loop displays information in a curses window:
-        self.time = curses.wrapper(
-            real_time_loop, self.recording_ref, self.time, self.annotations)
-        
-        print("New recording timestamp: {}.".format(self.time))
+        try:
+            self.time = curses.wrapper(
+                real_time_loop,
+                self.recording_ref, self.time, self.annotations)
+        except TerminalNotHighEnough:
+            print("Error: the terminal is not high enough.")
+        else:
+            print("New recording timestamp: {}.".format(self.time))
         
 def annotate_shell(args):
     """
