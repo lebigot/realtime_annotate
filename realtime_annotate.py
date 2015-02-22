@@ -593,7 +593,7 @@ class AnnotateShell(cmd.Cmd):
             # midiout.send_message(bytearray.fromhex("F0 7F 7F 06 44
             # 06 01 01 01 10 0C 00 F7")) works in Logic Pro, but there
             # is an offset of 1 hour (here, sets time to 1'16.480")
-            
+
             print("Time in recording set to {}.".format(self.time))
 
     def do_annotate(self, arg):
@@ -649,6 +649,8 @@ class AnnotateShell(cmd.Cmd):
 
         # Annotation list for the current recording:
         annotations_list = self.all_annotations[self.curr_rec_ref].list_
+        print("Current recording set to {}.".format(self.curr_rec_ref))
+    
         try:
             self.time = annotations_list[-1].time
         except IndexError:
