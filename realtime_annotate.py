@@ -280,8 +280,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.addstr("<Del>: delete last annotation\n")
     for (key, command) in annotation_keys.items():
         stdscr.addstr("{}: {}\n".format(key, command))
-
-    # !!!!!!!!!!
     
     ## Previous annotations:
     
