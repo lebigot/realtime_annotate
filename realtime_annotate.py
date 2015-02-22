@@ -24,14 +24,6 @@ import yaml
 # references to their annotations.
 ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
-# !!!!!!!!! Ideally, I would check my listening notes for my CD and
-# also for 2014-6-21, to know what kind of annotations I make. For
-# instance, maybe adding some level indication (optional) would be
-# good, like inspired 2 (meaning "a lot", or something), or "glitch 1"
-# (small) or "glitch 2" (big). OR MAYBE simply adding "adjectives"
-# would be enough: small and big (big glitch, very much uninspired,
-# etc.).
-
 # Mapping from keyboard keys to the corresponding enumeration name
 # (which must be a valid Python attribute name):
 #
@@ -40,7 +32,7 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 # the end (because the files data relies on the order).
 #
 # WARNING 2: Some keys are reserved for the control of the real-time
-# interface: space, delete.
+# interface: space, delete, and digits.
 annotation_keys = collections.OrderedDict([
     ("s", "start"),
     ("e", "end"),
@@ -300,6 +292,11 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # Now that the previous annotations are listed, the next
     # annotation can be printed and its updates scheduled:
 
+    # In order to cancel upcoming updates of the next annotation
+    # (highlight and transfer to the list of previous events), the
+    # corresponding events are stored in this list:
+    next_annotation_upcoming_events = []
+
     def display_next_annotation():
         """
         Update the display of the next annotation with the current
@@ -322,14 +319,21 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         stdscr.clrtoeol()
 
         if next_annotation is not None:
-            # Visual clue about upcoming annotation:
-            scheduler.enterabs(
-                time_to_counter(next_annotation.time)-1, 0,
-                lambda: stdscr.chgat(
-                2, x_display, len(next_annotation_text), curses.A_STANDOUT))
 
-            scheduler.enterabs(time_to_counter(next_annotation.time), 0,
-                               transfer_next_annotation)
+            nonlocal next_annotation_upcoming_events
+            
+            next_annotation_upcoming_events = [
+                
+                # Visual clue about upcoming annotation:
+                scheduler.enterabs(
+                    time_to_counter(next_annotation.time)-1, 0,
+                    lambda: stdscr.chgat(
+                    2, x_display,
+                    len(next_annotation_text), curses.A_STANDOUT)),
+
+                scheduler.enterabs(time_to_counter(next_annotation.time), 0,
+                                   transfer_next_annotation)
+                ]
 
     def transfer_next_annotation():
         """
@@ -394,6 +398,12 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()
+            elif key.isdigit():
+                if annotation_list.cursor:
+                    # !!!!!! Handle value
+                    pass
+                else:  # No previous annotation
+                    curses.beep()
             elif key == "\x7f":  # ASCII delete: delete the previous annotation
                 if annotation_list.cursor:
                     
@@ -411,11 +421,27 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                                 [index_new_prev_annot]))
                     
                 else:
-                    stdscr.beep()  # Error: no previous annotation
+                    curses.beep()  # Error: no previous annotation
 
         
         if key == " ":
-            pass   # !!!!! Stop play
+            # No new scheduling of a possible user key reading.
+
+            # Existing scheduled events (highlighting and transfer of
+            # the next annotation to the previous annotations) must be
+            # canceled (otherwise the scheduler will not quit because
+            # it has events waiting in the queue):
+
+            for event in next_annotation_upcoming_events:
+                try:
+                    # Highlighting events are not tracked, so they
+                    # might have passed without this program knowing
+                    # it, which makes the following fail:
+                    scheduler.cancel(event)
+                except ValueError:
+                    pass
+            
+            # !!!!! Stop play
         else:
             next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
@@ -437,7 +463,7 @@ class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
     """
-    intro = "Welcome to the annotation shell. Type help or ? to list commands."
+    intro = "Welcome to the annotation shell."
     prompt = "> "
 
     def __init__(self, recording_ref):
