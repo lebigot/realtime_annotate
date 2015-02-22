@@ -1,9 +1,14 @@
 #!/usr/bin/env python3.4
 
 """
-Annotations tagged with a timestamp.
+Real-time annotation tool.
 
-Ad hoc annotations for judging a long string of recordings.
+Annotations are timestamped. They contain predefined (and extendable)
+values.
+
+Optionally, Logic Pro can be partially controlled so that recordings
+start playing when a real-time annotation session starts, and stopped
+when it stops.
 """
 
 import collections
@@ -20,6 +25,20 @@ import bisect
 import sys
 
 import yaml
+try:
+    import simplecoremidi.core
+except ImportError:
+    stop_or_play = lambda: None
+    print("Logic support not available.",
+          "It can be enabled with the simplecoremidi module.")
+else:
+    def send_MIDI_msg(value):
+        """
+        Send a MIDI SysEx message with the given value. Such messages
+        can be learned by Logic Pro.
+        """
+        simplecoremidi.core.send_midi((0xf0, 0x7d, value, 0xf7))
+    stop_or_play = lambda: send_MIDI_msg(1)
 
 # File that contains the annotations. It contains a mapping from recording
 # references to their annotations.
@@ -599,9 +618,11 @@ class AnnotateShell(cmd.Cmd):
         
             print("Time in recording set to {}.".format(self.time))
 
-    def do_play(self, arg):
+    def do_record(self, arg):
         """
-        Start playing the recording in Logic Pro, and record annotations.
+        Start recording annotations.
+
+        Also start playing in Logic Pro, if configured.
         """
         # The real-time loop displays information in a curses window:
         try:
@@ -612,7 +633,31 @@ class AnnotateShell(cmd.Cmd):
             print("Error: the terminal is not high enough.")
         else:
             print("New recording timestamp: {}.".format(self.time))
+
+    def do_configure(self, arg):
+        """
+        Optional setup procedure for controlling Logic Pro.
+        """
+
+        try:
+            simplecoremidi
+        except NameError:
+            print("Error: module simplecoremidi not available.")
+            return
         
+        print("Setup of the control of Logic Pro.")
+        print("Go to menu Logic Pro > Key Commands > Edit")
+        print("You will select each command in turn, then click on",
+              "Learn New Assignment and type enter:")
+
+        print("- Stop or Play from Last Position.")
+        input()
+        stop_or_play()
+
+        print("You should see an Assignment for each command.")
+        print("Configuration over.")
+
+    
 def annotate_shell(args):
     """
     Launch a shell for annotating a recording.
