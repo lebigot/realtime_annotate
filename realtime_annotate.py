@@ -138,18 +138,19 @@ class TerminalNotHighEnough(Exception):
     
 class AnnotationList:
     """
-    List of annotations (for a single recording) sorted by timestamp.
+    List of annotations (for a single recording) sorted by timestamp,
+    with a live cursor between annotations.
 
     Main attributes:
-    - annotation_list: list of Annotations, sorted by increasing timestamp.
+    - list_: list of Annotations, sorted by increasing timestamp.
     - cursor: index between annotations (0 = before the first annotation).
     """
     def __init__(self):
-        self.annotation_list = []
+        self.list_ = []
         self.cursor = 0
 
     def __len__(self):
-        return len(self.annotation_list)
+        return len(self.list_)
 
     def move_cursor(self, time):
         """
@@ -161,13 +162,13 @@ class AnnotationList:
         object).
         """
         self.cursor = bisect.bisect(
-            [annotation.time for annotation in self.annotation_list], time)
+            [annotation.time for annotation in self.list_], time)
 
     def __getitem__(self, slice):
         """
         Return the annotations from the given slice.
         """
-        return self.annotation_list[slice]
+        return self.list_[slice]
     
     def next_annotation(self):
         """
@@ -191,7 +192,7 @@ class AnnotationList:
         (but this call is not required, as the cursor can be set by
         other means too, including outside of this class).
         """
-        self.annotation_list.insert(self.cursor, annotation)
+        self.list_.insert(self.cursor, annotation)
         self.cursor += 1
 
     def delete_last(self):
@@ -201,9 +202,9 @@ class AnnotationList:
         annotation).
         """
         self.cursor -= 1        
-        del self.annotation_list[self.cursor]
+        del self.list_[self.cursor]
     
-def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
+def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
     """
     Run the main real-time annotation loop and return the time in the
     recording, when exiting.
@@ -217,7 +218,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     
     start_time -- time in the recording when play starts (Time object).
     
-    annotation_list -- AnnotationList to be updated.
+    annotations -- AnnotationList to be updated.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -270,7 +271,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     (term_lines, term_cols) = stdscr.getmaxyx()
     
     ## Annotations cursor:
-    annotation_list.move_cursor(start_time)
+    annotations.move_cursor(start_time)
 
     ####################    
     # Information display at start:
@@ -315,15 +316,16 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
     
     ## If there is any annotation before the current time:
-    if annotation_list.cursor:  # The slice below is cumbersome otherwise
+    #!!!!!! bug??
+    if annotations.cursor:  # The slice below is cumbersome otherwise
         
-        slice_end = annotation_list.cursor-1-num_prev_annot
+        slice_end = annotations.cursor-1-num_prev_annot
         if slice_end < 0:
             slice_end = None  # For a Python slice
 
         for (line_idx, annotation) in enumerate(
-            annotation_list.annotations[
-                annotation_list.cursor-1 : slice_end :-1],
+            annotations.list_[
+                annotations.cursor-1 : slice_end :-1],
             6):
 
             stdscr.addstr(line_idx, 0, str(annotation))
@@ -339,7 +341,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     def display_next_annotation():
         """
         Update the display of the next annotation with the current
-        next annotation in annotation_list and schedule its screen
+        next annotation in annotations and schedule its screen
         update (going from the next annotation entry to the previous
         annotations list).
 
@@ -351,7 +353,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
         x_display = 19
     
         # Display
-        next_annotation = annotation_list.next_annotation()
+        next_annotation = annotations.next_annotation()
         next_annotation_text = (str(next_annotation)
                                 if next_annotation is not None else "<None>")
         stdscr.addstr(2, x_display, next_annotation_text)
@@ -391,12 +393,12 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
         #
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
-        stdscr.addstr(6, 0, str(annotation_list.next_annotation()))
+        stdscr.addstr(6, 0, str(annotations.next_annotation()))
         stdscr.refresh()  # Instant feedback
         
         # The cursor in the annotations list must be updated to
         # reflect the screen update:
-        annotation_list.cursor += 1
+        annotations.cursor += 1
     
         display_next_annotation()
 
@@ -406,8 +408,8 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     # User key handling:
 
     # Counter for the next getkey() (see below). This counter is
-    # always such that the annotation_list.cursor corresponds to it
-    # (with respect to the annotation times in annotation_list): the
+    # always such that the annotations.cursor corresponds to it
+    # (with respect to the annotation times in annotations): the
     # two are always paired.
     next_getkey_counter = start_counter
     
@@ -438,39 +440,37 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
             if key in annotation_keys:  # Annotation
                 annotation = TimestampedAnnotation(
                     recording_time, Annotation[annotation_keys[key]])
-                annotation_list.insert(annotation)
+                annotations.insert(annotation)
                 # Display update:
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()  # Instant feedback
             elif key.isdigit():
-                if annotation_list.cursor:
-                    (annotation_list.annotations[annotation_list.cursor-1]
+                if annotations.cursor:
+                    (annotations.list_[annotations.cursor-1]
                      .set_value(int(key)))
                     # The screen must be updated so as to reflect the
                     # new value:
                     stdscr.addstr(
-                        6, 0,  str(annotation_list.annotations
-                                   [annotation_list.cursor-1]))
+                        6, 0,  str(annotations.list_[annotations.cursor-1]))
                     stdscr.clrtoeol()
                     stdscr.refresh()  # Instant feedback
                 else:  # No previous annotation
                     curses.beep()
             elif key == "\x7f":  # ASCII delete: delete the previous annotation
-                if annotation_list.cursor:
+                if annotations.cursor:
                     
-                    annotation_list.delete_last()
+                    annotations.delete_last()
                     # Corresponding screen update:
                     stdscr.scroll()
                     # The last line in the list of previous
                     # annotations might have to be updated:
                     index_new_prev_annot = (
-                        annotation_list.cursor-num_prev_annot)
+                        annotations.cursor-num_prev_annot)
                     if index_new_prev_annot >= 0:
                         stdscr.addstr(
                             5+num_prev_annot, 0,
-                            str(annotation_list.annotations
-                                [index_new_prev_annot]))
+                            str(annotations.list_[index_new_prev_annot]))
                     # Instant feedback:
                     stdscr.refresh()
                     
@@ -646,10 +646,13 @@ class AnnotateShell(cmd.Cmd):
 
         Annotations are attached to this recording.
         """
+        # !!!!!! It would be neat to have an automatic completion
+        # based on the available annotations!
+        
         self.curr_rec_ref = arg
 
         # Annotation list for the current recording:
-        annotations_list = self.all_annotations[self.curr_rec_ref].annotations
+        annotations_list = self.all_annotations[self.curr_rec_ref].list_
         try:
             self.time = annotations_list[-1].time
         except IndexError:
