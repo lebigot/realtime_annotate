@@ -209,7 +209,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.leaveok(True)
 
     # Initializations:
-    
+
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
     
@@ -220,7 +220,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     def update_next_annotation():
         """
         Update the display of the next annotation with the current
-        next annotation in annoation_list.
+        next annotation in annotation_list.
         """
         next_annotation = annotation_list.next_annotation()
         stdscr.addstr(
@@ -283,6 +283,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
         Before doing this, refreshes the screen, and schedules
         the next command key check.
+
+        This event is always scheduled for the next_event_counter
+        time.
         """
         nonlocal next_event_counter
 
