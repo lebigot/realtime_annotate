@@ -605,11 +605,13 @@ class AnnotateShell(cmd.Cmd):
         else:
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
+
+            # !!! Ideally, the time could be set automatically in the
+            # MIDI instrument as well, to a good precision.
+            # midiout.send_message(bytearray.fromhex("F0 7F 7F 06 44
+            # 06 01 01 01 10 0C 00 F7")) works in Logic Pro, but there
+            # is an offset of 1 hour (here, sets time to 1'16.480")
             
-            # !!! Ideally, the time would be set automatically in
-            # Logic Pro as well, but I'm not sure how to do this
-            # (initially) OR read (before recording annotations).
-        
             print("Time in recording set to {}.".format(self.time))
 
     def do_record(self, arg):
