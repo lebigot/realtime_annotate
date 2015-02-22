@@ -6,9 +6,9 @@ Real-time annotation tool.
 Annotations are timestamped. They contain predefined (and extendable)
 values.
 
-Optionally, Logic Pro can be partially controlled so that recordings
-start playing when a real-time annotation session starts, and stopped
-when it stops.
+Optionally, MIDI synthetizers can be partially controlled so that
+recordings start playing when a real-time annotation session starts,
+and stopped when it stops.
 """
 
 import collections
@@ -25,23 +25,11 @@ import bisect
 import sys
 
 import yaml
-try:
-    import simplecoremidi.core
-except ImportError:
-    print("Logic support not available.",
-          "It can be enabled with the simplecoremidi module.")
-    player_start = lambda: None
-    player_stop = player_start
-    
-else:
-    def send_MIDI_msg(value):
-        """
-        Send a MIDI SysEx message with the given value. Such messages
-        can be learned by Logic Pro.
-        """
-        simplecoremidi.core.send_midi((0xf0, 0x7d, value, 0xf7))
-    player_start = lambda: send_MIDI_msg(1)
-    player_stop = lambda: send_MIDI_msg(2)
+
+# Default player controls: no-ops. These functions are meant to be
+# overridden if possible.
+player_start = lambda: None  # Start the player (at current location)
+player_stop = player_start  # Stops the player (stays at current location)
 
 # File that contains the annotations. It contains a mapping from recording
 # references to their annotations.
@@ -239,10 +227,11 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # Counters for the event scheduling:
     start_counter = time.monotonic()
 
-    # !!!!! Send *play* command to Logic Pro. This is better done
-    # close to setting start_counter, so that there is not large
-    # discrepancy between the time in the recording and this time
-    # measured by this function.
+    # Starting the recording is better done close to setting
+    # start_counter, so that there is not large discrepancy between
+    # the time in the recording and this time measured by this
+    # function:
+    player_start()    
     
     def time_to_counter(time):
         """
@@ -505,8 +494,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                     scheduler.cancel(event)
                 except ValueError:
                     pass
-            
-            # !!!!! Stop play
+
+            player_stop()
+
         else:
             next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
@@ -526,7 +516,7 @@ class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
     """
-    intro = "Welcome to the annotation shell."
+    intro = "Type ? or help for help."
     prompt = "> "
 
     def __init__(self, recording_ref):
@@ -637,33 +627,6 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("New recording timestamp: {}.".format(self.time))
 
-    def do_configure(self, arg):
-        """
-        Optional setup procedure for controlling Logic Pro.
-        """
-
-        try:
-            simplecoremidi
-        except NameError:
-            print("Error: module simplecoremidi not available.")
-            return
-        
-        print("Setup of the control of Logic Pro.")
-        print("Go to menu Logic Pro > Key Commands > Edit")
-        print("You will select each command in turn, then click on",
-              "Learn New Assignment and type enter:")
-
-        print("- Play", end="")
-        input()
-        player_start()
-        
-        print("- Stop", end="")
-        input()
-        player_stop()
-
-        print("You should see an Assignment for each command.")
-        print("Configuration over.")
-
     
 def annotate_shell(args):
     """
@@ -725,12 +688,56 @@ if __name__ == "__main__":
             yaml.dump(collections.defaultdict(AnnotationList),
                       annotations_file)
 
+    # Support for a MIDI player:
+    
     try:
+        # simplecoremidi 0.3 almost works: it needs an undocumented
+        # initial SysEx which is ignored, which is not clean.
+        #
+        # More generally, any module that can send MIDI messages would
+        # work.
+        import rtmidi
+
+    except ImportError:
+        print("MIDI support not available.",
+              "It can be enabled with the python-rtmidi module.")
+
+    else:
+
+        print("MIDI synthetizer support enabled: make sure that your",
+              "synthetizer listens")
+        print("to MMC messages (in Logic Pro: menu File > Project",
+              "Settings > Synchronization")
+        print("> MIDI > Listen to MMC Input).")
+
+        # ! The initialization code is from the documentation:
+        midiout = rtmidi.MidiOut()
+        if midiout.get_ports():
+            midiout.open_port(0)
+        else:
+            midiout.open_virtual_port("realtime_annotate.py")
+
+        def send_MMC_command(command):
+            """
+            Send a MIDI MMC command.
+
+            Referene: http://en.wikipedia.org/wiki/MIDI_Machine_Control.
+
+            command -- value of the command (e.g. play = 2, stop = 1, etc.)
+            """
+            midiout.send_message((0xf0, 0x7f, 0x7f, 0x06, command, 0xf7))
+
+        player_start = lambda: send_MMC_command(2)
+        player_stop = lambda: send_MMC_command(1)
+
+
+    # try: args.func() except AttributeError would not work because
+    # the main program is args.func(), and it could raise
+    # AttributeError:
+    if hasattr(args, "func"):
         # Execution of the function set for the chosen command:
         args.func(args)
-    except AttributeError:
+    else:
         # No command given
         parser.error("Please provide a command.")
-
-
 
