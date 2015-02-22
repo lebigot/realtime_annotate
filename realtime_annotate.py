@@ -199,6 +199,20 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     annotation_list -- AnnotationList to be updated.
     """
 
+    # Events (get user key, transfer the next annotation to the list
+    # of previous annotations) are handled by the following scheduler:
+    scheduler = sched.scheduler(time.monotonic)
+
+    # Counters for the event scheduling:
+    first_event_counter = time.monotonic()
+    next_getkey_counter = first_event_counter            
+
+    # !!!!! Send *play* command to Logic Pro. This is better done
+    # close to setting first_event_counter, so that there is not large
+    # discrepancy between the time in the recording and this time
+    # measured by this function.
+    
+    
     # The terminal's default is better than curses's default:
     curses.use_default_colors()
     # For looping without waiting for the user:
@@ -209,7 +223,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.leaveok(True)
 
     # Initializations:
-
+    
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
     
@@ -220,13 +234,20 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     def update_next_annotation():
         """
         Update the display of the next annotation with the current
-        next annotation in annotation_list.
+        next annotation in annotation_list and schedule its screen
+        update (going from the next annotation entry to the previous
+        annotations list).
         """
+        # Display
         next_annotation = annotation_list.next_annotation()
         stdscr.addstr(
             2, 17,
             str(next_annotation) if next_annotation is not None else "<None>")
         stdscr.clrtoeol()
+
+        # Scheduling of the transfer to previous annotations:
+        scheduler.enterabs(next_annotation) #!!!!!!
+    
 
     # Static information:
     stdscr.clear()
@@ -270,12 +291,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # - !!!!!!! Automatic update when the time comes for the next one
     # to be displayed (sched event to be canceled upon quitting the
     # real-time mode)
-
-    # !!!!! Send *play* command to Logic Pro    
-
-    # Counters for the event scheduling:
-    first_event_counter = time.monotonic()
-    next_event_counter = first_event_counter            
     
     def handle_key():
         """
@@ -284,14 +299,14 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         Before doing this, refreshes the screen, and schedules
         the next command key check.
 
-        This event is always scheduled for the next_event_counter
+        This event is always scheduled for the next_getkey_counter
         time.
         """
-        nonlocal next_event_counter
+        nonlocal next_getkey_counter
 
         # Current time in the recording:
         recording_time = start_time + datetime.timedelta(
-            seconds=next_event_counter-first_event_counter)
+            seconds=next_getkey_counter-first_event_counter)
     
         stdscr.addstr(3, 19, str(recording_time))
         stdscr.clrtoeol()  # The time can have a varying size
@@ -313,24 +328,25 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
             # !!!!!!! Implement delete last annotation
         
-        if key != "p":  # !!!! document fact that not useable in annotation_keys
-            next_event_counter += 0.1  # Seconds
+        if key == "p":  # !!!! document fact that p not useable in annotation_keys
+            pass   # !!!!! Stop play
+        else:
+            next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
             # regular, in particular when some longer
             # tasks take time (compared to using a
             # relative waiting time at each iteration of
             # the loop).
-            scheduler.enterabs(next_event_counter, 0, handle_key)
+            scheduler.enterabs(next_getkey_counter, 0, handle_key)
 
-    scheduler = sched.scheduler(time.monotonic)
-    scheduler.enterabs(next_event_counter, 0, handle_key)
+    scheduler.enterabs(next_getkey_counter, 0, handle_key)
     scheduler.run()
 
     # !!! Resize the terminal during the loop and see the effect
 
-    # The pause key was entered at the last next_event_counter:
+    # The pause key was entered at the last next_getkey_counter:
     return start_time+datetime.timedelta(
-        seconds=next_event_counter-first_event_counter)
+        seconds=next_getkey_counter-first_event_counter)
     
 class AnnotateShell(cmd.Cmd):
     """
