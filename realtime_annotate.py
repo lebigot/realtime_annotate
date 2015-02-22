@@ -230,15 +230,22 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         """
         return start_time + datetime.timedelta(seconds=counter-start_counter)
 
-        
-    # The terminal's default is better than curses's default:
+
+    # Basic settings for the terminal:
+    
+    ## The terminal's default is better than curses's default:
     curses.use_default_colors()
-    # For looping without waiting for the user:
+    ## For looping without waiting for the user:
     stdscr.nodelay(True)
-    # No need to see any cursor:
+    ## No need to see any cursor:
     curses.curs_set(0)
-    # No need to have a cursor at the correct position:
+    ## No need to have a cursor at the correct position:
     stdscr.leaveok(True)
+    ## Scrolling region (for previous annotations):
+    stdscr.scrollok(True)
+    ## term_lines-1)  #!!!!! Set to full window, minus command list
+    num_prev_annot = 4  # Maximum number of previous annotations in window
+    stdscr.setscrreg(6, 5+num_prev_annot)
 
     # Initializations:
     
@@ -248,25 +255,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     ## Annotations cursor:
     annotation_list.move_cursor(start_time)
     
-    ## Next annotation update:
-    def update_next_annotation():
-        """
-        Update the display of the next annotation with the current
-        next annotation in annotation_list and schedule its screen
-        update (going from the next annotation entry to the previous
-        annotations list).
-        """
-        # Display
-        next_annotation = annotation_list.next_annotation()
-        stdscr.addstr(
-            2, 17,
-            str(next_annotation) if next_annotation is not None else "<None>")
-        stdscr.clrtoeol()
-
-        # Scheduling of the transfer to previous annotations:
-        scheduler.enterabs(next_annotation) #!!!!!!
-    
-
     # Static information:
     stdscr.clear()
     
@@ -276,19 +264,13 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
     stdscr.addstr(2, 0, "Next annotation:", curses.A_BOLD)
-    update_next_annotation()
         
     stdscr.addstr(3, 0, "Time in recording:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
-
-    stdscr.scrollok(True)
-    # term_lines-1)  #!!!!! Set to full window, minus command list
-    num_prev_annot = 4  # Maximum number of previous annotations in window
-    stdscr.setscrreg(6, 5+num_prev_annot)
-
+    
     # If there is any annotation before the current time:
     if annotation_list.cursor:  # The slice below is cumbersome otherwise
         
@@ -302,7 +284,54 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
             6):
 
             stdscr.addstr(line_idx, 0, str(annotation))
+
+    # Now that the previous annotations are listed, the next
+    # annotation can be printed and its updates scheduled:
+
+    def display_next_annotation():
+        """
+        Update the display of the next annotation with the current
+        next annotation in annotation_list and schedule its screen
+        update (going from the next annotation entry to the previous
+        annotations list).
+
+        The previous annotations must be already displayed (otherwise
+        the scheduled update for the next annotation might break the
+        display).
+        """
+        # Display
+        next_annotation = annotation_list.next_annotation()
+        stdscr.addstr(
+            2, 18,  # Aligned with the running timer
+            str(next_annotation) if next_annotation is not None else "<None>")
+        stdscr.clrtoeol()
+
+        if next_annotation is not None:
+            scheduler.enterabs(time_to_counter(next_annotation.time), 0,
+                               transfer_next_annotation)
+
+    def transfer_next_annotation():
+        """
+        Move the current next annotation (which does exist) to the
+        list of previous annotations, update the next annotation (if
+        any), and schedule the next transfer (if necessary).
+        """
+
+        # Transfer on screen to the list of next annotations:
+        #
+        # This requires the previous annotations to be already displayed:
+        stdscr.scroll(-1)
+        stdscr.addstr(6, 0, str(annotation_list.next_annotation()))
+        stdscr.refresh()  # Instant feedback
+        
+        # The cursor in the annotations list must be updated to
+        # reflect the screen update:
+        annotation_list.cursor += 1
     
+        display_next_annotation()
+
+    display_next_annotation()
+        
     # General information (mini-help):
     # !!!!!! Print commands at the bottom of the screen and keep there
 
@@ -396,7 +425,8 @@ class AnnotateShell(cmd.Cmd):
             self.time = annotations.annotations[-1].time
         except IndexError:
             self.time = Time()  # Start
-        print("Time in recording set to {}.".format(self.time))
+        print("Time in recording set to last annotation timestamp: {}."
+              .format(self.time))
 
         # Automatic (optional) saving of the annotations, both for
         # regular quitting and for exceptions:
@@ -449,7 +479,7 @@ class AnnotateShell(cmd.Cmd):
         """
         Set the current time in the recording to the given time.
 
-        time -- time in M:S or H:M:S format.
+        time -- time in S, M:S or H:M:S format.
         """
         try:
             # No need to have the program crash and exit for a small error:
@@ -457,10 +487,8 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            time_args = {"seconds": time_parts[-1], "minutes": time_parts[-2]}
-            if len(time_parts) == 3:
-                time_args["hours"] = time_parts[0]
-            self.time = Time(**time_args)
+            self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
+                                        time_parts[::-1])))
             
             # !!! Ideally, the time would be set automatically in
             # Logic Pro as well, but I'm not sure how to do this.
