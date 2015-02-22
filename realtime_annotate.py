@@ -229,7 +229,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         """
         return start_time + datetime.timedelta(seconds=counter-start_counter)
 
-
+    ####################
     # Basic settings for the terminal:
     
     ## The terminal's default is better than curses's default:
@@ -246,6 +246,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     num_prev_annot = 4  # Maximum number of previous annotations in window
     stdscr.setscrreg(6, 5+num_prev_annot)
 
+    ####################    
     # Initializations:
     
     ## Terminal size:
@@ -253,8 +254,10 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     
     ## Annotations cursor:
     annotation_list.move_cursor(start_time)
+
+    ####################    
+    # Information display at start:
     
-    # Static information:
     stdscr.clear()
     
     stdscr.addstr(0, 0, "Recording:", curses.A_BOLD)
@@ -284,6 +287,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
             stdscr.addstr(line_idx, 0, str(annotation))
 
+    
+        
     # Now that the previous annotations are listed, the next
     # annotation can be printed and its updates scheduled:
 
@@ -360,6 +365,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         
     # General information (mini-help):
     # !!!!!! Print commands at the bottom of the screen and keep there
+
+    ####################
+    # User key handling:
 
     # Counter for the next getkey() (see below). This counter is
     # always such that the annotation_list.cursor corresponds to it
