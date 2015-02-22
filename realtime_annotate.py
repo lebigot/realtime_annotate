@@ -38,6 +38,9 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 # WARNING: Entries can only be added (not removed, because this would
 # make previous annotation files illegible), and they must be added at
 # the end (because the files data relies on the order).
+#
+# WARNING 2: Some keys are reserved for the control of the real-time
+# interface: space, delete.
 annotation_keys = collections.OrderedDict([
     ("s", "start"),
     ("e", "end"),
@@ -344,11 +347,10 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # General information (mini-help):
     # !!!!!! Print commands at the bottom of the screen and keep there
 
-    # - !!!!!!! Automatic update when the time comes for the next one
-    # to be displayed (sched event to be canceled upon quitting the
-    # real-time mode)
-
-    # Counter for the next getkey() (see below):
+    # Counter for the next getkey() (see below). This counter is
+    # always such that the annotation_list.cursor corresponds to it
+    # (with respect to the annotation times in annotation_list): the
+    # two are always paired.
     next_getkey_counter = start_counter
     
     def getkey():
@@ -383,10 +385,16 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()
+            elif key == "\x7f":  # ASCII delete: delete the previous annotation
+                if annotation_list.cursor:
+                
+                    # !!!!!!! Implement delete last annotation
+                    
+                else:
+                    stdscr.beep()  # Error: no previous annotation
 
-            # !!!!!!! Implement delete last annotation
         
-        if key == "p":  # !!!! document fact that p not useable in annotation_keys
+        if key == " ":
             pass   # !!!!! Stop play
         else:
             next_getkey_counter += 0.1  # Seconds
