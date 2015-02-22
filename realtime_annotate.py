@@ -184,7 +184,16 @@ class AnnotationList:
         """
         self.annotations.insert(self.cursor, annotation)
         self.cursor += 1
-        
+
+    def delete_last(self):
+        """
+        Delete the annotation just before the cursor and update the
+        cursor (which does not move compared to its following
+        annotation).
+        """
+        self.cursor -= 1        
+        del self.annotations[self.cursor]
+    
 def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     """
     Run the main real-time annotation loop and return the time in the
@@ -387,8 +396,19 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 stdscr.refresh()
             elif key == "\x7f":  # ASCII delete: delete the previous annotation
                 if annotation_list.cursor:
-                
-                    # !!!!!!! Implement delete last annotation
+                    
+                    annotation_list.delete_last()
+                    # Corresponding screen update:
+                    stdscr.scroll()
+                    # The last line in the list of previous
+                    # annotations might have to be updated:
+                    index_new_prev_annot = (
+                        annotation_list.cursor-num_prev_annot)
+                    if index_new_prev_annot >= 0:
+                        stdscr.addstr(
+                            5+num_prev_annot, 0,
+                            str(annotation_list.annotations
+                                [index_new_prev_annot]))
                     
                 else:
                     stdscr.beep()  # Error: no previous annotation
