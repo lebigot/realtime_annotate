@@ -27,7 +27,8 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 
 # Mapping from keyboard keys to the corresponding enumeration name
 # (which must be a valid Python attribute name), followed by a blank
-# and help text.
+# and help text. The keys cannot be changed, as they are represent
+# annotations in files.
 #
 # WARNING: Entries can only be:
 # - extended in their name and help text (previous meanings should not
@@ -390,9 +391,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     display_next_annotation()
         
-    # General information (mini-help):
-    # !!!!!! Print commands at the bottom of the screen and keep there
-
     ####################
     # User key handling:
 
@@ -498,8 +496,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     scheduler.enterabs(next_getkey_counter, 0, getkey)
     scheduler.run()
-
-    # !!! Resize the terminal during the loop and see the effect
 
     # The pause key was entered at the last next_getkey_counter:
     return counter_to_time(next_getkey_counter)
