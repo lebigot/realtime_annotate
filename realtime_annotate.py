@@ -138,18 +138,18 @@ class TerminalNotHighEnough(Exception):
     
 class AnnotationList:
     """
-    List of annotations sorted by timestamp.
+    List of annotations (for a single recording) sorted by timestamp.
 
     Main attributes:
-    - annotations: list of Annotations, sorted by increasing timestamp.
+    - annotation_list: list of Annotations, sorted by increasing timestamp.
     - cursor: index between annotations (0 = before the first annotation).
     """
     def __init__(self):
-        self.annotations = []
+        self.annotation_list = []
         self.cursor = 0
 
     def __len__(self):
-        return len(self.annotations)
+        return len(self.annotation_list)
 
     def move_cursor(self, time):
         """
@@ -161,13 +161,13 @@ class AnnotationList:
         object).
         """
         self.cursor = bisect.bisect(
-            [annotation.time for annotation in self.annotations], time)
+            [annotation.time for annotation in self.annotation_list], time)
 
     def __getitem__(self, slice):
         """
         Return the annotations from the given slice.
         """
-        return self.annotations[slice]
+        return self.annotation_list[slice]
     
     def next_annotation(self):
         """
@@ -191,7 +191,7 @@ class AnnotationList:
         (but this call is not required, as the cursor can be set by
         other means too, including outside of this class).
         """
-        self.annotations.insert(self.cursor, annotation)
+        self.annotation_list.insert(self.cursor, annotation)
         self.cursor += 1
 
     def delete_last(self):
@@ -201,9 +201,9 @@ class AnnotationList:
         annotation).
         """
         self.cursor -= 1        
-        del self.annotations[self.cursor]
+        del self.annotation_list[self.cursor]
     
-def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
+def real_time_loop(stdscr, curr_rec_ref, start_time, annotation_list):
     """
     Run the main real-time annotation loop and return the time in the
     recording, when exiting.
@@ -213,7 +213,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     stdscr -- curses.WindowObject for displaying information.
 
-    recording_ref -- reference of the recording being annotated.
+    curr_rec_ref -- reference of the recording being annotated.
     
     start_time -- time in the recording when play starts (Time object).
     
@@ -278,7 +278,7 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     stdscr.clear()
     
     stdscr.addstr(0, 0, "Recording:", curses.A_BOLD)
-    stdscr.addstr(0, 11, recording_ref)
+    stdscr.addstr(0, 11, curr_rec_ref)
     
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
@@ -519,30 +519,20 @@ class AnnotateShell(cmd.Cmd):
     intro = "Type ? or help for help."
     prompt = "> "
 
-    def __init__(self, recording_ref):
-        """
-        recording_ref -- reference of the recording to be annotated (in
-        file ANNOTATIONS_PATH).
-        """
+    def __init__(self):
 
         super().__init__()
-    
-        print("Recording to be annotated: {}.".format(args.recording_ref))
-        self.recording_ref = recording_ref
+
+        # Current recording to be annotated:
+        self.curr_rec_ref = None
         
         # Reading of the existing annotations:
         with ANNOTATIONS_PATH.open("r") as annotations_file:
-            annotations = yaml.load(annotations_file)[recording_ref]
-        print("{} annotations found for {}.".format(
-            len(annotations), recording_ref))
-        self.annotations = annotations
+            annotations = yaml.load(annotations_file)
 
-        try:
-            self.time = annotations.annotations[-1].time
-        except IndexError:
-            self.time = Time()  # Start
-        print("Time in recording set to last annotation timestamp: {}."
-              .format(self.time))
+        # !!!!!! fix obsolete usage of self.annotation
+        self.all_annotations = annotations
+        self.do_list_recordings()
 
         # Automatic (optional) saving of the annotations, both for
         # regular quitting and for exceptions:
@@ -568,16 +558,10 @@ class AnnotateShell(cmd.Cmd):
         shutil.copyfile(str(ANNOTATIONS_PATH), backup_path)
         print("Previous annotations copied to {}.".format(backup_path))
 
-        # Update of the annotations database:
-        with ANNOTATIONS_PATH.open("r") as annotations_file:
-            all_annotations = yaml.load(annotations_file)
-        all_annotations[self.recording_ref] = self.annotations
-
         # Dump of the new annotations database:
         with ANNOTATIONS_PATH.open("w") as annotations_file:
-            yaml.dump(all_annotations, annotations_file)
-        print("Updated annotations for {} saved in {}.".format(
-            self.recording_ref, ANNOTATIONS_PATH))
+            yaml.dump(self.all_annotations, annotations_file)
+        print("Updated annotations saved in {}.".format(ANNOTATIONS_PATH))
     
     def do_exit(self, arg=None):
         """
@@ -614,31 +598,68 @@ class AnnotateShell(cmd.Cmd):
             
             print("Time in recording set to {}.".format(self.time))
 
-    def do_record(self, arg):
+    def do_annotate(self, arg):
         """
-        Start recording annotations.
+        Start recording annotations for the current recording
+        reference. This recording must first be set with
+        select_recording.
 
-        Also start playing in Logic Pro, if configured.
+        Also start playing through the MIDI instruments, if available.
+        They must listen to MIDI Machine Control events (MMC).
         """
-        # The real-time loop displays information in a curses window:
+            
+        if self.curr_rec_ref is None:
+            print("Error: please select a recording to be annotated",
+                  "with select_recording.")
+            return
+        
         try:
+            
+            # The real-time loop displays information in a curses window:
             self.time = curses.wrapper(
-                real_time_loop,
-                self.recording_ref, self.time, self.annotations)
+                real_time_loop, self.curr_rec_ref, self.time,
+                self.all_annotations[self.curr_rec_ref])
+            
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
         else:
-            print("New recording timestamp: {}.".format(self.time))
+            print("Current timestamp: {}.".format(self.time))
 
-    
+    def do_list_recordings(self, arg):
+        """
+        List annotated recordings.
+        """
+        print("Annotated recordings (sorted alphabetically):")
+        for recording_ref in sorted(self.all_annotations):
+            print("- {}".format(recording_ref))
+
+    def do_select_recording(self, arg):
+        """
+        Set the given recording reference as the current recording.
+
+        The current list of references can be obtained with
+        list_recordings.
+
+        Annotations are attached to this recording.
+        """
+        self.curr_rec_ref = arg
+
+        # Annotation list for the current recording:
+        annotations_list = self.all_annotations[self.curr_rec_ref].annotations
+        try:
+            self.time = annotations_list[-1].time
+        except IndexError:
+            self.time = Time()  # Start
+        print("Time in recording set to last annotation timestamp: {}."
+              .format(self.time))
+        
 def annotate_shell(args):
     """
     Launch a shell for annotating a recording.
 
     args -- command-line arguments of the annotate command.
     """
-    shell = AnnotateShell(args.recording_ref)
-    shell.cmdloop()
+    AnnotateShell().cmdloop()
 
 def list_recordings(args):
     """
@@ -667,9 +688,6 @@ if __name__ == "__main__":
 
     parser_annotate = subparsers.add_parser(
         "annotate", help="annotate recording")
-    parser_annotate.add_argument(
-        "recording_ref",
-        help="Reference to the recording to be annotated")
     parser_annotate.set_defaults(func=annotate_shell)
     
     parser_list = subparsers.add_parser(
