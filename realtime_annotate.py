@@ -211,7 +211,6 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # discrepancy between the time in the recording and this time
     # measured by this function.
     
-    # !!!!!!! def utility for time conversion
     def time_to_counter(time):
         """
         Return the scheduler counter corresponding to the given
