@@ -516,7 +516,7 @@ class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
     """
-    intro = "Type ? or help for help."
+    intro = "Type ? (or help) for help."
     prompt = "> "
 
     def __init__(self):
@@ -625,13 +625,18 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("Current timestamp: {}.".format(self.time))
 
-    def do_list_recordings(self, arg):
+    def do_list_recordings(self, arg=None):
         """
         List annotated recordings.
         """
-        print("Annotated recordings (sorted alphabetically):")
-        for recording_ref in sorted(self.all_annotations):
-            print("- {}".format(recording_ref))
+
+        if self.all_annotations:
+            print("Annotated recordings (sorted alphabetically):")
+            for recording_ref in sorted(self.all_annotations):
+                print("- {}".format(recording_ref))
+        else:
+            print("No annotated recording found.")
+            
 
     def do_select_recording(self, arg):
         """
