@@ -530,7 +530,6 @@ class AnnotateShell(cmd.Cmd):
         with ANNOTATIONS_PATH.open("r") as annotations_file:
             annotations = yaml.load(annotations_file)
 
-        # !!!!!! fix obsolete usage of self.annotation
         self.all_annotations = annotations
         self.do_list_recordings()
 
