@@ -205,7 +205,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     # Counters for the event scheduling:
     first_event_counter = time.monotonic()
-    next_getkey_counter = first_event_counter            
+    # !!!!!!! def utility for time conversion
+
 
     # !!!!! Send *play* command to Logic Pro. This is better done
     # close to setting first_event_counter, so that there is not large
@@ -291,8 +292,11 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
     # - !!!!!!! Automatic update when the time comes for the next one
     # to be displayed (sched event to be canceled upon quitting the
     # real-time mode)
+
+    # Counter for the next getkey() (see below):
+    next_getkey_counter = first_event_counter
     
-    def handle_key():
+    def getkey():
         """
         Get the user key command (if any) and process it.
 
@@ -337,9 +341,9 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
             # tasks take time (compared to using a
             # relative waiting time at each iteration of
             # the loop).
-            scheduler.enterabs(next_getkey_counter, 0, handle_key)
+            scheduler.enterabs(next_getkey_counter, 0, getkey)
 
-    scheduler.enterabs(next_getkey_counter, 0, handle_key)
+    scheduler.enterabs(next_getkey_counter, 0, getkey)
     scheduler.run()
 
     # !!! Resize the terminal during the loop and see the effect
