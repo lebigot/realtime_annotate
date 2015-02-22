@@ -28,9 +28,11 @@ import yaml
 try:
     import simplecoremidi.core
 except ImportError:
-    stop_or_play = lambda: None
     print("Logic support not available.",
           "It can be enabled with the simplecoremidi module.")
+    player_start = lambda: None
+    player_stop = player_start
+    
 else:
     def send_MIDI_msg(value):
         """
@@ -38,7 +40,8 @@ else:
         can be learned by Logic Pro.
         """
         simplecoremidi.core.send_midi((0xf0, 0x7d, value, 0xf7))
-    stop_or_play = lambda: send_MIDI_msg(1)
+    player_start = lambda: send_MIDI_msg(1)
+    player_stop = lambda: send_MIDI_msg(2)
 
 # File that contains the annotations. It contains a mapping from recording
 # references to their annotations.
@@ -650,9 +653,13 @@ class AnnotateShell(cmd.Cmd):
         print("You will select each command in turn, then click on",
               "Learn New Assignment and type enter:")
 
-        print("- Stop or Play from Last Position.")
+        print("- Play", end="")
         input()
-        stop_or_play()
+        player_start()
+        
+        print("- Stop", end="")
+        input()
+        player_stop()
 
         print("You should see an Assignment for each command.")
         print("Configuration over.")
