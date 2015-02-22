@@ -577,6 +577,9 @@ class AnnotateShell(cmd.Cmd):
         """
         Set the current time in the recording to the given time.
 
+        This time should typically be the time at which the play head
+        of the player is.
+
         time -- time in S, M:S or H:M:S format.
         """
         try:
@@ -602,8 +605,10 @@ class AnnotateShell(cmd.Cmd):
         recording reference. This recording must first be set with
         select_recording.
 
-        Also start playing through the MIDI instruments, if available.
-        They must listen to MIDI Machine Control events (MMC).
+        The player should typically be started simultaneously.  If
+        possible, the MIDI instruments are automatically started.
+        They must be st to listen to MIDI Machine Control events
+        (MMC).
         """
             
         if self.curr_rec_ref is None:
