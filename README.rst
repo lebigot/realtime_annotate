@@ -28,6 +28,15 @@ be replaced in the code by a standard module like pickle or json (this
 is almost a drop-in replacement: the main difference is that files
 must be opened in binary mode, for pickle).
 
+.. !!!!!! EITHER indicate how to install PyYAML, or move to JSON. I
+   could convert annotations to [(H, M, S), key] and back (directly in
+   the AnnotationList object). THEN I should document the structure of
+   the output file, and indicate how to manipulate it in Python
+   (AnnotationList)—or maybe later, when *I* do it. NOW, why would we
+   need to read the file when we have AnnotationList objects that we
+   can study? NOT CLEAR YET. pickle might actually be good. SETTLE THIS.
+   
+
 Configuration of the annotations
 ================================
 
