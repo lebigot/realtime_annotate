@@ -273,6 +273,10 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
 
     # !!!!! Send *play* command to Logic Pro    
 
+    # Counters for the event scheduling:
+    first_event_counter = time.monotonic()
+    next_event_counter = first_event_counter            
+    
     def handle_key():
         """
         Get the user key command (if any) and process it.
@@ -280,11 +284,11 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
         Before doing this, refreshes the screen, and schedules
         the next command key check.
         """
-        nonlocal next_event_time
+        nonlocal next_event_counter
 
         # Current time in the recording:
         recording_time = start_time + datetime.timedelta(
-            seconds=time.monotonic()-first_event_time)
+            seconds=next_event_counter-first_event_counter)
     
         stdscr.addstr(3, 19, str(recording_time))
         stdscr.clrtoeol()  # The time can have a varying size
@@ -307,25 +311,23 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
             # !!!!!!! Implement delete last annotation
         
         if key != "p":  # !!!! document fact that not useable in annotation_keys
-            next_event_time += 0.1  # Seconds
-            # Using absolute times makes the counter more
+            next_event_counter += 0.1  # Seconds
+            # Using absolute counters makes the counter more
             # regular, in particular when some longer
             # tasks take time (compared to using a
             # relative waiting time at each iteration of
             # the loop).
-            scheduler.enterabs(next_event_time, 0, handle_key)
+            scheduler.enterabs(next_event_counter, 0, handle_key)
 
     scheduler = sched.scheduler(time.monotonic)
-    first_event_time = time.monotonic()
-    next_event_time = first_event_time            
-    scheduler.enterabs(next_event_time, 0, handle_key)
+    scheduler.enterabs(next_event_counter, 0, handle_key)
     scheduler.run()
 
     # !!! Resize the terminal during the loop and see the effect
 
-    # The pause key was entered at the last next_event_time:
+    # The pause key was entered at the last next_event_counter:
     return start_time+datetime.timedelta(
-        seconds=next_event_time-first_event_time)
+        seconds=next_event_counter-first_event_counter)
     
 class AnnotateShell(cmd.Cmd):
     """
