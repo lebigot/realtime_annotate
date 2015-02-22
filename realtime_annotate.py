@@ -321,6 +321,12 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 
                 # Visual clue about upcoming annotation:
                 scheduler.enterabs(
+                    # The chosen delay must be larger than the time
+                    # that it takes for the user to add a value to an
+                    # annotation (otherwise, he would not always have
+                    # enough time to target the previous annotation
+                    # and change its value before it is replaced by
+                    # the next annotation).
                     time_to_counter(next_annotation.time)-1, 0,
                     lambda: stdscr.chgat(
                     2, x_display,
@@ -392,11 +398,18 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                 # Display update:
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
-                stdscr.refresh()
+                stdscr.refresh()  # Instant feedback
             elif key.isdigit():
                 if annotation_list.cursor:
-                    # !!!!!! Handle value
-                    pass
+                    (annotation_list.annotations[annotation_list.cursor-1]
+                     .set_value(int(key)))
+                    # !!! The screen must be updated so as to reflect
+                    # the new value:
+                    stdscr.addstr(
+                        6, 0,  str(annotation_list.annotations
+                                   [annotation_list.cursor-1]))
+                    stdscr.clrtoeol()
+                    stdscr.refresh()  # Instant feedback
                 else:  # No previous annotation
                     curses.beep()
             elif key == "\x7f":  # ASCII delete: delete the previous annotation
@@ -414,6 +427,8 @@ def real_time_loop(stdscr, recording_ref, start_time, annotation_list):
                             5+num_prev_annot, 0,
                             str(annotation_list.annotations
                                 [index_new_prev_annot]))
+                    # Instant feedback:
+                    stdscr.refresh()
                     
                 else:
                     curses.beep()  # Error: no previous annotation
