@@ -50,7 +50,7 @@ ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
 # interface: space, delete, and digits, and cannot be present here.
 annotation_keys = {
     "s": "start (between pieces, before the beginning)",
-    "e": "end (between pieces, after the end)",
+    "e": "end (0 = could be an end if needed)",
     "i": "inspired (0 = somewhat, 2 = nicely)",
     "u": "uninspired (0 = a little, 2 = very much)",
     "g": "glitch (0 = small, 2 = major)"
