@@ -646,9 +646,6 @@ class AnnotateShell(cmd.Cmd):
 
         Annotations are attached to this recording.
         """
-        # !!!!!! It would be neat to have an automatic completion
-        # based on the available annotations!
-        
         self.curr_rec_ref = arg
 
         # Annotation list for the current recording:
