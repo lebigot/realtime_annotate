@@ -111,7 +111,7 @@ class TimestampedAnnotation:
         result = "{} {}".format(self.time, self.annotation.name)
         
         if hasattr(self, "value"):
-            result += " (value {})".format(self.value)
+            result += " [value {}]".format(self.value)
             
         return result
     
