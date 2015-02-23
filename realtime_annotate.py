@@ -687,8 +687,12 @@ if __name__ == "__main__":
         # An empty annotation database is created:
         with annotations_path.open("w") as annotations_file:
             # Annotations for unknown recordings are empty lists by default:
-            yaml.dump(collections.defaultdict(AnnotationList),
-                      annotations_file)
+            yaml.dump(
+                # The format is a dictionary, for easier extensions
+                # (that let previous formats be read):
+                {"annotations": collections.defaultdict(AnnotationList)},
+                annotations_file)
+        print("New annotation file created.")
 
     # Support for a MIDI player:
     
