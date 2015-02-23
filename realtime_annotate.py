@@ -67,7 +67,7 @@ class TimestampedAnnotation:
 
     Main attributes:
     - time (datetime.timedelta)
-    - annotation (Annotation)
+    - key (single character)
 
     An value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
@@ -79,9 +79,13 @@ class TimestampedAnnotation:
 
         time -- timestamp for the annotation, as a datetime.timedelta.
         
-        annotation -- Annotation to be stored.
+        annotation -- annotation to be stored, as an enum.Enum.
         """
         self.time = time
+        # The advantage of storing the annotation as an Enum instead
+        # of just a key is that it can have a nice string
+        # representation, and that it preserve the associated key
+        # (which can then be saved to a file, etc.):
         self.annotation = annotation
     
     def set_value(self, value):
@@ -91,7 +95,9 @@ class TimestampedAnnotation:
         self.value = value
 
     def __str__(self):
-        
+
+        # The fact that Enums can have a nice-looking name is
+        # convenient:
         result = "{} {}".format(self.time, self.annotation.name)
         
         if hasattr(self, "value"):
@@ -178,7 +184,7 @@ class AnnotationList:
         del self.list_[self.cursor]
     
 def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
-                   key_assignments):
+                   annot_enum):
     """
     Run the main real-time annotation loop and return the time in the
     recording, when exiting.
@@ -194,8 +200,9 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     
     annotations -- AnnotationList to be updated.
 
-    key_assignments -- mapping from keys to the corresponding textual
-    annotation or meaning.
+    annot_enum -- enum.Enum enumeration with all the possible
+    annotations. The names are the full names of the annotations,
+    while the values are the corresponding keyboard keys.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -267,12 +274,15 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
 
     # Help at the bottom of the screen:
-    help_start_line = term_lines - (len(key_assignments)+5)
+    help_start_line = term_lines - (len(annot_enum)+5)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Enter>: return to shell\n")
     stdscr.addstr("<Del>: delete last annotation\n")
-    for (key, command) in key_assignments.items():
+    # !!!! Check in doc that __members__ is correct:
+    # !!! Check about the order: is it fixed? IF NOT it should be fixed
+    # at last to alphabetical
+    for (command, key) in annot_enum.__members__.items():
         stdscr.addstr("{}: {}\n".format(key, command))
     stdscr.addstr("0-9: sets the value of the previous annotation")
         
@@ -413,45 +423,52 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
             key = None  # No key pressed
         else:
 
-            if key in key_assignments:  # Annotation
-                annotation = TimestampedAnnotation(
-                    recording_time, Annotation[key_assignments[key]])
-                annotations.insert(annotation)
+            try:
+                annotation = annot_enum(key)
+            except ValueError:
+
+                if key.isdigit():
+                    if annotations.cursor:
+                        (annotations.list_[annotations.cursor-1]
+                         .set_value(int(key)))
+                        # The screen must be updated so as to reflect
+                        # the new value:
+                        stdscr.addstr(
+                            6, 0,  str(annotations.list_[annotations.cursor-1]))
+                        stdscr.clrtoeol()
+                        stdscr.refresh()  # Instant feedback
+                    else:  # No previous annotation
+                        curses.beep()
+                elif key == "\x7f":
+                    # ASCII delete: delete the previous annotation
+                    if annotations.cursor:
+
+                        annotations.delete_last()
+                        # Corresponding screen update:
+                        stdscr.scroll()
+                        # The last line in the list of previous
+                        # annotations might have to be updated:
+                        index_new_prev_annot = (
+                            annotations.cursor-num_prev_annot)
+                        if index_new_prev_annot >= 0:
+                            stdscr.addstr(
+                                5+num_prev_annot, 0,
+                                str(annotations.list_[index_new_prev_annot]))
+                        # Instant feedback:
+                        stdscr.refresh()
+
+                    else:
+                        curses.beep()  # Error: no previous annotation
+                
+            else:
+                
+                # An annotation key was pressed:
+                annotations.insert(TimestampedAnnotation(
+                    recording_time, annotation))
                 # Display update:
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotation))
                 stdscr.refresh()  # Instant feedback
-            elif key.isdigit():
-                if annotations.cursor:
-                    (annotations.list_[annotations.cursor-1]
-                     .set_value(int(key)))
-                    # The screen must be updated so as to reflect the
-                    # new value:
-                    stdscr.addstr(
-                        6, 0,  str(annotations.list_[annotations.cursor-1]))
-                    stdscr.clrtoeol()
-                    stdscr.refresh()  # Instant feedback
-                else:  # No previous annotation
-                    curses.beep()
-            elif key == "\x7f":  # ASCII delete: delete the previous annotation
-                if annotations.cursor:
-                    
-                    annotations.delete_last()
-                    # Corresponding screen update:
-                    stdscr.scroll()
-                    # The last line in the list of previous
-                    # annotations might have to be updated:
-                    index_new_prev_annot = (
-                        annotations.cursor-num_prev_annot)
-                    if index_new_prev_annot >= 0:
-                        stdscr.addstr(
-                            5+num_prev_annot, 0,
-                            str(annotations.list_[index_new_prev_annot]))
-                    # Instant feedback:
-                    stdscr.refresh()
-                    
-                else:
-                    curses.beep()  # Error: no previous annotation
 
         
         if key == " ":
@@ -513,8 +530,9 @@ class AnnotateShell(cmd.Cmd):
 
         # Extraction of the file contents:
         #
-        # The key assignments might not be defined yet:
-        self.key_assignments = file_contents.get("key_assignments")
+        # The key assignments (represented as an enum.Enum) might not
+        # be defined yet:
+        self.annot_enum = file_contents.get("key_assignments")
         self.all_annotations = file_contents["annotations"]
         
         self.do_list_recordings()
@@ -550,7 +568,7 @@ class AnnotateShell(cmd.Cmd):
             # !!!! It would be more robust if the whole structure was
             # already in the object
             yaml.dump({"annotations": self.all_annotations,
-                       "key_assignments": self.key_assignments},
+                       "key_assignments": self.annot_enum},
                       annotations_file)
         print("Up-to-date annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
@@ -658,16 +676,9 @@ class AnnotateShell(cmd.Cmd):
                               " in line {} with key '{}'."
                               .format(line_num, key))
                         return
-                    key_assignments[key] = text
+                    key_assignments[text] = key
 
-        self.key_assignments = key_assignments
-
-        # !!! Is an Enum rally needd? IN ANY CASE don't use a global
-        global Annotation
-        Annotation = enum.Enum("Annotation",
-                               {text: key for (key, text) in key_assignments.items()})
-
-
+        self.annot_enum = enum.Enum("Annotation", key_assignments)
     
         print("Key assignments loaded from file {}.".format(file_path))
         print("They are listed when running the annotate command.")
@@ -745,7 +756,7 @@ class AnnotateShell(cmd.Cmd):
         (MMC).
         """
 
-        if self.key_assignments is None:
+        if self.annot_enum is None:
             print("Error: please load key assignments first (load_keys"
                   " command).")
             return
@@ -761,7 +772,7 @@ class AnnotateShell(cmd.Cmd):
             self.time = curses.wrapper(
                 real_time_loop, self.curr_rec_ref, self.time,
                 self.all_annotations[self.curr_rec_ref],
-                self.key_assignments)
+                self.annot_enum)
             
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
