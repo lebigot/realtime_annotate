@@ -678,9 +678,8 @@ if __name__ == "__main__":
     ####################
 
     annotations_path = pathlib.Path(args.annotation_file)
-    
+
     # The annotations file is created, if it does not already exist:
-    print("Annotations file: {}.".format(annotations_path))
     
     # The annotation file is created if it does not exist:
     if not annotations_path.exists():
@@ -694,6 +693,8 @@ if __name__ == "__main__":
                 annotations_file)
         print("New annotation file created.")
 
+    print("Annotations file: {}.".format(annotations_path))
+        
     # Support for a MIDI player:
     
     try:
