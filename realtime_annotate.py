@@ -547,8 +547,13 @@ class AnnotateShell(cmd.Cmd):
 
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
-            yaml.dump(self.all_annotations, annotations_file)
-        print("Updated annotations saved in {}.".format(self.annotations_path))
+            # !!!! It would be more robust if the whole structure was
+            # already in the object
+            yaml.dump({"annotations": self.all_annotations,
+                       "key_assignments": self.key_assignments},
+                      annotations_file)
+        print("Up-to-date annotations (and key assignments) saved to {}."
+              .format(self.annotations_path))
     
     def do_exit(self, arg=None):
         """
@@ -632,13 +637,20 @@ class AnnotateShell(cmd.Cmd):
         
         with keys_file:
             for (line_num, line) in enumerate(keys_file, 1):
+                
                 line = line.rstrip()
+
+                # Empty lines and comments are skipped:
+                if not line or line.startswith("#"):
+                    continue
+                
                 try:
                     key, text = line.split(None, 1)
                 except ValueError:
                     # !!!!! test
                     print("Error: syntax error in line {}:\n{}".format(
                         line_num, line))
+                    return
                 else:
                     # Sanity check:
                     if len(key) != 1:
@@ -658,6 +670,7 @@ class AnnotateShell(cmd.Cmd):
 
     
         print("Key assignments loaded from file {}.".format(file_path))
+        print("They are listed when running the annotate command.")
 
     def complete_load_keys(self, text, line, begidx, endidx):
         """
@@ -747,7 +760,8 @@ class AnnotateShell(cmd.Cmd):
             # The real-time loop displays information in a curses window:
             self.time = curses.wrapper(
                 real_time_loop, self.curr_rec_ref, self.time,
-                self.all_annotations[self.curr_rec_ref])
+                self.all_annotations[self.curr_rec_ref],
+                self.key_assignments)
             
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
@@ -781,7 +795,8 @@ class AnnotateShell(cmd.Cmd):
         # Annotation list for the current recording:
         annotations_list = self.all_annotations[self.curr_rec_ref].list_
         print("Current recording set to {}.".format(self.curr_rec_ref))
-    
+        print("{} annotations found.".format(len(annotations_list)))
+                                             
         try:
             self.time = annotations_list[-1].time
         except IndexError:
