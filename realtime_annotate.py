@@ -33,15 +33,8 @@ player_stop = player_start  # Stops the player (stays at current location)
 
 # !!!!!!!! implement reading from standard file (can be overridden by
 # option)
-#
-annotation_keys = {
-    "s": "start (between pieces, before the beginning)",
-    "e": "end (0 = could be an end if needed)",
-    "i": "inspired (0 = somewhat, 2 = nicely)",
-    "u": "uninspired (0 = a little, 2 = very much)",
-    "g": "glitch (0 = small, 2 = major)"
-    }
-    
+
+# !!! Is an Enum rally needd?
 Annotation = enum.Enum("Annotation",
                        {text: key for (key, text) in annotation_keys.items()})
 
@@ -190,7 +183,8 @@ class AnnotationList:
         self.cursor -= 1        
         del self.list_[self.cursor]
     
-def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
+def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
+                   key_assignments):
     """
     Run the main real-time annotation loop and return the time in the
     recording, when exiting.
@@ -205,6 +199,9 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
     start_time -- time in the recording when play starts (Time object).
     
     annotations -- AnnotationList to be updated.
+
+    key_assignments -- mapping from keys to the corresponding textual
+    annotation or meaning.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -276,12 +273,12 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
 
     # Help at the bottom of the screen:
-    help_start_line = term_lines - (len(annotation_keys)+5)
+    help_start_line = term_lines - (len(key_assignments)+5)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Enter>: return to shell\n")
     stdscr.addstr("<Del>: delete last annotation\n")
-    for (key, command) in annotation_keys.items():
+    for (key, command) in key_assignments.items():
         stdscr.addstr("{}: {}\n".format(key, command))
     stdscr.addstr("0-9: sets the value of the previous annotation")
         
@@ -422,9 +419,9 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations):
             key = None  # No key pressed
         else:
 
-            if key in annotation_keys:  # Annotation
+            if key in key_assignments:  # Annotation
                 annotation = TimestampedAnnotation(
-                    recording_time, Annotation[annotation_keys[key]])
+                    recording_time, Annotation[key_assignments[key]])
                 annotations.insert(annotation)
                 # Display update:
                 stdscr.scroll(-1)
@@ -501,7 +498,7 @@ class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time recording annotation loop.
     """
-    intro = "Type ? (or help) for help."
+    intro = "Type ? (or help) for help. Use <tab> for automatic completion."
     prompt = "> "
 
     def __init__(self, annotations_path):
@@ -518,9 +515,14 @@ class AnnotateShell(cmd.Cmd):
         
         # Reading of the existing annotations:
         with annotations_path.open("r") as annotations_file:
-            annotations = yaml.load(annotations_file)
+            file_contents = yaml.load(annotations_file)
 
-        self.all_annotations = annotations
+        # Extraction of the file contents:
+        #
+        # The key assignments might not be defined yet:
+        self.key_assignments = file_contents.get("key_assignments")
+        self.all_annotations = file_contents["annotations"]
+        
         self.do_list_recordings()
 
         # Automatic (optional) saving of the annotations, both for
@@ -590,23 +592,57 @@ class AnnotateShell(cmd.Cmd):
 
             print("Time in recording set to {}.".format(self.time))
 
+    def do_load_key(self, arg):
+        """
+        Load key assignments from the given file. They are saved with
+        the annotations.
+
+        The format is as follows:
+
+        s    start (between pieces, before the beginning)
+        e    end (0 = could be an end if needed)
+        i    inspired (0 = somewhat, 2 = nicely)
+        u    uninspired (0 = a little, 2 = very much)
+        g    glitch (0 = small, 2 = major)
+
+        The first letter is a keyboard key (case sensitive). Typing
+        this key will insert the annotation described afterwards (free
+        text).
+
+        The key can be followed by any number of spaces, which are
+        followed by a text describing the meaning of the annotation
+        (and optionally of any numeric modifier).
+        """
+        # !!!!!!!
+    
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
         recording reference. This recording must first be set with
         select_recording.
 
+        The annotations file must also contain annotation key
+        definitions. This typically has to be done once after creating
+        the file, with the command load_keys.
+
+        # !!!!! Remove all refs to MIDI
+        
         The player should typically be started simultaneously.  If
         possible, the MIDI instruments are automatically started.
         They must be st to listen to MIDI Machine Control events
         (MMC).
         """
-            
+
+        if self.key_assignments is None:
+            print("Error: please load key assignments first (load_keys"
+                  " command).")
+            return
+        
         if self.curr_rec_ref is None:
             print("Error: please select a recording to be annotated",
                   "with select_recording.")
             return
-        
+
         try:
             
             # The real-time loop displays information in a curses window:
