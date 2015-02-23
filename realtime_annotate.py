@@ -31,23 +31,9 @@ import yaml
 player_start = lambda: None  # Start the player (at current location)
 player_stop = player_start  # Stops the player (stays at current location)
 
-# File that contains the annotations. It contains a mapping from recording
-# references to their annotations.
-ANNOTATIONS_PATH = pathlib.Path("annotations.yaml")
-
-# Mapping from keyboard keys to the corresponding enumeration name
-# (which must be a valid Python attribute name), followed by a blank
-# and help text. The keys cannot be changed, as they are represent
-# annotations in files.
+# !!!!!!!! implement reading from standard file (can be overridden by
+# option)
 #
-# WARNING: Entries can only be:
-# - extended in their name and help text (previous meanings should not
-# be altered), and
-# - added, and not removed, because this would make previous
-# annotation files illegible.
-#
-# WARNING: Some keys are reserved for the control of the real-time
-# interface: space, delete, and digits, and cannot be present here.
 annotation_keys = {
     "s": "start (between pieces, before the beginning)",
     "e": "end (0 = could be an end if needed)",
@@ -518,15 +504,20 @@ class AnnotateShell(cmd.Cmd):
     intro = "Type ? (or help) for help."
     prompt = "> "
 
-    def __init__(self):
+    def __init__(self, annotations_path):
+        """
+        annotations_path -- pathlib.Path to the file with the annotations.
+        """
 
         super().__init__()
 
+        self.annotations_path = annotations_path
+        
         # Current recording to be annotated:
         self.curr_rec_ref = None
         
         # Reading of the existing annotations:
-        with ANNOTATIONS_PATH.open("r") as annotations_file:
+        with annotations_path.open("r") as annotations_file:
             annotations = yaml.load(annotations_file)
 
         self.all_annotations = annotations
@@ -552,14 +543,14 @@ class AnnotateShell(cmd.Cmd):
         """
 
         # The old annotations are backed up:
-        backup_path = str(ANNOTATIONS_PATH)+".bak"
-        shutil.copyfile(str(ANNOTATIONS_PATH), backup_path)
+        backup_path = str(self.annotations_path)+".bak"
+        shutil.copyfile(str(self.annotations_path), backup_path)
         print("Previous annotations copied to {}.".format(backup_path))
 
         # Dump of the new annotations database:
-        with ANNOTATIONS_PATH.open("w") as annotations_file:
+        with self.annotations_path.open("w") as annotations_file:
             yaml.dump(self.all_annotations, annotations_file)
-        print("Updated annotations saved in {}.".format(ANNOTATIONS_PATH))
+        print("Updated annotations saved in {}.".format(self.annotations_path))
     
     def do_exit(self, arg=None):
         """
@@ -677,17 +668,24 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description=__doc__)
 
+    parser.add_argument(
+        "annotation_file",
+        help=("Path to the annotation file (it will be created if it does not"
+              " yet exist)"))
+    
     args = parser.parse_args()
 
     ####################
 
+    annotations_path = pathlib.Path(args.annotation_file)
+    
     # The annotations file is created, if it does not already exist:
-    print("Annotations file: {}.".format(ANNOTATIONS_PATH))
+    print("Annotations file: {}.".format(annotations_path))
     
     # The annotation file is created if it does not exist:
-    if not ANNOTATIONS_PATH.exists():
+    if not annotations_path.exists():
         # An empty annotation database is created:
-        with ANNOTATIONS_PATH.open("w") as annotations_file:
+        with annotations_path.open("w") as annotations_file:
             # Annotations for unknown recordings are empty lists by default:
             yaml.dump(collections.defaultdict(AnnotationList),
                       annotations_file)
@@ -735,4 +733,4 @@ if __name__ == "__main__":
         player_start = lambda: send_MMC_command(2)
         player_stop = lambda: send_MMC_command(1)
 
-    AnnotateShell().cmdloop()        
+    AnnotateShell(annotations_path).cmdloop()

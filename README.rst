@@ -47,14 +47,18 @@ Configuration of the annotations
 The possible annotations are configured by the user in a simple text
 file. The format is as follows::
 
-  s start (between pieces, before the beginning)
-  e end (0 = could be an end if needed)
-  i inspired (0 = somewhat, 2 = nicely)
-  u uninspired (0 = a little, 2 = very much)
-  g glitch (0 = small, 2 = major)
+  s    start (between pieces, before the beginning)
+  e    end (0 = could be an end if needed)
+  i    inspired (0 = somewhat, 2 = nicely)
+  u    uninspired (0 = a little, 2 = very much)
+  g    glitch (0 = small, 2 = major)
 
 The first letter is a keyboard key (case sensitive). Typing this key
 will insert the annotation described afterwards (free text).
+
+The key can be followed by any number of spaces, which are followed by
+a text describing the meaning of the annotation (and optionally of any
+numeric modifier).
 
 **Important**:
 
