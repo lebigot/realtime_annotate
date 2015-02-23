@@ -23,6 +23,7 @@ import time
 import sched
 import bisect
 import sys
+import glob
 
 import yaml
 
@@ -30,13 +31,6 @@ import yaml
 # overridden if possible.
 player_start = lambda: None  # Start the player (at current location)
 player_stop = player_start  # Stops the player (stays at current location)
-
-# !!!!!!!! implement reading from standard file (can be overridden by
-# option)
-
-# !!! Is an Enum rally needd?
-Annotation = enum.Enum("Annotation",
-                       {text: key for (key, text) in annotation_keys.items()})
 
 class Time(datetime.timedelta):
     """
@@ -544,6 +538,8 @@ class AnnotateShell(cmd.Cmd):
         Save the current annotations to file.
         """
 
+        # !!!!! Update with new format
+        
         # The old annotations are backed up:
         backup_path = str(self.annotations_path)+".bak"
         shutil.copyfile(str(self.annotations_path), backup_path)
@@ -592,13 +588,18 @@ class AnnotateShell(cmd.Cmd):
 
             print("Time in recording set to {}.".format(self.time))
 
-    def do_load_key(self, arg):
+    def do_load_keys(self, file_path):
         """
         Load key assignments from the given file. They are saved with
-        the annotations.
+        the annotations. This can be used for modifying or updating
+        the annotations associated with a file.
+
+        # !!!!!!!! Add WARNINGS about modifications here
 
         The format is as follows:
 
+        # Musical annotations
+        
         s    start (between pieces, before the beginning)
         e    end (0 = could be an end if needed)
         i    inspired (0 = somewhat, 2 = nicely)
@@ -612,9 +613,107 @@ class AnnotateShell(cmd.Cmd):
         The key can be followed by any number of spaces, which are
         followed by a text describing the meaning of the annotation
         (and optionally of any numeric modifier).
+
+        Empty lines and lines starting by # are ignored.
         """
-        # !!!!!!!
+
+        # Common error: no file name given:
+        if not file_path:
+            print("Error: please provide a file path.")
+            return
+        
+        key_assignments = {}
+
+        try:
+            keys_file = open(file_path)
+        except IOError as err:
+            print("Error: cannot open '{}': {}".format(file_path, err))
+            return
+        
+        with keys_file:
+            for (line_num, line) in enumerate(keys_file, 1):
+                line = line.rstrip()
+                try:
+                    key, text = line.split(None, 1)
+                except ValueError:
+                    # !!!!! test
+                    print("Error: syntax error in line {}:\n{}".format(
+                        line_num, line))
+                else:
+                    # Sanity check:
+                    if len(key) != 1:
+                        print("Error: keys must be single characters. Error"
+                              " in line {} with key '{}'."
+                              .format(line_num, key))
+                        return
+                    key_assignments[key] = text
+
+        self.key_assignments = key_assignments
+
+        # !!! Is an Enum rally needd? IN ANY CASE don't use a global
+        global Annotation
+        Annotation = enum.Enum("Annotation",
+                               {text: key for (key, text) in key_assignments.items()})
+
+
     
+        print("Key assignments loaded from file {}.".format(file_path))
+
+    def complete_load_keys(self, text, line, begidx, endidx):
+        """
+        Complete the text with paths from the current directory.
+        """
+
+        # When the line ends with "/", "text" appears to be empty.
+        if line.endswith("/"):
+            # Directory completion
+            directory = pathlib.Path(line.split(None, 1)[1])
+            ## print("DIRECTORY", directory)
+            ## print([
+            ##     # The completions must only include file names
+            ##     # *without the prefix in "line" (otherwise the
+            ##     # beginning of the path is repeated in the command
+            ##     # line):
+            ##     str(path.relative_to(directory))
+            ##     for path in directory.glob("*")
+            ##     ])
+            
+            return [
+                # The completions must only include file names
+                # *without the prefix in "line" (otherwise the
+                # beginning of the path is repeated in the command
+                # line):
+                str(path.relative_to(directory))
+                for path in directory.glob("*")
+                ]
+    
+        else:
+            # Direct expansion:
+
+
+            # Special characters like "*" at the beginning of the
+            # string entered by the user are not included in "text" by
+            # the cmd modul, so they are explicitly included by
+            # calculating "start":
+            #
+            # Part before the text, without the command:
+            try:
+                start = line[:begidx].split(None, 1)[1]
+            except IndexError:
+                # Case of a completion from an empty string:
+                start = ""
+
+            # The escape() takes care of characters that are
+            # interpreted by glob(), like *:                
+            glob_expr = "{}*".format(glob.escape(start+text))
+            ## print("GLOB expr", glob_expr)
+                
+            return [
+                # Only the part after begidx must be returned:
+                glob_result[len(start):]
+                for glob_result in glob.glob(glob_expr)
+                ]
+        
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
