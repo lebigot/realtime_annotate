@@ -547,7 +547,7 @@ class AnnotateShell(cmd.Cmd):
         # !!!!!! Interpret the file contents (conversion of key
         # assignments to enum.Enum)
     
-        self.annot_enum = file_contents.get("key_assignments")
+        self.annot_enum = file_contents["key_assignments"]
         self.all_annotations = file_contents["annotations"]
         
         self.do_list_recordings()
@@ -884,7 +884,8 @@ if __name__ == "__main__":
             yaml.dump(
                 # The format is a dictionary, for easier extensions
                 # (that let previous formats be read):
-                {"annotations": collections.defaultdict(AnnotationList)},
+                {"key_assignments": None,
+                 "annotations": collections.defaultdict(AnnotationList)},
                 annotations_file)
         print("New annotation file created.")
 
