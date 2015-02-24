@@ -100,7 +100,7 @@ class TimestampedAnnotation:
         
         annotation -- annotation to be stored, as an enum.Enum.
         """
-        self.time = time  # Annotation timer time
+        self.time = time
         
         # The advantage of storing the annotation as an Enum instead
         # of just a key (Enum value)is that it can have a nice string
@@ -731,10 +731,8 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
-                                        time_parts[::-1])))
-
-            player_module.set_time(*self.time.to_HMS())
+            self.update_times(Time(**dict(zip(["seconds", "minutes", "hours"],
+                                              time_parts[::-1]))))
 
             print("Annotation timer set to {}.".format(self.time))
 
@@ -919,10 +917,10 @@ class AnnotateShell(cmd.Cmd):
         try:
             
             # The real-time loop displays information in a curses window:
-            self.time = curses.wrapper(
+            self.update_times(curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.time,
                 self.all_annotations[self.curr_event_ref],
-                self.annot_enum)
+                self.annot_enum))
             
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
@@ -961,12 +959,20 @@ class AnnotateShell(cmd.Cmd):
         
         # The time of the last annotation before the cursor is
         # "just" before when the user last stopped:
-        self.time = (last_annotation.time if last_annotation is not None
-                     else Time())  # Start
+        self.update_times(last_annotation.time if last_annotation is not None
+                          else Time())
+        print("Time set to last annotation timestamp: {}.".format(self.time))
 
-        print("Annotation timer set to last annotation timestamp: {}."
-              .format(self.time))
+    def update_times(self, time):
+        """
+        Set both the annotation timer and the player time to the given
+        time.
 
+        time -- Time object.
+        """
+        self.time = time
+        player_module.set_time(*time.to_HMS())
+        
     def complete_select_event(self, text, line, begidx, endidx):
         """
         Complete event references with the known references.
