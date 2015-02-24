@@ -293,9 +293,6 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Enter>: return to shell\n")
     stdscr.addstr("<Del>: delete last annotation\n")
-    # !!!! Check in doc that __members__ is correct:
-    # !!! Check about the order: is it fixed? IF NOT it should be fixed
-    # at last to alphabetical. It looks like it is fixed: I see a simple enumeration represented by an OrderedDict:
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
@@ -571,8 +568,6 @@ class AnnotateShell(cmd.Cmd):
         Save the current annotations to file.
         """
 
-        # !!!!! Update with new format
-        
         # The old annotations are backed up:
         backup_path = str(self.annotations_path)+".bak"
         shutil.copyfile(str(self.annotations_path), backup_path)
@@ -580,8 +575,6 @@ class AnnotateShell(cmd.Cmd):
 
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
-            # !!!! It would be more robust if the whole structure was
-            # already in the object
 
             # A serializable version of the annotation enumeration is
             # saved:
@@ -592,10 +585,13 @@ class AnnotateShell(cmd.Cmd):
                 serializable_annot_enum = collections.OrderedDict(
                     (annot.name, annot.value) for annot in self.annot_enum)
             
+            # !!!!! Update with new "basic"/flat format for
+            # self.all_annotations
         
             yaml.dump({"annotations": self.all_annotations,
                        "key_assignments": serializable_annot_enum},
                       annotations_file)
+            
         print("Up-to-date annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
     
