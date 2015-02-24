@@ -933,7 +933,6 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("No annotated recording found.")
             
-
     def do_select_recording(self, arg):
         """
         Set the given recording reference as the current recording.
@@ -984,8 +983,6 @@ if __name__ == "__main__":
     ####################
 
     annotations_path = pathlib.Path(args.annotation_file)
-
-    # The annotations file is created, if it does not already exist:
     
     # The annotation file is created if it does not exist:
     if not annotations_path.exists():
