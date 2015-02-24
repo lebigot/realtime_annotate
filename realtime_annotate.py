@@ -436,7 +436,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
         else:
 
             try:
-                annotation = annot_enum(key)
+                annotation_kind = annot_enum(key)
             except ValueError:
 
                 if key.isdigit():
@@ -475,10 +475,10 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                 
                 # An annotation key was pressed:
                 annotations.insert(TimestampedAnnotation(
-                    recording_time, annotation))
+                    recording_time, annotation_kind))
                 # Display update:
                 stdscr.scroll(-1)
-                stdscr.addstr(6, 0, str(annotations))  #!!!
+                stdscr.addstr(6, 0, str(annotations.last_annotation()))
                 stdscr.refresh()  # Instant feedback
 
         
@@ -693,7 +693,6 @@ class AnnotateShell(cmd.Cmd):
                 try:
                     key, text = line.split(None, 1)
                 except ValueError:
-                    # !!!!! test
                     print("Error: syntax error in line {}:\n{}".format(
                         line_num, line))
                     return
