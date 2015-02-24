@@ -48,9 +48,9 @@ def out_port():
 
 midi_out = out_port()
 
-def send_MMC_command(command):
+def send_simple_MMC_command(command):
     """
-    Send a MIDI Machine Control command.
+    Send a simple MIDI Machine Control command.
 
     command -- value of the command (e.g. play = 2, stop = 1, etc.)
     """
