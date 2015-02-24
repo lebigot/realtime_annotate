@@ -20,8 +20,8 @@ try:
     # not clean.
     #
     # More generally, any module that can send MIDI messages would
-    # work.
-    import rtmidi  # This is from the rtmidi-python package
+    # work (rtmidi-python,...).
+    import rtmidi  # This is from the python-rtmidi package
     
 except ImportError:
     sys.exit("MIDI support not available."
@@ -37,10 +37,10 @@ def out_port():
     Return a MIDI port for output.
     """
 
-    midi_out = rtmidi.Midi_Out()
+    midi_out = rtmidi.MidiOut()
 
     # This initialization code is from the documentation (it is required):    
-    if midi_out.get_ports():
+    if midi_out.get_ports():  # If there are available ports...
         midi_out.open_port(0)
     else:
         midi_out.open_virtual_port("realtime_annotate.py")
@@ -51,14 +51,16 @@ midi_out = out_port()
 
 def send_MMC_command(command):
     """
-    Send a MIDI Machine Control command.
+    Send a MIDI Machine Control command to all MIDI devices.
 
     command -- value of the command (e.g. play = 2, stop = 1, etc.),
     or bytes with the command.
     """
+    if isinstance(command, int):
+        command = bytes([command])
+        
     midi_out.send_message(
-        bytes([0xF0, 0x7f, 0x7f, 0x06],
-              command, 0xf7))
+        bytes([0xF0, 0x7F, 0x7F, 0x06])+command+bytes([0xF7]))
 
 start = lambda: send_MMC_command(2)
 stop = lambda: send_MMC_command(1)
@@ -81,8 +83,9 @@ def set_time(hours, minutes, seconds):
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
         
-    midi_out.send_message(
-        bytes.fromhex("F0 7F 7F 06 44 06 01")
-        +bytes([
-            hours, minutes, seconds, int(round(25*fractional_seconds)), 0,
-            0xF7]))
+    send_MMC_command(
+        bytes([0x44, 0x06, 0x01])  # ... or .fromhex("44 06 01")
+        +bytes([hours, minutes, seconds, int(round(25*fractional_seconds)), 0])
+        )
+
+
