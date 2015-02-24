@@ -35,9 +35,10 @@ def out_port():
     """
     Return a MIDI port for output.
     """
-    # This initialization code is from the documentation (it is required):
+
     midi_out = rtmidi.Midi_Out()
-    
+
+    # This initialization code is from the documentation (it is required):    
     if midi_out.get_ports():
         midi_out.open_port(0)
     else:
