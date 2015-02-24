@@ -607,28 +607,35 @@ class AnnotateShell(cmd.Cmd):
         self.curr_rec_ref = None
         
         # Reading of the existing annotations:
-        with annotations_path.open("r") as annotations_file:
-            file_contents = json.load(annotations_file)
+        if annotations_path.exists():
 
-        # Extraction of the file contents:
-        #
-        # The key assignments (represented as an enum.Enum) might not
-        # be defined yet:
+            with annotations_path.open("r") as annotations_file:
+                file_contents = json.load(annotations_file)
 
-        self.annot_enum = (
-            enum.Enum("AnnotationKind", file_contents["key_assignments"])
-            if file_contents["key_assignments"] is not None
-            else None)
+            # Extraction of the file contents:
+            #
+            # The key assignments (represented as an enum.Enum) might not
+            # be defined yet:
 
-        self.all_annotations = collections.defaultdict(
-            AnnotationList,
-            {recording_ref:
-             AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
-             for (recording_ref, annotations)
-             in file_contents["annotations"].items()})
-        
-        self.do_list_recordings()
+            self.annot_enum = (
+                enum.Enum("AnnotationKind", file_contents["key_assignments"])
+                if file_contents["key_assignments"] is not None
+                else None)
 
+            self.all_annotations = collections.defaultdict(
+                AnnotationList,
+                {recording_ref:
+                 AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
+                 for (recording_ref, annotations)
+                 in file_contents["annotations"].items()})
+
+            self.do_list_recordings()
+
+        else:  # A new file must to be created
+            self.annot_enum = None
+            self.all_annotations = collections.defaultdict(AnnotationList)
+            self.do_save()
+            
         # Automatic (optional) saving of the annotations, both for
         # regular quitting and for exceptions:
         def save_if_needed():
@@ -645,14 +652,21 @@ class AnnotateShell(cmd.Cmd):
     
     def do_save(self, arg=None):
         """
-        Save the current annotations to file.
+        Save the current annotations to file after making a copy of any
+        previous version.
+
+        If no previous version was available, a new file is created.
         """
 
-        # The old annotations are backed up:
-        backup_path = str(self.annotations_path)+".bak"
-        shutil.copyfile(str(self.annotations_path), backup_path)
-        print("Previous annotations copied to {}.".format(backup_path))
-
+        if self.annotations_path.exists():
+            # The old annotations are backed up:
+            backup_path = str(self.annotations_path)+".bak"
+            shutil.copyfile(str(self.annotations_path), backup_path)
+            print("Previous annotations copied to {}.".format(backup_path))
+        else:
+            # A new file must be created:
+            print("Creating a new annotation file...")
+            
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
 
@@ -682,7 +696,7 @@ class AnnotateShell(cmd.Cmd):
                        "key_assignments": annot_enum_for_file},
                       annotations_file, indent=2)
             
-        print("Up-to-date annotations (and key assignments) saved to {}."
+        print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
     
     def do_exit(self, arg=None):
@@ -983,24 +997,6 @@ if __name__ == "__main__":
     ####################
 
     annotations_path = pathlib.Path(args.annotation_file)
-    
-    # The annotation file is created if it does not exist:
-    if not annotations_path.exists():
-        # An empty annotation database is created:
-        with annotations_path.open("w") as annotations_file:
-            # Annotations for unknown recordings are empty lists by default:
-
-            # !!!!!!! This would ideally be factored, so that there is
-            # !!!!!!! no duplication inside do_save(). How to do this?
-            json.dump(
-                # The format is a dictionary, for easier extensions
-                # (that let previous formats be read):
-                {"key_assignments": None, "annotations": {}},
-                annotations_file)
-        print("New annotation file created.")
-
-    print("Annotations file: {}.".format(annotations_path))
-        
     # Support for a MIDI player:
     
     try:
