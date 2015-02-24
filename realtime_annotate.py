@@ -835,14 +835,17 @@ class AnnotateShell(cmd.Cmd):
         self.curr_rec_ref = arg
 
         # Annotation list for the current recording:
-        annotations_list = self.all_annotations[self.curr_rec_ref].list_
+        annotations = self.all_annotations[self.curr_rec_ref]
         print("Current recording set to {}.".format(self.curr_rec_ref))
-        print("{} annotations found.".format(len(annotations_list)))
-                                             
-        try:
-            self.time = annotations_list[-1].time
-        except IndexError:
-            self.time = Time()  # Start
+        print("{} annotations found.".format(len(annotations)))
+
+        last_annotation = annotations.last_annotation()
+        
+        # The time of the last annotation before the cursor is
+        # "just" before when the user last stopped:
+        self.time = (last_annotation.time if last_annotation is not None:
+                     else Time())  # Start
+
         print("Time in recording set to last annotation timestamp: {}."
               .format(self.time))
 
