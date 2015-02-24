@@ -6,8 +6,10 @@ Real-time annotation tool.
 Annotations are timestamped. They contain user-defined values.
 
 Optionally, some realtime player (music player, video player, MIDI
-player,...) can be controlled so that annotation tasks start and stop
-at the same time as the player.
+player,...) can be controlled so that annotation timestamps are
+synchronized with the player (the player time head is automatically
+set to the annotation timestamp; the player is started and stopped at
+the same times as the annotation process).
 
 (c) 2015 by Eric O. LEBIGOT (EOL)
 """
@@ -37,9 +39,8 @@ class Time(datetime.timedelta):
     # done with datetime.time objects (which cannot be added to a
     # timedelta).    
     """
-    Timestamp: time since the beginning of a recording.
+    Timestamp compatible with a datetime.timedelta.
     """
-    
 
     def __add__(self, other):
         """
@@ -728,7 +729,6 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
 
-            # !!!!!! Document set_time in __doc__ and help for --player
             player_set_time(*self.time.to_HMS())
 
             print("Time in recording set to {}.".format(self.time))
@@ -983,13 +983,16 @@ if __name__ == "__main__":
         "--player", action="store",
         help=("Name of Python module that controls some realtime player"
               " (music player, etc.)."
-              # !!!!!! Test working dir
-              " The module must be in the Python path (working directory,"
-              " directory of this program, etc.)"
+              " The module must be in the Python module path (working"
+              " directory, directory of this program, etc.)"
               " The module must provide a player_start() and"
-              " a player_stop() function (that take no argument). These"
-              " functions are respectively called when starting and stopping"
-              " the annotation process: the annotations times can be"
+              " a player_stop() function (that take no argument), and a"
+              " function player_set_time(hours, minutes, seconds)."
+              " player_start() is called when the annotation process starts,"
+              " player_stop() when it is stopped."
+              " player_set_time() is called when the user sets the current"
+              " annotation time."
+              " Annotations times can thus be"
               " synchronized with the elapsed time in a piece of music, etc."))
     
     parser.add_argument(
