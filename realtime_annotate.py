@@ -589,7 +589,7 @@ class AnnotateShell(cmd.Cmd):
             if self.annot_enum is None:
                 serializable_annot_enum = None
             else:
-                seriablizable_annot_enum = collections.OrderedDict(
+                serializable_annot_enum = collections.OrderedDict(
                     (annot.name, annot.value) for annot in self.annot_enum)
             
         
