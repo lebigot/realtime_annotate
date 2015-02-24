@@ -15,12 +15,13 @@ import sys
 import math
 
 try:
-    # simplecoremidi 0.3 almost works: it needs an undocumented
-    # initial SysEx which is ignored, which is not clean.
+    # simplecoremidi 0.3 almost works (it is OS X only, though): it
+    # needs an undocumented initial SysEx which is ignored, which is
+    # not clean.
     #
     # More generally, any module that can send MIDI messages would
     # work.
-    import rtmidi
+    import rtmidi  # This is from the rtmidi-python package
     
 except ImportError:
     sys.exit("MIDI support not available."
@@ -48,13 +49,16 @@ def out_port():
 
 midi_out = out_port()
 
-def send_simple_MMC_command(command):
+def send_MMC_command(command):
     """
-    Send a simple MIDI Machine Control command.
+    Send a MIDI Machine Control command.
 
-    command -- value of the command (e.g. play = 2, stop = 1, etc.)
+    command -- value of the command (e.g. play = 2, stop = 1, etc.),
+    or bytes with the command.
     """
-    midi_out.send_message((0xf0, 0x7f, 0x7f, 0x06, command, 0xf7))
+    midi_out.send_message(
+        bytes([0xF0, 0x7f, 0x7f, 0x06],
+              command, 0xf7))
 
 start = lambda: send_MMC_command(2)
 stop = lambda: send_MMC_command(1)
