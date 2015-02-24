@@ -9,6 +9,7 @@ __version__ = "0.9"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 import sys
+import math
 
 try:
     # simplecoremidi 0.3 almost works: it needs an undocumented
@@ -45,5 +46,27 @@ def send_MMC_command(command):
     """
     midiout.send_message((0xf0, 0x7f, 0x7f, 0x06, command, 0xf7))
 
-player_start = lambda: send_MMC_command(2)
-player_stop = lambda: send_MMC_command(1)
+start = lambda: send_MMC_command(2)
+stop = lambda: send_MMC_command(1)
+
+def set_time(hours, minutes, seconds):
+    """
+    Set the MIDI players to the given time + 1 hour.
+
+    hours and minutes are integers. seconds is a float.
+    minutes and seconds are in [0; 60).
+
+    hours must be in [0; 255].
+
+    Sub-second time setting is approximate, and is handled by setting
+    a frame number based on 25 frames/seconds.
+    """
+
+    # The seconds must be split into integer seconds and fractional seconds:
+    integer_seconds, fractional_seconds = math.modf(seconds)
+    
+    midiout.send_message(bytearray.fromhex(
+        "F0 7F 7F 06 44 06 01 {hours:2x} {minutes:2x} {seconds:2x} {frames:2x}"
+        " {subframes} F7".format(
+            hours=hours+1, minutes=minutes, seconds=integer_seconds,
+            frames=int(round(25*fractional_seconds)))))
