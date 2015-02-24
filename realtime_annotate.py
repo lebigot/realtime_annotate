@@ -541,10 +541,11 @@ class AnnotateShell(cmd.Cmd):
         # The key assignments (represented as an enum.Enum) might not
         # be defined yet:
 
-        # !!!!!! Interpret the file contents (conversion of key
-        # assignments to enum.Enum)
-    
-        self.annot_enum = file_contents["key_assignments"]
+
+        self.annot_enum = (enum.Enum("AnnotationKind",
+                                     file_contents["key_assignments"])
+                           if file_contents["key_assignments"] is not None
+                           else None)
         self.all_annotations = file_contents["annotations"]
         
         self.do_list_recordings()
@@ -582,6 +583,7 @@ class AnnotateShell(cmd.Cmd):
             if self.annot_enum is None:
                 serializable_annot_enum = None
             else:
+                # The order of the enumerations is preserved:
                 serializable_annot_enum = collections.OrderedDict(
                     (annot.name, annot.value) for annot in self.annot_enum)
             
@@ -705,7 +707,7 @@ class AnnotateShell(cmd.Cmd):
                     
         try:
             self.annot_enum = enum.unique(
-                enum.Enum("Annotation", key_assignments))
+                enum.Enum("AnnotationKind", key_assignments))
         except ValueError as err:  # Non-unique keyboard keys
             print("Error: all keyboard keys should be different.")
         else:
