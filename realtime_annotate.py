@@ -259,7 +259,7 @@ class AnnotationList:
         return cls(
             cursor=annotations["cursor"],
             list_=[
-                TimestampedAnnotations(
+                TimestampedAnnotation(
                     Time(**dict(zip(("hours", "minutes", "seconds"), time))),
                     key_assignments(key))
                 for (time, key) in annotations["annotation_list"]
