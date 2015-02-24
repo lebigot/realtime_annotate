@@ -3,12 +3,11 @@
 """
 Real-time annotation tool.
 
-Annotations are timestamped. They contain predefined (and extendable)
-values.
+Annotations are timestamped. They contain user-defined values.
 
-Optionally, MIDI synthetizers can be partially controlled so that
-recordings start playing when a real-time annotation session starts,
-and stopped when it stops.
+Optionally, some realtime player (music player, video player, MIDI
+player,...) can be controlled so that annotation tasks start and stop
+at the same time as the player.
 
 (c) 2015 by Eric O. LEBIGOT (EOL)
 """
@@ -729,11 +728,8 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
 
-            # !! The time could be set automatically in the MIDI
-            # instrument as well, to a good precision.
-            # midiout.send_message(bytearray.fromhex("F0 7F 7F 06 44
-            # 06 01 01 01 10 0C 00 F7")) works in Logic Pro, but there
-            # is an offset of 1 hour (here, sets time to 1'16.480")
+            # !!!!!! Document set_time in __doc__ and help for --player
+            player_set_time(*self.time.to_HMS())
 
             print("Time in recording set to {}.".format(self.time))
 
@@ -900,16 +896,12 @@ class AnnotateShell(cmd.Cmd):
         recording reference. This recording must first be set with
         select_recording.
 
+        # !!!!! Recording should be removed: it might be a live show,
+        # etc.  lkjlkj
+        
         The annotations file must also contain annotation key
         definitions. This typically has to be done once after creating
         the file, with the command load_keys.
-
-        # !!!!! Remove all refs to MIDI
-        
-        The player should typically be started simultaneously.  If
-        possible, the MIDI instruments are automatically started.
-        They must be st to listen to MIDI Machine Control events
-        (MMC).
         """
 
         if self.annot_enum is None:
