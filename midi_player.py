@@ -68,7 +68,7 @@ def set_time(hours, minutes, seconds):
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
         
-    midiout.send_message(bytearray.fromhex(
+    midiout.send_message(bytes.fromhex(
         "F0 7F 7F 06 44 06 01 {hours:02X} {minutes:02X} {seconds:02X}"
         " {frames:02X} 00 F7".format(
             hours=hours, minutes=minutes, seconds=seconds,
