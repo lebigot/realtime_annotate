@@ -244,6 +244,28 @@ class AnnotationList:
                 ]
             }
 
+    @classmethod
+    def from_builtins_fmt(cls, key_assignments, annotations):
+        """
+        Reverse of to_builtins_fmt().
+
+        key_assignments -- enumeration (enum.Enum) for interpreting
+        the annotations. Its values must correspond to the annotation
+        values stored in annotations.
+        
+        annotations -- annotation list in the form returned by
+        to_builtins_fmt().
+        """
+        return cls(
+            cursor=annotations["cursor"],
+            list_=[
+                TimestampedAnnotations(
+                    Time(**dict(zip(("hours", "minutes", "seconds"), time))),
+                    key_assignments(key))
+                for (time, key) in annotations["annotation_list"]
+            ]
+        )
+        
 def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                    annot_enum):
     """
@@ -600,10 +622,7 @@ class AnnotateShell(cmd.Cmd):
 
         self.all_annotations = collections.defaultdict(
             AnnotationList,
-            {recording_ref: AnnotationList(
-                cursor=annotations["cursor"],
-                list_=AnnotationList.from_builtins_fmt(
-                    annotations["annotation_list"]))
+            {recording_ref: AnnotationList.from_builtins_fmt(annotations)
              for (recording_ref, annotations)
              in file_contents["annotations"].items()})
         
