@@ -83,9 +83,8 @@ def set_time(hours, minutes, seconds):
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
         
-    send_MMC_command(
-        bytes([0x44, 0x06, 0x01])  # ... or .fromhex("44 06 01")
-        +bytes([hours, minutes, seconds, int(round(25*fractional_seconds)), 0])
-        )
+    send_MMC_command(bytes([
+        0x44, 0x06, 0x01,
+        hours, minutes, seconds, int(round(25*fractional_seconds)), 0]))
 
 
