@@ -2,7 +2,9 @@
 Real-time annotations
 #####################
 
-``realtime_annotate.py`` is a real-time annotation program.
+``realtime_annotate.py`` is a real-time annotation program for Unix
+(and maybe Windows, but after replacing the curses module with an
+alternative—patches are welcome).
 
 The annotations handled by this program are entered in real-time with
 a **single key** (with a meaning, e.g., "i" for "interesting
@@ -13,7 +15,15 @@ Annotations have a **time stamp**. In a practical application, a piece
 of music, etc. plays alongside the program, and they have synchronized
 clocks (thanks to the command ``set_time``).
 
-.. !!! update all uses of YAML
+The program optionally automatically start and stop some player (music
+player, etc.) when starting and stopping the annotation process. An
+implementation for automatically starting and stopping MIDI
+instruments is provided.
+
+.. !!! update all uses of simple JSON => edit or automated
+   analysis simple and perenial,
+
+.. !!! YAML > JSON
    
 Annotations are stored in a file that can be relatively easily edited
 by hand if needed (a YAML file).
