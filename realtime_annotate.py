@@ -808,6 +808,10 @@ class AnnotateShell(cmd.Cmd):
                     if key.isdigit():
                         print("Error: digits are reserved keys.")
                         return
+                    # The other reserved keys are space and delete,
+                    # but space cannot be entered in the file, and
+                    # delete is cumbersome to enter, so this case is
+                    # not checked.
                     key_assignments[text] = key
 
         print("Key assignments loaded from file {}.".format(file_path))
