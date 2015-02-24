@@ -100,7 +100,7 @@ class TimestampedAnnotation:
         
         annotation -- annotation to be stored, as an enum.Enum.
         """
-        self.time = time
+        self.time = time  # Annotation timer time
         
         # The advantage of storing the annotation as an Enum instead
         # of just a key (Enum value)is that it can have a nice string
@@ -734,10 +734,9 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
 
-            # !!!!!!!! test
             player_module.set_time(*self.time.to_HMS())
 
-            print("Annotation recording time set to {}.".format(self.time))
+            print("Annotation timer set to {}.".format(self.time))
 
     def do_load_keys(self, file_path):
         """
