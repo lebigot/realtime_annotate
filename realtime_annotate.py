@@ -34,10 +34,10 @@ import json
 
 class Time(datetime.timedelta):
     # ! A datetime.timedelta is used instead of a datetime.time
-    # because the internal timer of this program must be added to the
-    # current recording timestamp so as to update it. This cannot be
-    # done with datetime.time objects (which cannot be added to a
-    # timedelta).    
+    # because the internal scheduler of this program must be added to
+    # the current annotation timestamp so as to update it. This cannot
+    # be done with datetime.time objects (which cannot be added to a
+    # timedelta).
     """
     Timestamp compatible with a datetime.timedelta.
     """
@@ -133,7 +133,7 @@ class TerminalNotHighEnough(Exception):
     
 class AnnotationList:
     """
-    List of annotations (for a single recording) sorted by timestamp,
+    List of annotations (for a single reference) sorted by timestamp,
     with a live cursor between annotations.
 
     Main attributes:
@@ -266,20 +266,21 @@ class AnnotationList:
             ]
         )
         
-def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
+def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                    annot_enum):
     """
-    Run the main real-time annotation loop and return the time in the
-    recording, when exiting.
+    Run the main real-time annotation loop and return the annotation
+    time at the time of exit.
 
     Displays and updates the given annotation list based on
     user command keys.
 
     stdscr -- curses.WindowObject for displaying information.
 
-    curr_rec_ref -- reference of the recording being annotated.
+    #!!!!!!!! rec > event
+    curr_event_ref -- reference of the event (recording...)  being annotated.
     
-    start_time -- time in the recording when play starts (Time object).
+    start_time -- starting annotation time (Time object).
     
     annotations -- AnnotationList to be updated.
 
@@ -295,25 +296,25 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     # Counters for the event scheduling:
     start_counter = time.monotonic()
 
-    # Starting the recording is better done close to setting
+    # Starting the player is better done close to setting
     # start_counter, so that there is not large discrepancy between
-    # the time in the recording and this time measured by this
+    # the time in the player and this time measured by this
     # function:
     player_start()    
     
     def time_to_counter(time):
         """
         Return the scheduler counter corresponding to the given
-        recording time.
+        annotation timestamp.
 
-        time -- recording time (datetime.timedelta, including Time).
+        time -- time (datetime.timedelta, including Time).
         """
         return (time-start_time).total_seconds() + start_counter
 
     def counter_to_time(counter):
         """
-        Return the recording time corresponding to the given scheduler
-        counter.
+        Return the annotation timestamp corresponding to the given
+        scheduler counter.
 
         counter -- scheduler counter (in seconds).
         """
@@ -345,14 +346,14 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     
     stdscr.clear()
     
-    stdscr.addstr(0, 0, "Recording:", curses.A_BOLD)
-    stdscr.addstr(0, 11, curr_rec_ref)
+    stdscr.addstr(0, 0, "Event:", curses.A_BOLD)
+    stdscr.addstr(0, 11, curr_event_ref)
     
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
     stdscr.addstr(2, 0, "Next annotation:", curses.A_BOLD)
         
-    stdscr.addstr(3, 0, "Time in recording:", curses.A_BOLD)
+    stdscr.addstr(3, 0, "Annotation timer:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
 
@@ -489,10 +490,10 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
         """
         nonlocal next_getkey_counter
 
-        # Current time in the recording:
-        recording_time = counter_to_time(next_getkey_counter)
+        # Current time in the annotation process:
+        annotation_time = counter_to_time(next_getkey_counter)
     
-        stdscr.addstr(3, 19, str(recording_time))
+        stdscr.addstr(3, 19, str(annotation_time))
         stdscr.clrtoeol()  # The time can have a varying size
 
         try:
@@ -541,7 +542,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                 
                 # An annotation key was pressed:
                 annotations.insert(TimestampedAnnotation(
-                    recording_time, annotation_kind))
+                    annotation_time, annotation_kind))
                 # Display update:
                 stdscr.scroll(-1)
                 stdscr.addstr(6, 0, str(annotations.last_annotation()))
@@ -589,7 +590,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     
 class AnnotateShell(cmd.Cmd):
     """
-    Shell for launching a real-time recording annotation loop.
+    Shell for launching a real-time annotation recording loop.
     """
     intro = "Type ? (or help) for help. Use <tab> for automatic completion."
     prompt = "> "
@@ -603,8 +604,8 @@ class AnnotateShell(cmd.Cmd):
 
         self.annotations_path = annotations_path
         
-        # Current recording to be annotated:
-        self.curr_rec_ref = None
+        # Current event to be annotated:  # !!!!!!!! rec > evnt
+        self.curr_event_ref = None
         
         # Reading of the existing annotations:
         if annotations_path.exists():
@@ -624,12 +625,12 @@ class AnnotateShell(cmd.Cmd):
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
-                {recording_ref:
+                {event_ref:
                  AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
-                 for (recording_ref, annotations)
+                 for (event_ref, annotations)
                  in file_contents["annotations"].items()})
 
-            self.do_list_recordings()
+            self.do_list_events()
 
         else:  # A new file must to be created
             self.annot_enum = None
@@ -679,16 +680,16 @@ class AnnotateShell(cmd.Cmd):
 
             # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
-            # annotations for those recording that the user
-            # touched. This would save memory and processing time, at
-            # the cost of slightly more complicated code (because the
-            # in-memory data would basically be an updated cache that
-            # has priority over the file data: handling this priority
-            # is not as straightforward as the current "read/write all
-            # recordings" method.
+            # annotations for those events that the user touched. This
+            # would save memory and processing time, at the cost of
+            # slightly more complicated code (because the in-memory
+            # data would basically be an updated cache that has
+            # priority over the file data: handling this priority is
+            # not as straightforward as the current "read/write all
+            # events" method.
             all_annotations_for_file = {
-                recording_ref: annotation_list.to_builtins_fmt()
-                for (recording_ref, annotation_list)
+                event_ref: annotation_list.to_builtins_fmt()
+                for (event_ref, annotation_list)
                 in self.all_annotations.items()
             }
 
@@ -713,10 +714,10 @@ class AnnotateShell(cmd.Cmd):
 
     def do_set_time(self, time):
         """
-        Set the current time in the recording to the given time.
+        Set the current annotation timer to the given time.
 
-        This time should typically be the time at which the play head
-        of the player is.
+        If a player is used, this time should typically be the play
+        head location.
 
         time -- time in S, M:S or H:M:S format.
         """
@@ -731,7 +732,7 @@ class AnnotateShell(cmd.Cmd):
 
             player_set_time(*self.time.to_HMS())
 
-            print("Time in recording set to {}.".format(self.time))
+            print("Annotation recording time set to {}.".format(self.time))
 
     def do_load_keys(self, file_path):
         """
@@ -893,12 +894,9 @@ class AnnotateShell(cmd.Cmd):
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
-        recording reference. This recording must first be set with
-        select_recording.
+        event reference. This event must first be set with
+        select_event.
 
-        # !!!!! Recording should be removed: it might be a live show,
-        # etc.  lkjlkj
-        
         The annotations file must also contain annotation key
         definitions. This typically has to be done once after creating
         the file, with the command load_keys.
@@ -909,17 +907,17 @@ class AnnotateShell(cmd.Cmd):
                   " command).")
             return
         
-        if self.curr_rec_ref is None:
-            print("Error: please select a recording to be annotated",
-                  "with select_recording.")
+        if self.curr_event_ref is None:
+            print("Error: please select an event to be annotated",
+                  "with select_event.")
             return
 
         try:
             
             # The real-time loop displays information in a curses window:
             self.time = curses.wrapper(
-                real_time_loop, self.curr_rec_ref, self.time,
-                self.all_annotations[self.curr_rec_ref],
+                real_time_loop, self.curr_event_ref, self.time,
+                self.all_annotations[self.curr_event_ref],
                 self.annot_enum)
             
         except TerminalNotHighEnough:
@@ -927,32 +925,32 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("Current timestamp: {}.".format(self.time))
 
-    def do_list_recordings(self, arg=None):
+    def do_list_events(self, arg=None):
         """
-        List annotated recordings.
+        List annotated events.
         """
 
         if self.all_annotations:
-            print("Annotated recordings (sorted alphabetically):")
-            for recording_ref in sorted(self.all_annotations):
-                print("- {}".format(recording_ref))
+            print("Annotated events (sorted alphabetically):")
+            for event_ref in sorted(self.all_annotations):
+                print("- {}".format(event_ref))
         else:
-            print("No annotated recording found.")
+            print("No annotated event found.")
             
-    def do_select_recording(self, arg):
+    def do_select_event(self, arg):
         """
-        Set the given recording reference as the current recording.
+        Set the given event reference as the current event.
 
         The current list of references can be obtained with
-        list_recordings.
+        list_events.
 
-        Annotations are attached to this recording.
+        Annotations are attached to this event.
         """
-        self.curr_rec_ref = arg
+        self.curr_event_ref = arg
 
-        # Annotation list for the current recording:
-        annotations = self.all_annotations[self.curr_rec_ref]
-        print("Current recording set to {}.".format(self.curr_rec_ref))
+        # Annotation list for the current event:
+        annotations = self.all_annotations[self.curr_event_ref]
+        print("Current event set to {}.".format(self.curr_event_ref))
         print("{} annotations found.".format(len(annotations)))
 
         last_annotation = annotations.last_annotation()
@@ -962,15 +960,15 @@ class AnnotateShell(cmd.Cmd):
         self.time = (last_annotation.time if last_annotation is not None
                      else Time())  # Start
 
-        print("Time in recording set to last annotation timestamp: {}."
+        print("Annotation timer set to last annotation timestamp: {}."
               .format(self.time))
 
-    def complete_select_recording(self, text, line, begidx, endidx):
+    def complete_select_event(self, text, line, begidx, endidx):
         """
-        Complete recording references with the known references.
+        Complete event references with the known references.
         """
-        return [recording_ref for recording_ref in sorted(self.all_annotations)
-                if recording_ref.startswith(text)]
+        return [event_ref for event_ref in sorted(self.all_annotations)
+                if event_ref.startswith(text)]
         
 if __name__ == "__main__":
     
@@ -990,8 +988,8 @@ if __name__ == "__main__":
               " function player_set_time(hours, minutes, seconds)."
               " player_start() is called when the annotation process starts,"
               " player_stop() when it is stopped."
-              " player_set_time() is called when the user sets the current"
-              " annotation time."
+              " player_set_time() is called when the user sets the time of the"
+              " annotation timer."
               " Annotations times can thus be"
               " synchronized with the elapsed time in a piece of music, etc."))
     
