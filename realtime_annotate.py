@@ -304,7 +304,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # start_counter, so that there is not large discrepancy between
     # the time in the player and this time measured by this
     # function:
-    player_module.player_start()    
+    player_module.start()    
     
     def time_to_counter(time):
         """
@@ -558,7 +558,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # Stopping the player is best done as soon as possible, so
             # as to keep the synchronization between self.time and the
             # player time:
-            player_module.player_stop()
+            player_module.stop()
             
             # No new scheduling of a possible user key reading.
 
@@ -735,7 +735,7 @@ class AnnotateShell(cmd.Cmd):
                                         time_parts[::-1])))
 
             # !!!!!!!! test
-            player_module.player_set_time(*self.time.to_HMS())
+            player_module.set_time(*self.time.to_HMS())
 
             print("Annotation recording time set to {}.".format(self.time))
 
@@ -988,12 +988,12 @@ if __name__ == "__main__":
               " (music player, etc.)."
               " The module must be in the Python module path (working"
               " directory, directory of this program, etc.)"
-              " The module must provide a player_start() and"
-              " a player_stop() function (that take no argument), and a"
-              " function player_set_time(hours, minutes, seconds)."
-              " player_start() is called when the annotation process starts,"
-              " player_stop() when it is stopped."
-              " player_set_time() is called when the user sets the time of the"
+              " The module must provide a start() and"
+              " a stop() function (that take no argument), and a"
+              " function set_time(hours, minutes, seconds)."
+              " start() is called when the annotation process starts,"
+              " stop() when it is stopped."
+              " set_time() is called when the user sets the time of the"
               " annotation timer."
               " Annotations times can thus be"
               " synchronized with the elapsed time in a piece of music, etc."))
@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    player_functions = ["player_start", "player_stop", "player_set_time"]
+    player_functions = ["start", "stop", "set_time"]
     if args.player:
         player_module = __import__(args.player, fromlist=player_functions)
     else:  # Default player (which does nothing):
