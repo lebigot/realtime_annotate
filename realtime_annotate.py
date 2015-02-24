@@ -121,7 +121,11 @@ class AnnotationList:
     with a live cursor between annotations.
 
     Main attributes:
-    - list_: list of Annotations, sorted by increasing timestamp.
+    
+    - list_: list of Annotations, sorted by increasing timestamp. The
+      elements of the list can be accessed directly by subscripting
+      the AnnotationList (instead of list_).
+    
     - cursor: index between annotations (0 = before the first annotation).
     """
     def __init__(self):
@@ -159,6 +163,16 @@ class AnnotationList:
         except IndexError:
             return None
 
+    def last_annotation(self):
+        """
+        Return the annotation just before the cursor, or None if there
+        is none.
+        """
+        try:
+            return self[self.cursor-1]
+        except IndexError:
+            return None
+        
     def insert(self, annotation):
         """
         Insert the given annotation at the cursor location and moves
@@ -281,9 +295,9 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
     stdscr.addstr("<Del>: delete last annotation\n")
     # !!!! Check in doc that __members__ is correct:
     # !!! Check about the order: is it fixed? IF NOT it should be fixed
-    # at last to alphabetical
-    for (command, key) in annot_enum.__members__.items():
-        stdscr.addstr("{}: {}\n".format(key, command))
+    # at last to alphabetical. It looks like it is fixed: I see a simple enumeration represented by an OrderedDict:
+    for annotation in annot_enum:
+        stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
         
     ## Previous annotations:
@@ -310,9 +324,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
             slice_end = None  # For a Python slice
 
         for (line_idx, annotation) in enumerate(
-            annotations.list_[
-                annotations.cursor-1 : slice_end :-1],
-            6):
+            annotations[annotations.cursor-1 : slice_end :-1], 6):
 
             stdscr.addstr(line_idx, 0, str(annotation))
 
@@ -429,12 +441,11 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
 
                 if key.isdigit():
                     if annotations.cursor:
-                        (annotations.list_[annotations.cursor-1]
-                         .set_value(int(key)))
+                        (annotations.last_annotation().set_value(int(key)))
                         # The screen must be updated so as to reflect
                         # the new value:
                         stdscr.addstr(
-                            6, 0,  str(annotations.list_[annotations.cursor-1]))
+                            6, 0,  str(annotations.last_annotation()))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
@@ -453,7 +464,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                         if index_new_prev_annot >= 0:
                             stdscr.addstr(
                                 5+num_prev_annot, 0,
-                                str(annotations.list_[index_new_prev_annot]))
+                                str(annotations[index_new_prev_annot]))
                         # Instant feedback:
                         stdscr.refresh()
 
@@ -467,7 +478,7 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                     recording_time, annotation))
                 # Display update:
                 stdscr.scroll(-1)
-                stdscr.addstr(6, 0, str(annotation))
+                stdscr.addstr(6, 0, str(annotations))  #!!!
                 stdscr.refresh()  # Instant feedback
 
         
@@ -532,6 +543,10 @@ class AnnotateShell(cmd.Cmd):
         #
         # The key assignments (represented as an enum.Enum) might not
         # be defined yet:
+
+        # !!!!!! Interpret the file contents (conversion of key
+        # assignments to enum.Enum)
+    
         self.annot_enum = file_contents.get("key_assignments")
         self.all_annotations = file_contents["annotations"]
         
@@ -567,8 +582,19 @@ class AnnotateShell(cmd.Cmd):
         with self.annotations_path.open("w") as annotations_file:
             # !!!! It would be more robust if the whole structure was
             # already in the object
+
+            # A serializable version of the annotation enumeration is
+            # saved:
+            #
+            if self.annot_enum is None:
+                serializable_annot_enum = None
+            else:
+                seriablizable_annot_enum = collections.OrderedDict(
+                    (annot.key, annot.value) for annot in self.annot_enum)
+            
+        
             yaml.dump({"annotations": self.all_annotations,
-                       "key_assignments": self.annot_enum},
+                       "key_assignments": serializable_annot_enum},
                       annotations_file)
         print("Up-to-date annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
@@ -617,8 +643,8 @@ class AnnotateShell(cmd.Cmd):
         the annotations. This can be used for modifying or updating
         the annotations associated with a file.
 
-        # !!!!!!!! Add WARNINGS about modifications here
-
+        # !!!!!!!! Add WARNINGS about modifications here.
+        
         The format is as follows:
 
         # Musical annotations
@@ -644,8 +670,10 @@ class AnnotateShell(cmd.Cmd):
         if not file_path:
             print("Error: please provide a file path.")
             return
-        
-        key_assignments = {}
+
+        # It is convenient to keep the annotations in the same order
+        # as in the file:
+        key_assignments = collections.OrderedDict()
 
         try:
             keys_file = open(file_path)
@@ -678,10 +706,16 @@ class AnnotateShell(cmd.Cmd):
                         return
                     key_assignments[text] = key
 
-        self.annot_enum = enum.Enum("Annotation", key_assignments)
-    
         print("Key assignments loaded from file {}.".format(file_path))
-        print("They are listed when running the annotate command.")
+                    
+        try:
+            self.annot_enum = enum.unique(
+                enum.Enum("Annotation", key_assignments))
+        except ValueError as err:  # Non-unique keyboard keys
+            print("Error: all keyboard keys should be different.")
+        else:
+            print("Key assignments are listed when running the annotate"
+                  " command.")
 
     def complete_load_keys(self, text, line, begidx, endidx):
         """
