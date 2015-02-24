@@ -32,22 +32,15 @@ player_start = lambda: None  # Start the player (at current location)
 player_stop = player_start  # Stops the player (stays at current location)
 
 class Time(datetime.timedelta):
-    """
-    Timestamp: time since the beginning of a recording.
-    """
-    
     # ! A datetime.timedelta is used instead of a datetime.time
     # because the internal timer of this program must be added to the
     # current recording timestamp so as to update it. This cannot be
     # done with datetime.time objects (which cannot be added to a
-    # timedelta).
-    def __str__(self):
-        """
-        Same representation as a datetime.timedelta, but without
-        fractional seconds.
-        """
-        return "{}.{:.0f}".format(
-            super().__str__().split(".", 1)[0], self.microseconds/1e5)
+    # timedelta).    
+    """
+    Timestamp: time since the beginning of a recording.
+    """
+    
 
     def __add__(self, other):
         """
@@ -60,6 +53,29 @@ class Time(datetime.timedelta):
         # built-in type:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
 
+    def to_HMS(self):
+        """
+        Returns the time as a tuple (hours, minutes, seconds), with
+        seconds and minutes between 0 and 60 (not included). The
+        number of hours has no limit.
+
+        Hours and minutes are integers.
+
+        Not tested with a negative duration.
+
+        This can be inverted with Time(hours=..., minutes=..., seconds=...).
+        """
+        total_seconds = self.days*24*3600+self.seconds+self.microseconds/1e6
+        (hours, minutes) = divmod(total_seconds, 3600)
+        (minutes, seconds) = divmod(minutes, 60)
+        return (int(hours), int(minutes), seconds)
+    
+    def __str__(self):
+        """
+        ...HH:MM:SS.d format.
+        """
+        return "{:02}:{:02}:{:02.1f}".format(*self.to_builtins_fmt())
+
 class TimestampedAnnotation:
     """
     Annotation made at a specific time.
@@ -68,7 +84,7 @@ class TimestampedAnnotation:
     - time (datetime.timedelta)
     - annotation (enum.Enum)
 
-    An value can be added to the annotation. It is stored in the
+    A value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
     an intensity (such as a small glitch, or a very uninspired part).
     """
@@ -81,6 +97,7 @@ class TimestampedAnnotation:
         annotation -- annotation to be stored, as an enum.Enum.
         """
         self.time = time
+        
         # The advantage of storing the annotation as an Enum instead
         # of just a key (Enum value)is that it can have a nice string
         # representation (Enum name), and that it preserve the
@@ -122,15 +139,21 @@ class AnnotationList:
     Main attributes:
     
     - list_: list of TimestampedAnnotations, sorted by increasing
-      timestamp. List-like operations on this list can be performed
+      timestamps. List-like operations on this list can be performed
       directly on the AnnotationList: len(), subscripting, and
       iteration.
     
     - cursor: index between annotations (0 = before the first annotation).
     """
-    def __init__(self):
-        self.list_ = []
-        self.cursor = 0
+    def __init__(self, list_=None, cursor=0):
+        """
+        list_ -- list of TimestampedAnnotations.
+        
+        cursor -- insertion index for the next annotation (in
+        timestamp order).
+        """
+        self.list_ = [] if list_ is None else list_
+        self.cursor = cursor
 
     def __len__(self):
         return len(self.list_)
@@ -199,7 +222,28 @@ class AnnotationList:
         """
         self.cursor -= 1        
         del self.list_[self.cursor]
-    
+
+    def to_builtins_fmt(self):
+        """
+        Return a version of the AnnotationList that only uses built-in
+        Python types, and which is suitable for lossless serialization
+        through json.
+
+        This is the reverse of from_builtins_fmt().
+        """
+
+        return {
+            "cursor": self.cursor,
+            "annotation_list": [
+                (timed_annotation.time.to_HMS(),
+                 # Only the keyboard key is saved, so that the
+                 # description texts can be updated
+                 # independently:
+                 timed_annotation.annotation.value)
+                for timed_annotation in self
+                ]
+            }
+
 def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                    annot_enum):
     """
@@ -483,6 +527,12 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
 
         
         if key == " ":
+
+            # Stopping the player is best done as soon as possible, so
+            # as to keep the synchronization between self.time and the
+            # player time:
+            player_stop()
+            
             # No new scheduling of a possible user key reading.
 
             # Existing scheduled events (highlighting and transfer of
@@ -499,7 +549,6 @@ def real_time_loop(stdscr, curr_rec_ref, start_time, annotations,
                 except ValueError:
                     pass
 
-            player_stop()
 
         else:
             next_getkey_counter += 0.1  # Seconds
@@ -537,10 +586,6 @@ class AnnotateShell(cmd.Cmd):
         
         # Reading of the existing annotations:
         with annotations_path.open("r") as annotations_file:
-            # !!!! For JSON: load with json.loads(json_str,
-            # object_pairs_hook=collections.OrderedDict), so as to
-            # preserve the order of the annotations
-            # !!!!!!!! Also make the annotations a defaultdict!
             file_contents = json.load(annotations_file)
 
         # Extraction of the file contents:
@@ -553,8 +598,14 @@ class AnnotateShell(cmd.Cmd):
             if file_contents["key_assignments"] is not None
             else None)
 
-        # !!!!!!! Convert from simple format:
-        self.all_annotations = file_contents["annotations"]
+        self.all_annotations = collections.defaultdict(
+            AnnotationList,
+            {recording_ref: AnnotationList(
+                cursor=annotations["cursor"],
+                list_=AnnotationList.from_builtins_fmt(
+                    annotations["annotation_list"]))
+             for (recording_ref, annotations)
+             in file_contents["annotations"].items()})
         
         self.do_list_recordings()
 
@@ -592,8 +643,6 @@ class AnnotateShell(cmd.Cmd):
                 else [(annot.name, annot.value) for annot in self.annot_enum]
             )
 
-            # !!!!! The annotations are converted to their file format:
-            
             # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
             # annotations for those recording that the user
@@ -604,17 +653,7 @@ class AnnotateShell(cmd.Cmd):
             # is not as straightforward as the current "read/write all
             # recordings" method.
             all_annotations_for_file = {
-                recording_ref: {
-                    "cursor": annotation_list.cursor,
-                    "annotations": [
-                        (timed_annotation.time,
-                         # Only the keyboard key is saved, so that the
-                         # description texts can be updated
-                         # independently:
-                         timed_annotation.annotation.value)
-                        for timed_annotation in annotation_list
-                    ]
-                }
+                recording_ref: annotation_list.to_builtins_fmt()
                 for (recording_ref, annotation_list)
                 in self.all_annotations.items()
             }
@@ -913,7 +952,8 @@ if __name__ == "__main__":
             json.dump(
                 # The format is a dictionary, for easier extensions
                 # (that let previous formats be read):
-                {"key_assignments": None, "annotations": {}},
+                {"key_assignments": None,
+                 "annotations": AnnotationList().to_builtins_fmt()},
                 annotations_file)
         print("New annotation file created.")
 
