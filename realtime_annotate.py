@@ -680,7 +680,7 @@ class AnnotateShell(cmd.Cmd):
 
             json.dump({"annotations": all_annotations_for_file,
                        "key_assignments": annot_enum_for_file},
-                      annotations_file)
+                      annotations_file, indent=2)
             
         print("Up-to-date annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
@@ -729,17 +729,13 @@ class AnnotateShell(cmd.Cmd):
         the annotations. This can be used for modifying or updating
         the annotations associated with a file.
 
-        # !!!!!!!! Add WARNINGS about modifications here.
-        
         The format is as follows:
 
         # Musical annotations
         
         s    start (between pieces, before the beginning)
         e    end (0 = could be an end if needed)
-        i    inspired (0 = somewhat, 2 = nicely)
-        u    uninspired (0 = a little, 2 = very much)
-        g    glitch (0 = small, 2 = major)
+        ...
 
         The first letter is a keyboard key (case sensitive). Typing
         this key will insert the annotation described afterwards (free
@@ -750,6 +746,26 @@ class AnnotateShell(cmd.Cmd):
         (and optionally of any numeric modifier).
 
         Empty lines and lines starting by # are ignored.
+
+        IMPORTANTT: keys are used for storing annotations in
+        files. This has some important consequences:
+
+        WARNINGS:
+        
+        1) A key cannot be modified. A key cannot be removed.
+        
+        2) Texts can change, but the meanings should probably not be
+        altered in a way that invalidates previous annotations (e.g.,
+        if "s" meant "start of a piece", then "s" should keep meaning
+        this, even if the text description changes).
+
+        3) The meanings can normally be refined or extended (e.g., if
+        "s" meant "start of a piece", it's OK to extend its meaning to
+        "start of a piece or of an improvisation", since the new
+        meaning encompasses the previous one and therefore does not
+        invalidate previous annotations).
+
+        New keys can be added.
         """
 
         # Common error: no file name given:
@@ -788,6 +804,9 @@ class AnnotateShell(cmd.Cmd):
                         print("Error: keys must be single characters. Error"
                               " in line {} with key '{}'."
                               .format(line_num, key))
+                        return
+                    if key.isdigit():
+                        print("Error: digits are reserved keys.")
                         return
                     key_assignments[text] = key
 
@@ -969,6 +988,9 @@ if __name__ == "__main__":
         # An empty annotation database is created:
         with annotations_path.open("w") as annotations_file:
             # Annotations for unknown recordings are empty lists by default:
+
+            # !!!!!!! This would ideally be factored, so that there is
+            # !!!!!!! no duplication inside do_save(). How to do this?
             json.dump(
                 # The format is a dictionary, for easier extensions
                 # (that let previous formats be read):
