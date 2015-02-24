@@ -74,7 +74,7 @@ class Time(datetime.timedelta):
         """
         ...HH:MM:SS.d format.
         """
-        return "{:02}:{:02}:{:02.1f}".format(*self.to_builtins_fmt())
+        return "{:02}:{:02}:{:02.1f}".format(*self.to_HMS())
 
 class TimestampedAnnotation:
     """
