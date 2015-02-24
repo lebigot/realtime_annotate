@@ -590,7 +590,7 @@ class AnnotateShell(cmd.Cmd):
                 serializable_annot_enum = None
             else:
                 seriablizable_annot_enum = collections.OrderedDict(
-                    (annot.key, annot.value) for annot in self.annot_enum)
+                    (annot.name, annot.value) for annot in self.annot_enum)
             
         
             yaml.dump({"annotations": self.all_annotations,
