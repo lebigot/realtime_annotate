@@ -65,19 +65,6 @@ file. The format is as follows::
 
 .. !!! Include the following
    
-# Mapping from keyboard keys to the corresponding enumeration name
-# (which must be a valid Python attribute name), followed by a blank
-# and help text. The keys cannot be changed, as they are represent
-# annotations in files.
-#
-# WARNING: Entries can only be:
-# - extended in their name and help text (previous meanings should not
-# be altered), and
-# - added, and not removed, because this would make previous
-# annotation files illegible.
-#
-# WARNING: Some keys are reserved for the control of the real-time
-# interface: space, delete, and digits, and cannot be present here.
 
 
 

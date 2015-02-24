@@ -9,7 +9,12 @@ values.
 Optionally, MIDI synthetizers can be partially controlled so that
 recordings start playing when a real-time annotation session starts,
 and stopped when it stops.
+
+(c) 2015 by Eric O. LEBIGOT (EOL)
 """
+
+__version__ = "0.9"
+__author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 import collections
 import enum
@@ -25,11 +30,6 @@ import bisect
 import sys
 import glob
 import json
-
-# Default player controls: no-ops. These functions are meant to be
-# overridden if possible.
-player_start = lambda: None  # Start the player (at current location)
-player_stop = player_start  # Stops the player (stays at current location)
 
 class Time(datetime.timedelta):
     # ! A datetime.timedelta is used instead of a datetime.time
@@ -988,56 +988,33 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
+        "--player", action="store",
+        help=("Name of Python module that controls some realtime player"
+              " (music player, etc.)."
+              # !!!!!! Test working dir
+              " The module must be in the Python path (working directory,"
+              " directory of this program, etc.)"
+              " The module must provide a player_start() and"
+              " a player_stop() function (that take no argument). These"
+              " functions are respectively called when starting and stopping"
+              " the annotation process: the annotations times can be"
+              " synchronized with the elapsed time in a piece of music, etc."))
+    
+    parser.add_argument(
         "annotation_file",
         help=("Path to the annotation file (it will be created if it does not"
               " yet exist)"))
-    
+
     args = parser.parse_args()
 
-    ####################
-
-    annotations_path = pathlib.Path(args.annotation_file)
-    # Support for a MIDI player:
-    
-    try:
-        # simplecoremidi 0.3 almost works: it needs an undocumented
-        # initial SysEx which is ignored, which is not clean.
-        #
-        # More generally, any module that can send MIDI messages would
-        # work.
-        import rtmidi
-
-    except ImportError:
-        print("MIDI support not available.",
-              "It can be enabled with the python-rtmidi module.")
-
+    if args.player:
+        player_module = __import__(args.player,
+                                   fromlist=["player_start", "player_stop"])
+        player_start = player_module.player_start
+        player_stop = player_module.player_stop
     else:
-
-        print("MIDI synthetizer support enabled: make sure that your",
-              "synthetizer listens")
-        print("to MMC messages (in Logic Pro: menu File > Project",
-              "Settings > Synchronization")
-        print("> MIDI > Listen to MMC Input).")
-
-        # ! The initialization code is from the documentation (it is
-        # required):
-        midiout = rtmidi.MidiOut()
-        if midiout.get_ports():
-            midiout.open_port(0)
-        else:
-            midiout.open_virtual_port("realtime_annotate.py")
-
-        def send_MMC_command(command):
-            """
-            Send a MIDI MMC command.
-
-            Referene: http://en.wikipedia.org/wiki/MIDI_Machine_Control.
-
-            command -- value of the command (e.g. play = 2, stop = 1, etc.)
-            """
-            midiout.send_message((0xf0, 0x7f, 0x7f, 0x06, command, 0xf7))
-
-        player_start = lambda: send_MMC_command(2)
-        player_stop = lambda: send_MMC_command(1)
-
-    AnnotateShell(annotations_path).cmdloop()
+        # The default player controls are no-ops:
+        player_start = lambda: None
+        player_stop = player_start
+        
+    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
