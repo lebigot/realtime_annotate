@@ -8,6 +8,9 @@ stopping MIDI devices.
 __version__ = "0.9"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
+# Reference for the MIDI Machine Control sequences:
+# http://en.wikipedia.org/wiki/MIDI_Machine_Control.
+
 import sys
 import math
 
@@ -40,8 +43,6 @@ def send_MMC_command(command):
     """
     Send a MIDI Machine Control command.
 
-    Referene: http://en.wikipedia.org/wiki/MIDI_Machine_Control.
-
     command -- value of the command (e.g. play = 2, stop = 1, etc.)
     """
     midiout.send_message((0xf0, 0x7f, 0x7f, 0x06, command, 0xf7))
@@ -63,10 +64,11 @@ def set_time(hours, minutes, seconds):
     """
 
     # The seconds must be split into integer seconds and fractional seconds:
-    integer_seconds, fractional_seconds = math.modf(seconds)
-    
+    fractional_seconds, seconds = math.modf(seconds)
+    seconds = int(seconds)
+        
     midiout.send_message(bytearray.fromhex(
-        "F0 7F 7F 06 44 06 01 {hours:2x} {minutes:2x} {seconds:2x} {frames:2x}"
-        " {subframes} F7".format(
-            hours=hours+1, minutes=minutes, seconds=integer_seconds,
+        "F0 7F 7F 06 44 06 01 {hours:02X} {minutes:02X} {seconds:02X}"
+        " {frames:02X} 00 F7".format(
+            hours=hours+1, minutes=minutes, seconds=seconds,
             frames=int(round(25*fractional_seconds)))))
