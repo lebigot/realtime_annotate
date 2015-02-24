@@ -92,13 +92,16 @@ class TimestampedAnnotation:
     optional 'value' attribute. This is typically used for indicating
     an intensity (such as a small glitch, or a very uninspired part).
     """
-    def __init__(self, time, annotation):
+    def __init__(self, time, annotation, value=None):
         """
         Annotation represented by the given keyboard key.
 
         time -- timestamp for the annotation, as a datetime.timedelta.
         
         annotation -- annotation to be stored, as an enum.Enum.
+
+        value -- non-None value associated with the annotation. If
+        None, no "value" attribute is created.
         """
         self.time = time
         
@@ -107,6 +110,9 @@ class TimestampedAnnotation:
         # representation (Enum name), and that it preserve the
         # associated key (which can then be saved to a file, etc.):
         self.annotation = annotation
+
+        if value is not None:
+            self.value = value
     
     def set_value(self, value):
         """
@@ -243,10 +249,13 @@ class AnnotationList:
                  # Only the keyboard key is saved, so that the
                  # description texts can be updated
                  # independently:
-                 timed_annotation.annotation.value)
+                 [timed_annotation.annotation.value]
+                 +([timed_annotation.value]
+                   if hasattr(timed_annotation, "value") else [])
+                )
                 for timed_annotation in self
-                ]
-            }
+            ]
+        }
 
     @classmethod
     def from_builtins_fmt(cls, key_assignments, annotations):
@@ -265,8 +274,10 @@ class AnnotationList:
             list_=[
                 TimestampedAnnotation(
                     Time(**dict(zip(("hours", "minutes", "seconds"), time))),
-                    key_assignments(key))
-                for (time, key) in annotations["annotation_list"]
+                    key_assignments(annotation[0]),
+                    annotation[1] if len(annotation) > 1 else None
+                )
+                for (time, annotation) in annotations["annotation_list"]
             ]
         )
         
