@@ -24,8 +24,7 @@ import sched
 import bisect
 import sys
 import glob
-
-import yaml
+import json
 
 # Default player controls: no-ops. These functions are meant to be
 # overridden if possible.
@@ -67,7 +66,7 @@ class TimestampedAnnotation:
 
     Main attributes:
     - time (datetime.timedelta)
-    - key (single character)
+    - annotation (enum.Enum)
 
     An value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
@@ -83,9 +82,9 @@ class TimestampedAnnotation:
         """
         self.time = time
         # The advantage of storing the annotation as an Enum instead
-        # of just a key is that it can have a nice string
-        # representation, and that it preserve the associated key
-        # (which can then be saved to a file, etc.):
+        # of just a key (Enum value)is that it can have a nice string
+        # representation (Enum name), and that it preserve the
+        # associated key (which can then be saved to a file, etc.):
         self.annotation = annotation
     
     def set_value(self, value):
@@ -122,9 +121,10 @@ class AnnotationList:
 
     Main attributes:
     
-    - list_: list of Annotations, sorted by increasing timestamp. The
-      elements of the list can be accessed directly by subscripting
-      the AnnotationList (instead of list_).
+    - list_: list of TimestampedAnnotations, sorted by increasing
+      timestamp. List-like operations on this list can be performed
+      directly on the AnnotationList: len(), subscripting, and
+      iteration.
     
     - cursor: index between annotations (0 = before the first annotation).
     """
@@ -135,6 +135,15 @@ class AnnotationList:
     def __len__(self):
         return len(self.list_)
 
+    def __getitem__(self, slice):
+        """
+        Return the annotations from the given slice.
+        """
+        return self.list_[slice]
+
+    def __iter__(self):
+        return iter(self.list_)
+    
     def move_cursor(self, time):
         """
         Set the internal cursor so that an annotation at the given
@@ -146,12 +155,6 @@ class AnnotationList:
         """
         self.cursor = bisect.bisect(
             [annotation.time for annotation in self.list_], time)
-
-    def __getitem__(self, slice):
-        """
-        Return the annotations from the given slice.
-        """
-        return self.list_[slice]
     
     def next_annotation(self):
         """
@@ -534,18 +537,23 @@ class AnnotateShell(cmd.Cmd):
         
         # Reading of the existing annotations:
         with annotations_path.open("r") as annotations_file:
-            file_contents = yaml.load(annotations_file)
+            # !!!! For JSON: load with json.loads(json_str,
+            # object_pairs_hook=collections.OrderedDict), so as to
+            # preserve the order of the annotations
+            # !!!!!!!! Also make the annotations a defaultdict!
+            file_contents = json.load(annotations_file)
 
         # Extraction of the file contents:
         #
         # The key assignments (represented as an enum.Enum) might not
         # be defined yet:
 
+        self.annot_enum = (
+            enum.Enum("AnnotationKind", file_contents["key_assignments"])
+            if file_contents["key_assignments"] is not None
+            else None)
 
-        self.annot_enum = (enum.Enum("AnnotationKind",
-                                     file_contents["key_assignments"])
-                           if file_contents["key_assignments"] is not None
-                           else None)
+        # !!!!!!! Convert from simple format:
         self.all_annotations = file_contents["annotations"]
         
         self.do_list_recordings()
@@ -577,21 +585,42 @@ class AnnotateShell(cmd.Cmd):
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
 
-            # A serializable version of the annotation enumeration is
-            # saved:
-            #
-            if self.annot_enum is None:
-                serializable_annot_enum = None
-            else:
-                # The order of the enumerations is preserved:
-                serializable_annot_enum = collections.OrderedDict(
-                    (annot.name, annot.value) for annot in self.annot_enum)
+            # Serializable version of the possible annotations:
+            annot_enum_for_file = (
+                None if self.annot_enum is None
+                # The order of the enumerations is preserved:                
+                else [(annot.name, annot.value) for annot in self.annot_enum]
+            )
+
+            # !!!!! The annotations are converted to their file format:
             
-            # !!!!! Update with new "basic"/flat format for
-            # self.all_annotations
-        
-            yaml.dump({"annotations": self.all_annotations,
-                       "key_assignments": serializable_annot_enum},
+            # !! Another architecture would consist in only keep in
+            # memory and converting (upon writing and reading) the
+            # annotations for those recording that the user
+            # touched. This would save memory and processing time, at
+            # the cost of slightly more complicated code (because the
+            # in-memory data would basically be an updated cache that
+            # has priority over the file data: handling this priority
+            # is not as straightforward as the current "read/write all
+            # recordings" method.
+            all_annotations_for_file = {
+                recording_ref: {
+                    "cursor": annotation_list.cursor,
+                    "annotations": [
+                        (timed_annotation.time,
+                         # Only the keyboard key is saved, so that the
+                         # description texts can be updated
+                         # independently:
+                         timed_annotation.annotation.value)
+                        for timed_annotation in annotation_list
+                    ]
+                }
+                for (recording_ref, annotation_list)
+                in self.all_annotations.items()
+            }
+
+            json.dump({"annotations": all_annotations_for_file,
+                       "key_assignments": annot_enum_for_file},
                       annotations_file)
             
         print("Up-to-date annotations (and key assignments) saved to {}."
@@ -843,7 +872,7 @@ class AnnotateShell(cmd.Cmd):
         
         # The time of the last annotation before the cursor is
         # "just" before when the user last stopped:
-        self.time = (last_annotation.time if last_annotation is not None:
+        self.time = (last_annotation.time if last_annotation is not None
                      else Time())  # Start
 
         print("Time in recording set to last annotation timestamp: {}."
@@ -881,11 +910,10 @@ if __name__ == "__main__":
         # An empty annotation database is created:
         with annotations_path.open("w") as annotations_file:
             # Annotations for unknown recordings are empty lists by default:
-            yaml.dump(
+            json.dump(
                 # The format is a dictionary, for easier extensions
                 # (that let previous formats be read):
-                {"key_assignments": None,
-                 "annotations": collections.defaultdict(AnnotationList)},
+                {"key_assignments": None, "annotations": {}},
                 annotations_file)
         print("New annotation file created.")
 
