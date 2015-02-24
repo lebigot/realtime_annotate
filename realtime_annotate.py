@@ -17,6 +17,10 @@ the same times as the annotation process).
 __version__ = "0.9"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
+# !! The optional player driven by this program must be defined by
+# functions in a module named player_module. See the main program for
+# an example.
+
 import collections
 import enum
 import pathlib
@@ -300,7 +304,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # start_counter, so that there is not large discrepancy between
     # the time in the player and this time measured by this
     # function:
-    player_start()    
+    player_module.player_start()    
     
     def time_to_counter(time):
         """
@@ -554,7 +558,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # Stopping the player is best done as soon as possible, so
             # as to keep the synchronization between self.time and the
             # player time:
-            player_stop()
+            player_module.player_stop()
             
             # No new scheduling of a possible user key reading.
 
@@ -730,7 +734,8 @@ class AnnotateShell(cmd.Cmd):
             self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
                                         time_parts[::-1])))
 
-            player_set_time(*self.time.to_HMS())
+            # !!!!!!!! test
+            player_module.player_set_time(*self.time.to_HMS())
 
             print("Annotation recording time set to {}.".format(self.time))
 
@@ -1000,14 +1005,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    player_functions = ["player_start", "player_stop", "player_set_time"]
     if args.player:
-        player_module = __import__(args.player,
-                                   fromlist=["player_start", "player_stop"])
-        player_start = player_module.player_start
-        player_stop = player_module.player_stop
-    else:
-        # The default player controls are no-ops:
-        player_start = lambda: None
-        player_stop = player_start
+        player_module = __import__(args.player, fromlist=player_functions)
+    else:  # Default player (which does nothing):
+        player_module = sys[__name__]  # This module
+        for func_name in player_functions:
+            setattr(player_module, func_name, lambda *args: None)
         
     AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
