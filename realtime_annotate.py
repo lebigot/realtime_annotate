@@ -652,6 +652,24 @@ class AnnotateShell(cmd.Cmd):
                 self.do_save()
         atexit.register(save_if_needed)
 
+    @property
+    def time(self):
+        """
+        Time of the annotation timer.
+        """
+        return self._time
+
+    @time.setter
+    def time(self, time):
+        """
+        Set both the annotation timer and the player time to the given
+        time.
+
+        time -- Time object.
+        """
+        self._time = time
+        player_module.set_time(*time.to_HMS())
+    
     def emptyline(self):
         pass  # No repetition of the last command
     
@@ -731,8 +749,8 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.update_times(Time(**dict(zip(["seconds", "minutes", "hours"],
-                                              time_parts[::-1]))))
+            self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
+                                        time_parts[::-1])))
 
             print("Annotation timer set to {}.".format(self.time))
 
@@ -917,10 +935,10 @@ class AnnotateShell(cmd.Cmd):
         try:
             
             # The real-time loop displays information in a curses window:
-            self.update_times(curses.wrapper(
+            self.time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.time,
                 self.all_annotations[self.curr_event_ref],
-                self.annot_enum))
+                self.annot_enum)
             
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
@@ -959,19 +977,9 @@ class AnnotateShell(cmd.Cmd):
         
         # The time of the last annotation before the cursor is
         # "just" before when the user last stopped:
-        self.update_times(last_annotation.time if last_annotation is not None
-                          else Time())
+        self.time = (last_annotation.time if last_annotation is not None
+                     else Time())
         print("Time set to last annotation timestamp: {}.".format(self.time))
-
-    def update_times(self, time):
-        """
-        Set both the annotation timer and the player time to the given
-        time.
-
-        time -- Time object.
-        """
-        self.time = time
-        player_module.set_time(*time.to_HMS())
         
     def complete_select_event(self, text, line, begidx, endidx):
         """
