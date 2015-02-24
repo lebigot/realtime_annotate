@@ -622,7 +622,8 @@ class AnnotateShell(cmd.Cmd):
 
         self.all_annotations = collections.defaultdict(
             AnnotationList,
-            {recording_ref: AnnotationList.from_builtins_fmt(annotations)
+            {recording_ref:
+             AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
              for (recording_ref, annotations)
              in file_contents["annotations"].items()})
         
@@ -971,8 +972,7 @@ if __name__ == "__main__":
             json.dump(
                 # The format is a dictionary, for easier extensions
                 # (that let previous formats be read):
-                {"key_assignments": None,
-                 "annotations": AnnotationList().to_builtins_fmt()},
+                {"key_assignments": None, "annotations": {}},
                 annotations_file)
         print("New annotation file created.")
 
