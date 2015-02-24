@@ -5,7 +5,7 @@ stopping MIDI devices.
 (c) 2015 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "0.9"
+__version__ = "1.0"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # Reference for the MIDI Machine Control sequences:

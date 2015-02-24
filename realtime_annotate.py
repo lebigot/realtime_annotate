@@ -14,7 +14,7 @@ the same times as the annotation process).
 (c) 2015 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "0.9"
+__version__ = "1.0"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # !! The optional player driven by this program must be defined by
