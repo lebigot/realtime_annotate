@@ -5,9 +5,9 @@ Real-time annotations
 ``realtime_annotate.py`` is a light-weight real-time annotation
 program.
 
-The annotations handled by this program are entered in real time with
-a **single key** (with a meaning, e.g., "i" for "interesting
-moment"), and an **optional digit** (that can be used for instance for
+The **annotations** handled by this program are entered in real time with
+a *single key* (with a meaning, e.g., "i" for "interesting
+moment"), and an *optional digit* (that can be used for instance for
 indicating a degree, e.g. "i9" could mean "extremely interesting").
 
 Annotations have a **time stamp**. In a practical application, a piece
@@ -20,7 +20,7 @@ The program optionally **synchronizes the annotation timer with an
 external player** (music player, etc.).  Thus, it can automatically
 start and stop the player when starting and stopping the annotation
 process, and can set the player's play head when the annotation timer
-is set to a specific time.  An `implementation <midi_player>`_ for
+is set to a specific time.  An `implementation <midi_player.py>`_ for
 automatically starting and stopping MIDI instruments is provided
 (option ``--player midi_player``).
 
