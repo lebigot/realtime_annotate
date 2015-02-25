@@ -45,7 +45,7 @@ name—with the command ``select_event``, the ``annotate`` command
 launches the real-time annotation process, during which keyboard keys
 are converted into time-stamped annotations:
 
-..image:: annotate.png
+.. image:: annotate.png
 
 Typing a **key** adds one of the user-defined annotations (displayed
 at the bottom of the terminal).
