@@ -37,8 +37,17 @@ The program runs in text mode, in a terminal:
 
 .. image:: shell.png
 
-The command shell of ``realtime_annotate.py`` offers the automatic
-completion of commands and arguments, through the tabulation key.
+The command shell of ``realtime_annotate.py`` offers the **automatic
+completion** of commands and arguments, through the tabulation key.
+
+Usage
+=====
+
+The program is simply run with ``python3.4 realtime_annotate.py
+<annotation_file>``, where ``python3.4`` should be replaced by the
+name of the local Python 3.4+ interpreter, and where
+``<annotation_file>`` is the path to the JSON file used for saving and
+reading annotations.
 
 Annotation process
 ==================
@@ -85,14 +94,6 @@ welcome. Support for earlier versions would require at least a
 replacement of the ``enum`` standard module. Windows support would
 require replacing the curses module with an alternative.
 
-Usage
-=====
-
-The program is simply run with ``python3.4 realtime_annotate.py
-<annotation_file>``, where ``python3.4`` should be replaced by the
-name of the local Python 3.4+ interpreter, and where
-``<annotation_file>`` is the path to the JSON file used for saving and
-reading annotations.
 
 Help
 ====
