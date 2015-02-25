@@ -28,9 +28,12 @@ except ImportError:
              " It can be enabled with the python-rtmidi module.")
     
 print("""\
+*******************************************************************************
 MIDI synthetizer support enabled: make sure that your synthetizer listens
 to MMC messages (in Logic Pro: menu File > Project Settings > Synchronization >
-MIDI > Listen to MMC Input).""")
+MIDI > Listen to MMC Input).
+*******************************************************************************
+""")
 
 def out_port():
     """
