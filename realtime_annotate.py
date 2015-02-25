@@ -78,7 +78,7 @@ class Time(datetime.timedelta):
         """
         ...HH:MM:SS.d format.
         """
-        return "{:02}:{:02}:{:02.1f}".format(*self.to_HMS())
+        return "{:02}:{:02}:{:04.1f}".format(*self.to_HMS())
 
 class TimestampedAnnotation:
     """
@@ -404,7 +404,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     help_start_line = term_lines - (len(annot_enum)+5)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
-    stdscr.addstr("<Enter>: return to shell\n")
+    stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del>: delete last annotation\n")
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
