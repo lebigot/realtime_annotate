@@ -3,7 +3,7 @@ Real-time annotations
 #####################
 
 ``realtime_annotate.py`` is a light-weight real-time annotation
-program. It runs in text mode.
+program.
 
 The annotations handled by this program are entered in real time with
 a **single key** (with a meaning, e.g., "i" for "interesting
@@ -29,11 +29,44 @@ This format has the advantage of being perennial. The collected
 annotations can also be conveniently manipulated by external programs
 (for manual editing, automatic analysis, etc.).
 
-Screenshots
-===========
+The program runs in text mode, in a terminal:
 
-.. !!!!!
-   
+.. image:: shell.png
+
+The command shell of ``realtime_annotate.py`` offers the automatic
+completion of commands and arguments, though the tabulation key.
+
+Annotation process
+==================
+
+After selecting an **event** to annotate—possibly giving a new event
+name—with the command ``select_event``, the ``annotate`` command
+launches the real-time annotation process, during which keyboard keys
+are converted into time-stamped annotations:
+
+..image:: annotate.png
+
+Typing a **key** adds one of the user-defined annotations (displayed
+at the bottom of the terminal).
+
+Any typed **digit** adds a **value** (or changes the value of) to the
+last annotation (for example, the glitch at 00:00:12.6 in the
+screenshot above has value 0).
+
+It is also possible to **add annotations** to existing annotations:
+the ``set_time`` command can be used to set the annotation timer time
+(00:00:13.9, in the example above), and new annotations will simply be
+added to the existing ones when running the ``annotate`` command.
+
+Existing annotations can also be **deleted**: the last annotation is
+deleted with the delete key.
+
+Existing annotations are displayed in the "**Next annotation**" field, so
+that the user can know what annotations have already been entered. The
+next annotation is *highlighted during one second*q before it scrolls
+down to the list of previous annotations below (and is replaced by the
+new next annotation, if any).
+
 Installation and platforms
 ==========================
 
@@ -51,9 +84,18 @@ The program is simply run with ``python3.4 realtime_annotate.py
 name of the local Python 3.4+ interpreter, and where
 ``<annotation_file>`` is the path to the JSON file where annotations
 will be saved and read.
-   
-Configuration of the annotations
-================================
+
+Help
+====
+
+Help can be obtained with the ``-h`` or ``--help`` option of
+``realtime_annotate.py``.
+
+The program launches a command shell. Help with the commands of this
+shell is available through ``?`` or ``help``.
+
+Configuration of the annotations list
+=====================================
 
 The possible annotations and annotation keys are configured by the
 user in a simple text file. For more information, see the built-in
@@ -87,18 +129,6 @@ second element with this value.
 The JSON file also contains an object with the annotation keys and
 their meaning. This part of the file can be conveniently updated by
 ``realtime_annotate.py`` through its ``load_keys`` command.
-
-Additional help
-===============
-
-Help
-====
-
-Help can be obtained with the ``-h`` or ``--help`` option of
-``realtime_annotate.py``.
-
-The program launches a command shell. Help with the commands of this
-shell is available through ``?`` or ``help``.
 
 Contact
 =======
