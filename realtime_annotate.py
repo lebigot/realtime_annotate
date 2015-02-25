@@ -390,7 +390,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.clear()
     
     stdscr.addstr(0, 0, "Event:", curses.A_BOLD)
-    stdscr.addstr(0, 11, curr_event_ref)
+    stdscr.addstr(0, 7, curr_event_ref)
     
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
