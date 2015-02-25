@@ -67,9 +67,9 @@ Existing annotations can also be **deleted**: the last annotation
 key.
 
 Existing annotations are displayed in the "**Next annotation**" field:
-the user can thus see what annotations have already been entered. The next
-annotation is *highlighted during one second* before it scrolls down
-to the list of previous annotations below (and is replaced by the new
+the user can thus see what annotations have already been entered. The
+next annotation is *highlighted during one second* before it scrolls
+down to the list of previous annotations (and is replaced by the new
 next annotation, if any).
 
 Installation and platforms
