@@ -5,7 +5,7 @@ Real-time annotation tool.
 
 Annotations are timestamped. They contain user-defined values.
 
-Optionally, some realtime player (music player, video player, MIDI
+Optionally, some real-time player (music player, video player, MIDI
 player,...) can be controlled so that annotation timestamps are
 synchronized with the player (the player time head is automatically
 set to the annotation timestamp; the player is started and stopped at
@@ -1041,7 +1041,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--player", action="store",
-        help=("Name of Python module that controls some realtime player"
+        help=("Name of Python module that controls some real-time player"
               " (music player, etc.)."
               " The module must be in the Python module path (working"
               " directory, directory of this program, etc.)"
