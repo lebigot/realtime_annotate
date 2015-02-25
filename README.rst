@@ -91,8 +91,8 @@ Usage
 The program is simply run with ``python3.4 realtime_annotate.py
 <annotation_file>``, where ``python3.4`` should be replaced by the
 name of the local Python 3.4+ interpreter, and where
-``<annotation_file>`` is the path to the JSON file where annotations
-will be saved and read.
+``<annotation_file>`` is the path to the JSON file used for saving and
+reading annotations.
 
 Help
 ====
