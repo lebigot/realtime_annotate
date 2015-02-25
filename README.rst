@@ -23,9 +23,10 @@ The program optionally **automatically synchronizes the annotation
 timer** with an external player (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
 annotation process, and can set the player's play head when the
-annotation timer is set to a specific time.  An `implementation
-<midi_player.py>`_ for automatically starting and stopping MIDI
-instruments is provided (option ``--player midi_player``).
+annotation timer is set to a specific time.  The automatic control of
+*MIDI instruments* is `available <midi_player.py>`_ (option ``--player
+midi_player``). Users can control *other kinds of players* by writing a
+few Python functions.
 
 Annotations are stored for multiple events in a single **JSON file**
 with a simple format.  This format has the advantage of being
@@ -109,17 +110,8 @@ Configuration of the annotations list
 
 The possible annotations and annotation keys are configured by the
 user in a simple text file. For more information, see the built-in
-help: ``help load_keys``. An simple `example
-<music_annotations.txt>`_ for annotating music recordings is provided.
-
-Automatic play
-==============
-
-The program can optionally automatically synchronize some player
-(music player, etc.) with the annotation timer. This is done through
-writing a Python module that contains a few player control function,
-and specifying it through the ``--player`` option (e.g. ``--player
-midi_player``). See ``realtime_annotate.py -h`` for details.
+help: ``help load_keys``. An simple `example <music_annotations.txt>`_
+for annotating music recordings is provided.
 
 Annotation file format
 ======================
@@ -139,6 +131,15 @@ second element with this value.
 The JSON file also contains an object with the annotation keys and
 their meaning. This part of the file can be conveniently updated by
 ``realtime_annotate.py`` through its ``load_keys`` command.
+
+Automatic play
+==============
+
+The program can optionally automatically synchronize some player
+(music player, etc.) with the annotation timer. This is done through
+writing a Python module that contains a few player control function,
+and specifying it through the ``--player`` option (e.g. ``--player
+midi_player``). See ``realtime_annotate.py -h`` for details.
 
 Contact
 =======
