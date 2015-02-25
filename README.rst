@@ -35,7 +35,7 @@ The program runs in text mode, in a terminal:
 .. image:: shell.png
 
 The command shell of ``realtime_annotate.py`` offers the automatic
-completion of commands and arguments, though the tabulation key.
+completion of commands and arguments, through the tabulation key.
 
 Annotation process
 ==================
