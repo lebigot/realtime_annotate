@@ -18,8 +18,8 @@ __version__ = "1.0"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # !! The optional player driven by this program must be defined by
-# functions in a module named player_module. See the main program for
-# an example.
+# functions in a module stored in a variable named player_module. See
+# the main program for two examples.
 
 import collections
 import enum
