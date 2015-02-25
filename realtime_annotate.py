@@ -1040,7 +1040,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
-        "--player", action="store",
+        "--player", metavar="python_module", action="store",
         help=("Name of Python module that controls some real-time player"
               " (music player, etc.)."
               " The module must be in the Python module path (working"
