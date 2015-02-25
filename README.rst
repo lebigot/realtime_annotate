@@ -54,22 +54,23 @@ Typing a **key** adds one of the user-defined annotations (displayed
 at the bottom of the terminal).
 
 Any typed **digit** adds a **value** (or changes the value of) to the
-last annotation (for example, the glitch at 00:00:12.6 in the
+*last* annotation (for example, the glitch at 00:00:12.6 in the
 screenshot above has value 0).
 
 It is also possible to **add annotations** to existing annotations:
 the ``set_time`` command can be used to set the annotation timer time
-(00:00:13.9, in the example above), and new annotations will simply be
+(00:00:19.1, in the example above), and new annotations will simply be
 added to the existing ones when running the ``annotate`` command.
 
-Existing annotations can also be **deleted**: the last annotation is
-deleted with the delete key.
+Existing annotations can also be **deleted**: the last annotation
+(from the list of previous annotations) is deleted with the delete
+key.
 
-Existing annotations are displayed in the "**Next annotation**" field,
-so that the user can know what annotations have already been
-entered. The next annotation is *highlighted during one second* before
-it scrolls down to the list of previous annotations below (and is
-replaced by the new next annotation, if any).
+Existing annotations are displayed in the "**Next annotation**" field:
+the user can thus see what annotations have already been entered. The next
+annotation is *highlighted during one second* before it scrolls down
+to the list of previous annotations below (and is replaced by the new
+next annotation, if any).
 
 Installation and platforms
 ==========================
