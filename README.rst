@@ -13,21 +13,22 @@ indicating a degree, e.g. "i9" could mean "extremely interesting").
 Annotations have a **time stamp**. In a practical application, a piece
 of music, etc. plays alongside the program. The annotation timer of
 the program can be set to the time of the event being annotated
-(command ``set_time``), for instance so that the play head of a music
-player is synchronized with the program's annotation timer.
+(command ``set_time``). For example, the play head of a music player
+can thus be synchronized with the program's annotation timer.
 
-The program optionally **synchronizes the annotation timer with an
-external player** (music player, etc.).  Thus, it can automatically
-start and stop the player when starting and stopping the annotation
-process, and can set the player's play head when the annotation timer
-is set to a specific time.  An `implementation <midi_player.py>`_ for
-automatically starting and stopping MIDI instruments is provided
-(option ``--player midi_player``).
+The program optionally **automatically synchronizes the annotation
+timer** with an external player (music player, etc.).  Thus, it can
+automatically start and stop the player when starting and stopping the
+annotation process, and can set the player's play head when the
+annotation timer is set to a specific time.  An `implementation
+<midi_player.py>`_ for automatically starting and stopping MIDI
+instruments is provided (option ``--player midi_player``).
 
-Annotations are stored for multiple events in a single **JSON file**.
-This format has the advantage of being perennial. The collected
-annotations can also be conveniently manipulated by external programs
-(for manual editing, automatic analysis, etc.).
+Annotations are stored for multiple events in a single **JSON file**
+with a simple format.  This format has the advantage of being
+perennial. The collected annotations can also be conveniently
+manipulated by external programs (for manual editing, automatic
+analysis, etc.).
 
 The program runs in text mode, in a terminal:
 
