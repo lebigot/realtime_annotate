@@ -2,6 +2,9 @@
 Real-time annotations
 #####################
 
+Overview
+========
+
 ``realtime_annotate.py`` is a light-weight real-time annotation
 program.
 
