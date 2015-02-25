@@ -61,11 +61,11 @@ added to the existing ones when running the ``annotate`` command.
 Existing annotations can also be **deleted**: the last annotation is
 deleted with the delete key.
 
-Existing annotations are displayed in the "**Next annotation**" field, so
-that the user can know what annotations have already been entered. The
-next annotation is *highlighted during one second*q before it scrolls
-down to the list of previous annotations below (and is replaced by the
-new next annotation, if any).
+Existing annotations are displayed in the "**Next annotation**" field,
+so that the user can know what annotations have already been
+entered. The next annotation is *highlighted during one second* before
+it scrolls down to the list of previous annotations below (and is
+replaced by the new next annotation, if any).
 
 Installation and platforms
 ==========================
