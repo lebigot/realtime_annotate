@@ -1066,7 +1066,7 @@ if __name__ == "__main__":
     if args.player:
         player_module = __import__(args.player, fromlist=player_functions)
     else:  # Default player (which does nothing):
-        player_module = sys[__name__]  # This module
+        player_module = sys.modules[__name__]  # This module
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args: None)
         
