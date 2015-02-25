@@ -75,11 +75,15 @@ next annotation, if any).
 Installation and platforms
 ==========================
 
-The program runs directly with Python 3.4+. Patches for support for
-earlier Python versions are welcome.
+The program runs directly with Python 3.4+.
 
-It runs on Unix (including OS X). Windows support would require
-replacing the curses module with an alternative: patches are welcome.
+It runs on Unix (including OS X).
+
+
+Patches for supporting earlier Python versions, or Windows are
+welcome. Support for earlier versions would require at least a
+replacement of the ``enum`` standard module. Windows support would
+require replacing the curses module with an alternative.
 
 Usage
 =====
