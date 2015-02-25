@@ -2,9 +2,7 @@
 Real-time annotations
 #####################
 
-``realtime_annotate.py`` is a real-time annotation program for Unix
-(and maybe Windows, but after replacing the curses module with an
-alternative—patches are welcome).
+``realtime_annotate.py`` is a real-time annotation program.
 
 The annotations handled by this program are entered in real-time with
 a **single key** (with a meaning, e.g., "i" for "interesting
@@ -29,16 +27,15 @@ Annotations are stored in a file that can be relatively easily edited
 by hand if needed (a YAML file).
 
 
-Installation
-============
+Installation & platforms
+========================
 
 The program runs directly with Python 3.4 (and maybe earlier Python 3
 versions).
 
-The only required non-standard module is PyYAML_. If necessary, it can
-be replaced in the code by a standard module like pickle or json (this
-is almost a drop-in replacement: the main difference is that files
-must be opened in binary mode, for pickle).
+It runs on Unix (including OS X). Windows support would require
+replacing the curses module with an alternative: patches are welcome.
+
 
 .. !!!!!! EITHER indicate how to install PyYAML, or move to JSON. I
    could convert annotations to [(H, M, S), key] and back (directly in
@@ -86,6 +83,12 @@ The program can be extended to automatically play something else, if
 needed (by modifying functions ``player_start()`` and
 ``player_stop()``).
 
+
+Annotation file format
+======================
+
+.. !!!!!!!!!
+   
 Additional help
 ===============
 

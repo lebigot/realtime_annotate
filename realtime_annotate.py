@@ -90,18 +90,19 @@ class TimestampedAnnotation:
 
     A value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
-    an intensity (such as a small glitch, or a very uninspired part).
+    an intensity (such as a small glitch, or a very uninspired
+    part). A merit of this approach is that there is no restriction on
+    the contents of value (which can be None, etc.). Another merit is
+    that only annotations that have a value store one (in memory, on
+    disk, etc.).
     """
-    def __init__(self, time, annotation, value=None):
+    def __init__(self, time, annotation):
         """
         Annotation represented by the given keyboard key.
 
         time -- timestamp for the annotation, as a datetime.timedelta.
         
         annotation -- annotation to be stored, as an enum.Enum.
-
-        value -- non-None value associated with the annotation. If
-        None, no "value" attribute is created.
         """
         self.time = time
         
@@ -110,9 +111,6 @@ class TimestampedAnnotation:
         # representation (Enum name), and that it preserve the
         # associated key (which can then be saved to a file, etc.):
         self.annotation = annotation
-
-        if value is not None:
-            self.value = value
     
     def set_value(self, value):
         """
@@ -130,7 +128,50 @@ class TimestampedAnnotation:
             result += " [value {}]".format(self.value)
             
         return result
-    
+
+    def to_builtins_fmt(self):
+        """
+        Return a version of the annotation with only Python builtin types.
+
+        Returns (time, annot), where annot is [annotation.value] or
+        [annotation.value, value], if a value is defined for the
+        TimestampedAnnotation. Thus, only the value of the enumeration
+        is saved. This allows the enumeration names to be modified
+        without touching the annotation.
+        """
+
+        annotation = [self.annotation.value]
+        if hasattr(self, "value"):
+            annotation.append(self.value)
+            
+        return [self.time.to_HMS(), annotation]
+
+
+
+    @classmethod
+    def from_builtins_fmt(cls, annotation_kinds, timed_annotation):
+        """
+        Reverse of to_builtins_fmt().
+
+        annotation_kinds -- enum.Enum for interpreting the
+        annotation. The timed_annotation refers to some value in
+        the enumeration.
+
+        timed_annotation -- version of the annotation as returned by
+        to_builtins_fmt().
+        """
+        annot = timed_annotation[1]
+
+        result = cls(
+            Time(**dict(zip(("hours", "minutes", "seconds"),
+                            timed_annotation[0]))),
+            annotation_kinds(annot[0]))
+        
+        if len(annot) > 1:
+            result.value = annot[1]
+            
+        return result
+        
 class NoAnnotation(Exception):
     """
     Raised when a requested annotation cannot be found.
@@ -244,25 +285,16 @@ class AnnotationList:
 
         return {
             "cursor": self.cursor,
-            "annotation_list": [
-                (timed_annotation.time.to_HMS(),
-                 # Only the keyboard key is saved, so that the
-                 # description texts can be updated
-                 # independently:
-                 [timed_annotation.annotation.value]
-                 +([timed_annotation.value]
-                   if hasattr(timed_annotation, "value") else [])
-                )
-                for timed_annotation in self
-            ]
+            "annotation_list": [timed_annotation.to_builtins_fmt()
+                                for timed_annotation in self]
         }
 
     @classmethod
-    def from_builtins_fmt(cls, key_assignments, annotations):
+    def from_builtins_fmt(cls, annotation_kinds, annotations):
         """
         Reverse of to_builtins_fmt().
 
-        key_assignments -- enumeration (enum.Enum) for interpreting
+        annotation_kinds -- enumeration (enum.Enum) for interpreting
         the annotations. Its values must correspond to the annotation
         values stored in annotations.
         
@@ -272,12 +304,9 @@ class AnnotationList:
         return cls(
             cursor=annotations["cursor"],
             list_=[
-                TimestampedAnnotation(
-                    Time(**dict(zip(("hours", "minutes", "seconds"), time))),
-                    key_assignments(annotation[0]),
-                    annotation[1] if len(annotation) > 1 else None
-                )
-                for (time, annotation) in annotations["annotation_list"]
+                TimestampedAnnotation.from_builtins_fmt(annotation_kinds,
+                                                        annotation)
+                for annotation in annotations["annotation_list"]
             ]
         )
         
@@ -292,7 +321,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     stdscr -- curses.WindowObject for displaying information.
 
-    #!!!!!!!! rec > event
     curr_event_ref -- reference of the event (recording...)  being annotated.
     
     start_time -- starting annotation time (Time object).
@@ -619,7 +647,7 @@ class AnnotateShell(cmd.Cmd):
 
         self.annotations_path = annotations_path
         
-        # Current event to be annotated:  # !!!!!!!! rec > evnt
+        # Current event to be annotated:
         self.curr_event_ref = None
         
         # Reading of the existing annotations:
@@ -640,7 +668,12 @@ class AnnotateShell(cmd.Cmd):
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
-                {event_ref:
+                {
+                 # self.annot_enum is guaranteed by this program to
+                 # not be None if there is any annotation: the user is
+                 # forced to load key assignments before any
+                 # annotation can be made:
+                 event_ref:
                  AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
                  for (event_ref, annotations)
                  in file_contents["annotations"].items()})
