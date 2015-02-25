@@ -109,7 +109,7 @@ Configuration of the annotations list
 
 The possible annotations and annotation keys are configured by the
 user in a simple text file. For more information, see the built-in
-help for the ``load_keys`` command. An simple `example
+help: ``help load_keys``. An simple `example
 <music_annotations.txt>`_ for annotating music recordings is provided.
 
 Automatic play
