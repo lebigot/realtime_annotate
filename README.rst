@@ -134,7 +134,7 @@ Selecting an event to be annotated **automatically sets the annotation
 timer** (to the annotation before the last time reached). If needed, a
 different annotation **starting time** can be set with the
 ``set_time`` command. If a music player, etc. is controlled by the
-program (``--player`` option), its play head is set automatically at
+program (``--player`` option), its play head is set automatically to
 the same time.
 
 The selected event can then be annotated in real time with the
