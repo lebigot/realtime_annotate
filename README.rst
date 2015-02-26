@@ -42,7 +42,7 @@ When going through an existing annotated event, existing **annotations
 scroll on screen**. The user can thus see existing annotations, and
 conveniently add only annotations that were not already entered,
 *without having to check time stamps themselves*. The program thus
-frees the user from inner monologues like this:
+frees the user from inner monologues like this one:
 
 - *Did I already indicate that the melody is good, here?*
 - *Let me check the timer…*
@@ -224,14 +224,14 @@ their meaning. This part of the file can be conveniently updated by
 Synchronization with an external player
 =======================================
 
-The program can optionally automatically synchronize some player
-(music player, etc.) with the annotation timer. This is done through
-writing a Python module that contains a few player control function,
-and specifying it through the ``--player`` option (e.g. ``--player
-midi_player``).  A working `MIDI instrument controller
-<midi_player.py>`_ is provided; it can be used as an example.  See
-``realtime_annotate.py -h`` for details on how to write a player
-controller module.
+The program can optionally automatically synchronize an external
+player (music player, etc.) with the annotation timer. This is done
+through writing a Python module that contains a few player control
+function, and specifying it through the ``--player`` option
+(e.g. ``--player midi_player``).  A working `MIDI instrument
+controller <midi_player.py>`_ is provided; it can be used as an
+example.  See ``realtime_annotate.py -h`` for details on how to write
+a player controller module.
 
 License
 =======
