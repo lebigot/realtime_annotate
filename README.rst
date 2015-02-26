@@ -18,7 +18,8 @@ annotation with a **single keyboard key**, and to letting the program
 **automatically handle time-related tasks** (time stamping, and
 automatic scrolling of existing annotations):
 
-.. _annotate_process:
+.. _screenshot:
+
 .. image:: doc/annotate.png
 
 .. Some details connected to the introductory paragraph:
@@ -95,8 +96,8 @@ Annotation process
 After selecting an **event** to annotate—possibly giving a new event
 name—with the command ``select_event``, the ``annotate`` command
 launches the real-time annotation process, during which keyboard keys
-are converted into time-stamped annotations (see the `screenshot
-<annotate_process>`_ in the introduction).
+are converted into time-stamped annotations (see the screenshot_ in
+the introduction).
 
 .. !!!!!! Internal link
 
