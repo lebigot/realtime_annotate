@@ -79,7 +79,7 @@ The program runs in text mode, in a terminal:
 
 .. image:: doc/shell.png
 
-The command shell of ``realtime_annotate.py`` offers the **automatic
+The command shell of ``realtime_annotate.py`` provides the **automatic
 completion** of commands and arguments, through the tabulation key.
 
 Usage
