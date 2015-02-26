@@ -5,12 +5,15 @@ Real-time annotations
 What does this program do?
 ==========================
 
-``realtime_annotate.py`` is a light-weight real-time annotation
-program that helps users focus on what they are listening, watching,
-etc., This program lets users **enter pre-defined annotations very
-efficiently**: annotations are entered with a *single keyboard key*,
-and the program *automatically handles time-related tasks* (time
-stamping, automatic scrolling of existing annotations).
+.. Benefits and description of the program for users, in one sentence:
+``realtime_annotate.py`` is a light-weight program that *lets users
+focus* on listening, watching, etc., and *make pre-defined
+annotations* very efficiently,
+.. How are the benefits obtained?
+This is made possible by having the user enter annotation with a
+*single keyboard key*, and by letting the program *automatically
+handle time-related tasks* (time stamping, and automatic scrolling of
+existing annotations).
 
 .. image:: doc/annotate.png
 
