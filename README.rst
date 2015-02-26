@@ -221,8 +221,8 @@ their meaning. This part of the file can be conveniently updated by
 
 .. _below:
 
-Automatic play
-==============
+Synchronization with an external player
+=======================================
 
 The program can optionally automatically synchronize some player
 (music player, etc.) with the annotation timer. This is done through
