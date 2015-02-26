@@ -52,7 +52,7 @@ frees the user from inner monologues like this:
 
 All of this is automatically handled by the program through the
 scrolling display of annotations around the current timer, and the
-user can focus on adding new annotations or modifying existing ones.
+user can focus on adding new annotations.
 
 Annotations for *multiple events* are stored in a single **JSON file**
 with a simple format.  This format has the advantage of being
