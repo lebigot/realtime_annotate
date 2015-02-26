@@ -115,18 +115,19 @@ New annotation file
 
 When a new annotation file is created, a **list of annotation keys**
 must first be attached to it: this defines the *meaning of the keys*
-used for entering annotations.
+used for entering annotations (``load_keys`` command).
 
 The possible annotations and annotation keys are configured by the
-user in a simple text file. For more information, see the built-in
-help: ``help load_keys``. An simple `example <music_annotations.txt>`_
-for annotating music recordings is provided.
+user in a simple text file. For more information on the format of this
+file, see the built-in help: ``help load_keys``. An simple `example
+<music_annotations.txt>`_ for annotating music recordings is provided.
 
 Typical workflow
 ----------------
-A typical workflow starts by simply selecting an **event** to annotate
-(command ``select_event``). A *new event* can be created by simply
-giving a new event name. *Existing events* are listed with
+
+A typical workflow starts by simply selecting an **event** to be
+annotated (command ``select_event``). A *new event* can be created by
+simply giving a new event name. *Existing events* are listed with
 ``list_events``).
 
 Selecting an event to be annotated **automatically sets the annotation
