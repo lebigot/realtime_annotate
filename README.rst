@@ -146,7 +146,7 @@ Annotation process
 """"""""""""""""""
 
 The ``annotate`` command launches the real-time annotation process
-(see the screenshot_ in the Overview).  Keyboard keys are
+(see the screenshot_ in the overview).  Keyboard keys are
 converted into time-stamped annotations, and existing annotations
 automatically scroll on the screen.
 
