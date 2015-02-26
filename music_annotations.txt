@@ -1,7 +1,7 @@
 # Annotations for music pieces:
 
 # The value 1 is not used, so that annotations with no value are
-# equivalent to annotations with value 1, which is intended to
+# equivalent to annotations with value 1. This is intended to
 # represent some middle/standard/default value.
 
 s    start (between pieces, before the beginning)
