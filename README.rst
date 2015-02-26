@@ -161,9 +161,10 @@ Existing annotations can also be **deleted**: the last annotation
 (from the list of previous annotations) is deleted with the delete
 key.
 
-**Existing annotations** are displayed both in the "Next annotation"
-field and in the "Previous annotations" list: the user can thus see
-what annotations have already been entered. The next annotation is
+**Existing annotations** with time stamps around the current
+annotation timer are displayed both in the "Next annotation" field and
+in the "Previous annotations" list. The user can thus see what
+annotations have already been entered. The next annotation is
 *highlighted during one second* before it **scrolls down** to the list
 of previous annotations (and is replaced by the new next annotation,
 if any).
