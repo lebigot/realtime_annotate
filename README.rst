@@ -148,8 +148,8 @@ annotated (command ``select_event``). A *new event* can be created by
 simply giving a new event name. *Existing events* are listed with
 ``list_events``.
 
-Selecting an event to be annotated **automatically sets the annotation
-timer** (to the annotation before the last time reached). If needed, a
+Selecting an event to be annotated *automatically sets the annotation
+timer* (to the annotation before the last time reached). If needed, a
 different annotation **starting time** can be set with the
 ``set_time`` command. If a music player, etc. is controlled by the
 program, its play head is set automatically to the same time.
