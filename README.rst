@@ -8,8 +8,8 @@ Overview
 .. Benefits and description of the program for users, in one sentence:
    
 ``realtime_annotate.py`` is a light-weight program that **lets users
-focus** on listening, watching, etc., and **make pre-defined
-annotations** very efficiently,
+focus** on listening to a piece of music, watching a video, etc., and
+**make pre-defined annotations** very efficiently,
 
 .. How are the benefits obtained?
    
