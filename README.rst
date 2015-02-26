@@ -36,7 +36,7 @@ analysis, etc.).
 
 The program runs in text mode, in a terminal:
 
-.. image:: shell.png
+.. image:: doc/shell.png
 
 The command shell of ``realtime_annotate.py`` offers the **automatic
 completion** of commands and arguments, through the tabulation key.
@@ -58,7 +58,7 @@ name—with the command ``select_event``, the ``annotate`` command
 launches the real-time annotation process, during which keyboard keys
 are converted into time-stamped annotations:
 
-.. image:: annotate.png
+.. image:: doc/annotate.png
 
 Typing a **key** adds one of the user-defined annotations (displayed
 at the bottom of the terminal).
