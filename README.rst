@@ -63,15 +63,14 @@ analysis, etc.).
 .. The optional feature is left at the end, as it is less immediately
    important:
 
-The program optionally **automatically synchronizes the annotation
-timer** with an external player (music player, etc.).  Thus, it can
+The program optionally **automatically synchronizes** the annotation
+timer with an **external player** (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
 `annotation process`_, and can set the player's play head when the
 annotation timer is set to a specific time.  *MIDI instruments* can be
-automatically controlled with the `provided MIDI
-controller <midi_player.py>`_ (option ``--player midi_player``). Users
-can control *other kinds of players* by writing a few Python
-functions.
+automatically controlled with the `provided MIDI controller
+<midi_player.py>`_. Users can control *other kinds of players* by
+writing a few Python functions.
 
 .. Concrete implementation details and features:
    
