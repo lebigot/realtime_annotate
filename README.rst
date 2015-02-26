@@ -6,24 +6,41 @@ What does this program do?
 ==========================
 
 ``realtime_annotate.py`` is a light-weight real-time annotation
-program.
+program that helps users focus on what they are listening, watching,
+etc., This program lets users **enter pre-defined annotations very
+efficiently**: annotations are entered with a *single keyboard key*,
+and the program *automatically handles time-related tasks* (time
+stamping, automatic scrolling of existing annotations).
 
-The **annotations** handled by this program are entered in real time with
-a *single key* (with a meaning, e.g., "i" for "interesting
+The **annotations** handled by this program are entered in real time
+with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
-indicating a degree, e.g. "i9" could mean "extremely interesting").
+indicating a degree, e.g. "i9" could mean "extremely
+interesting"). Their meaning is pre-defined by the user before
+starting the annotation process.
 
 Annotations have a **time stamp**, which is *automatically added* by
 the program. In a practical application, a piece of music, etc. plays
 alongside the program. The annotation timer of the program can be set
 to the time of the event being annotated (command ``set_time``). For
 example, the play head of a music player can thus be synchronized with
-the program's annotation timer.
+the user's annotation time stamps.
 
 When going through an existing annotated event, existing **annotations
-scroll on screen**. The user can thus see existing annotations and
-conveniently add only annotations that were not already entered (and
-modify existing ones).
+scroll on screen**. The user can thus see existing annotations, and
+conveniently add only annotations that were not already entered (or
+modify existing ones), *without having to check time stamps
+themselves*. The program thus frees the user from inner monologues
+like this one:
+
+- *Did I already indicate that the melody is good, here?*
+- *Let me check the timer…*
+- *00:01:23…*
+- *Let's see if there is an annotation around that time…*
+- *Yeah, there is already one at 00:01:24, I have already handled that.*
+
+All of this is handled by the program through the display of
+annotations around the current timer.
 
 Annotations for *multiple events* can be stored in a single **JSON
 file** with a simple format.  This format has the advantage of being
