@@ -12,6 +12,8 @@ efficiently**: annotations are entered with a *single keyboard key*,
 and the program *automatically handles time-related tasks* (time
 stamping, automatic scrolling of existing annotations).
 
+.. image:: doc/annotate.png
+
 The **annotations** handled by this program are entered in real time
 with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
@@ -79,9 +81,10 @@ Annotation process
 After selecting an **event** to annotate—possibly giving a new event
 name—with the command ``select_event``, the ``annotate`` command
 launches the real-time annotation process, during which keyboard keys
-are converted into time-stamped annotations:
+are converted into time-stamped annotations (see the screenshot in the
+introduction).
 
-.. image:: doc/annotate.png
+.. !!!!!! Internal link
 
 Typing a **key** adds one of the user-defined annotations (displayed
 at the bottom of the terminal).
