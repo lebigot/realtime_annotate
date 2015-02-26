@@ -82,6 +82,9 @@ def set_time(hours, minutes, seconds):
     a frame number based on 25 frames/seconds.
     """
 
+    assert 0 <= hours <= 255, (
+        "This number of hours cannot be handled: {}.".format(hours))
+    
     # The seconds must be split into integer seconds and fractional seconds:
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
