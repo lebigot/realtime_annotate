@@ -188,7 +188,7 @@ Annotation file format
 
 The annotation file JSON structure should be mostly self-explanatory.
 
-Annotation times are stored as an ``[hours, minutes, seconds]`` array.
+Annotation times are stored as ``[hours, minutes, seconds]``.
 ``hours`` and ``minutes`` are integers, and ``seconds`` is a
 float. ``minutes`` and ``seconds`` are in the [0; 60) interval.  There
 is no limit on the number of hours.
