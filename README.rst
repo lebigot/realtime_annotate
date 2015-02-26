@@ -145,9 +145,9 @@ The selected event can then be annotated in real time with the
 Annotation process
 """"""""""""""""""
 
-The ``annotate`` command launches the real-time annotation process.
-Keyboard keys are converted into time-stamped annotations (see the
-screenshot_ in the introduction), and existing annotations
+The ``annotate`` command launches the real-time annotation process
+(see the screenshot_ in the introduction).  Keyboard keys are
+converted into time-stamped annotations, and existing annotations
 automatically scroll on the screen.
 
 Typing a **key** adds one of the user-defined annotations (displayed
