@@ -6,15 +6,19 @@ Overview
 ========
 
 .. Benefits and description of the program for users, in one sentence:
-``realtime_annotate.py`` is a light-weight program that *lets users
-focus* on listening, watching, etc., and *make pre-defined
-annotations* very efficiently,
-.. How are the benefits obtained?
-This is made possible by having the user enter annotation with a
-*single keyboard key*, and by letting the program *automatically
-handle time-related tasks* (time stamping, and automatic scrolling of
-existing annotations).
+   
+``realtime_annotate.py`` is a light-weight program that **lets users
+focus** on listening, watching, etc., and **make pre-defined
+annotations** very efficiently,
 
+.. How are the benefits obtained?
+   
+Users can focus on the annotation task thanks to having them enter
+annotation with a **single keyboard key**, and to letting the program
+**automatically handle time-related tasks** (time stamping, and
+automatic scrolling of existing annotations):
+
+.. _annotate_process:
 .. image:: doc/annotate.png
 
 .. Some details connected to the introductory paragraph:
@@ -91,8 +95,8 @@ Annotation process
 After selecting an **event** to annotate—possibly giving a new event
 name—with the command ``select_event``, the ``annotate`` command
 launches the real-time annotation process, during which keyboard keys
-are converted into time-stamped annotations (see the screenshot in the
-introduction).
+are converted into time-stamped annotations (see the `screenshot
+<annotate_process>`_ in the introduction).
 
 .. !!!!!! Internal link
 
