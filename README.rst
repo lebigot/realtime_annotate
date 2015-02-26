@@ -2,8 +2,8 @@
 Real-time annotations
 #####################
 
-What does this program do?
-==========================
+Overview
+========
 
 .. Benefits and description of the program for users, in one sentence:
 ``realtime_annotate.py`` is a light-weight program that *lets users
@@ -17,6 +17,8 @@ existing annotations).
 
 .. image:: doc/annotate.png
 
+.. Some details connected to the introductory paragraph:
+   
 The **annotations** handled by this program are entered in real time
 with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
@@ -44,14 +46,17 @@ like this one:
 - *Let's see if there is an annotation around that time…*
 - *Yeah, there is already one at 00:01:24, I have already handled that.*
 
-All of this is handled by the program through the display of
+All of this is handled by the program through the scrolling display of
 annotations around the current timer.
 
-Annotations for *multiple events* can be stored in a single **JSON
-file** with a simple format.  This format has the advantage of being
+Annotations for *multiple events* are stored in a single **JSON file**
+with a simple format.  This format has the advantage of being
 perennial. The collected annotations can also be conveniently
 *manipulated by external programs* (for manual editing, automatic
 analysis, etc.).
+
+.. The optional feature is left at the end, as it is less immediately
+   important:
 
 The program optionally **automatically synchronizes the annotation
 timer** with an external player (music player, etc.).  Thus, it can
@@ -62,6 +67,8 @@ annotation timer is set to a specific time.  The automatic control of
 midi_player``). Users can control *other kinds of players* by writing a
 few Python functions.
 
+.. Concrete implementation details and features:
+   
 The program runs in text mode, in a terminal:
 
 .. image:: doc/shell.png
