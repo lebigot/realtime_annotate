@@ -141,6 +141,12 @@ writing a Python module that contains a few player control function,
 and specifying it through the ``--player`` option (e.g. ``--player
 midi_player``). See ``realtime_annotate.py -h`` for details.
 
+License
+=======
+
+This program and its documentation are released under the `Revised BSD
+License <LICENSE.txt>`_.
+
 Contact
 =======
 
