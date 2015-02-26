@@ -1005,6 +1005,8 @@ class AnnotateShell(cmd.Cmd):
         """
         Set the given event reference as the current event.
 
+        If the event does not exist yet, it is created.
+        
         The current list of references can be obtained with
         list_events.
 
