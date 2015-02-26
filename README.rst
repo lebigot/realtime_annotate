@@ -90,7 +90,7 @@ The program runs directly with Python 3.4+. It currently runs on Unix
 
 Downloading `realtime_annotate.py <realtime_annotate.py>`_ is
 sufficient for installing this program. It only uses standard modules
-(of Python 3.4+), which are generally installed along with Python.
+(of Python 3.4+)—they are generally installed along with Python.
 
 Two example configuration files are provided:
 
