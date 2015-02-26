@@ -82,6 +82,25 @@ The program runs in text mode, in a terminal:
 The command shell of ``realtime_annotate.py`` provides the **automatic
 completion** of commands and arguments, through the tabulation key.
 
+Platforms and installation
+==========================
+
+The program runs directly with Python 3.4+. It currently runs on Unix
+(including OS X).
+
+Downloading `realtime_annotate.py <realtime_annotate.py>`_ is
+sufficient for installing this program. It only uses standard modules
+(of Python 3.4+), which are generally installed along with Python.
+
+Two example configuration files are provided:
+
+- a key assignment configuration: `music_annotations.txt
+  <music_annotations.txt>`_,
+
+- an optional player controller, for synchronizing MIDI players with
+  the annotation timer: `midi_player.py <midi_player.py>`_.
+
+
 Usage
 =====
 
@@ -169,20 +188,6 @@ annotations have already been entered. The next annotation is
 of previous annotations (and is replaced by the new next annotation,
 if any).
 
-Installation and platforms
-==========================
-
-The program runs directly with Python 3.4+.
-
-It runs on Unix (including OS X).
-
-
-Patches for supporting earlier Python versions, or Windows are
-welcome. Support for earlier versions would require at least a
-replacement of the ``enum`` standard module. Windows support would
-require replacing the curses module with an alternative.
-
-
 Annotation file format
 ======================
 
@@ -219,6 +224,14 @@ License
 
 This program and its documentation are released under the `Revised BSD
 License <LICENSE.txt>`_.
+
+Patches
+=======
+
+Patches for supporting earlier Python versions or for Windows are
+welcome. Support for earlier versions of Python would require a
+replacement of the ``enum`` standard module. Windows support would
+require replacing the curses module with an alternative.
 
 Contact
 =======
