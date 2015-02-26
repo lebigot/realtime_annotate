@@ -186,7 +186,7 @@ require replacing the curses module with an alternative.
 Annotation file format
 ======================
 
-The annotation file structure in JSON should be mostly self-explanatory.
+The annotation file JSON structure should be mostly self-explanatory.
 
 Annotation times are stored as an ``[hours, minutes, seconds]`` array.
 ``hours`` and ``minutes`` are integers, and ``seconds`` is a
