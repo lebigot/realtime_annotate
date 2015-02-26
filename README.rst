@@ -165,28 +165,34 @@ Annotation process
 """"""""""""""""""
 
 The ``annotate`` command launches the real-time annotation process
-(see the screenshot_ in the overview).  Keyboard keys are
-converted into time-stamped annotations, and existing annotations
-automatically scroll on the screen.
+(see the screenshot_ in the overview), and the optional player
+(``--player`` option).  Existing **annotations automatically
+scroll** on the screen. All **actions** are run with a *single*
+keyboard key (listed in the help at the bottom of the ``annotate``
+screen):
 
-Typing a **key** adds one of the user-defined annotations (displayed
-at the bottom of the terminal).
+- Typing the **key** of one of the user-defined annotations adds it with
+  the current annotation timer as a time stamp.
+  
+- Any typed **digit** adds a **value** to (or changes the value of)
+  the *last* annotation (for example, the glitch at 00:00:12.6 in the
+  screenshot above has value 0).
 
-Any typed **digit** adds a **value** to (or changes the value of) the
-*last* annotation (for example, the glitch at 00:00:12.6 in the
-screenshot above has value 0).
+- Existing annotations can also be **deleted**: the last annotation
+  (from the list of previous annotations) is deleted with the delete
+  key.
 
-Existing annotations can also be **deleted**: the last annotation
-(from the list of previous annotations) is deleted with the delete
-key.
+- **Stopping** the annotation process is done with the space key. If a
+  player controller is used (``--player`` option), the player
+  is stopped.
 
 **Existing annotations** with time stamps around the current
-annotation timer are displayed both in the "Next annotation" field and
-in the "Previous annotations" list. The user can thus see what
-annotations have already been entered. The next annotation is
-*highlighted during one second* before it **scrolls down** to the list
-of previous annotations (and is replaced by the new next annotation,
-if any).
+annotation timer are displayed in the "Next annotation" field and in
+the "Previous annotations" list (see the screenshot_). The user can
+thus see what annotations have already been entered. The next
+annotation is *highlighted during one second* before it **scrolls
+down** to the list of previous annotations (and is replaced by the new
+next annotation, if any).
 
 Annotation file format
 ======================
