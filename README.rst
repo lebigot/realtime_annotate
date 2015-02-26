@@ -2,8 +2,8 @@
 Real-time annotations
 #####################
 
-Overview
-========
+What does this program do?
+==========================
 
 ``realtime_annotate.py`` is a light-weight real-time annotation
 program.
@@ -13,11 +13,23 @@ a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
 indicating a degree, e.g. "i9" could mean "extremely interesting").
 
-Annotations have a **time stamp**. In a practical application, a piece
-of music, etc. plays alongside the program. The annotation timer of
-the program can be set to the time of the event being annotated
-(command ``set_time``). For example, the play head of a music player
-can thus be synchronized with the program's annotation timer.
+Annotations have a **time stamp**, which is *automatically added* by
+the program. In a practical application, a piece of music, etc. plays
+alongside the program. The annotation timer of the program can be set
+to the time of the event being annotated (command ``set_time``). For
+example, the play head of a music player can thus be synchronized with
+the program's annotation timer.
+
+When going through an existing annotated event, existing **annotations
+scroll on screen**. The user can thus see existing annotations and
+conveniently add only annotations that were not already entered (and
+modify existing ones).
+
+Annotations for *multiple events* can be stored in a single **JSON
+file** with a simple format.  This format has the advantage of being
+perennial. The collected annotations can also be conveniently
+*manipulated by external programs* (for manual editing, automatic
+analysis, etc.).
 
 The program optionally **automatically synchronizes the annotation
 timer** with an external player (music player, etc.).  Thus, it can
@@ -27,12 +39,6 @@ annotation timer is set to a specific time.  The automatic control of
 *MIDI instruments* is `available <midi_player.py>`_ (option ``--player
 midi_player``). Users can control *other kinds of players* by writing a
 few Python functions.
-
-Annotations are stored for multiple events in a single **JSON file**
-with a simple format.  This format has the advantage of being
-perennial. The collected annotations can also be conveniently
-manipulated by external programs (for manual editing, automatic
-analysis, etc.).
 
 The program runs in text mode, in a terminal:
 
