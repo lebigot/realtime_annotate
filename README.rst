@@ -152,8 +152,7 @@ Selecting an event to be annotated **automatically sets the annotation
 timer** (to the annotation before the last time reached). If needed, a
 different annotation **starting time** can be set with the
 ``set_time`` command. If a music player, etc. is controlled by the
-program (``--player`` option), its play head is set automatically to
-the same time.
+program, its play head is set automatically to the same time.
 
 The selected event can then be annotated in real time with the
 ``annotate`` command.
@@ -164,11 +163,19 @@ Annotation process
 """"""""""""""""""
 
 The ``annotate`` command launches the real-time annotation process
-(see the screenshot_ in the overview), and the optional player
-(``--player`` option).  Existing **annotations automatically
-scroll** on the screen. All **actions** are run with a *single*
-keyboard key (listed in the help at the bottom of the ``annotate``
-screen):
+(see the screenshot_ in the overview).
+
+The **annotation timer** starts running when the user enters the
+command. The starting annotation timer is typically set (beforehand)
+so that it coincides with the event's time when the ``annotate``
+command is entered (i.e. when the Enter key is pressed): this way, the
+annotation timer is the same as the event's timer (play head location
+of a music player, etc.), which is convenient. If a music controller
+is used (see below_), this time synchronization can be automatic.
+
+Existing **annotations automatically scroll** on the
+screen. All **actions** are run with a *single* keyboard key (listed
+in the help at the bottom of the ``annotate`` screen):
 
 - Typing the **key** of one of the user-defined annotations adds it with
   the current annotation timer as a time stamp.
@@ -211,6 +218,8 @@ second element with this value.
 The JSON file also contains an object with the annotation keys and
 their meaning. This part of the file can be conveniently updated by
 ``realtime_annotate.py`` through its ``load_keys`` command.
+
+.. _below:
 
 Automatic play
 ==============
