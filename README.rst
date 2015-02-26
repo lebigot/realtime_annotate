@@ -29,7 +29,7 @@ with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
 indicating a degree, e.g. "i9" could mean "extremely
 interesting"). Their meaning is pre-defined by the user before
-starting the annotation process.
+starting the `annotation process`_.
 
 Annotations have a **time stamp**, which is *automatically added* by
 the program. In a practical application, a piece of music, etc. plays
@@ -40,19 +40,19 @@ the user's annotation time stamps.
 
 When going through an existing annotated event, existing **annotations
 scroll on screen**. The user can thus see existing annotations, and
-conveniently add only annotations that were not already entered (or
-modify existing ones), *without having to check time stamps
-themselves*. The program thus frees the user from inner monologues
-like this one:
+conveniently add only annotations that were not already entered,
+*without having to check time stamps themselves*. The program thus
+frees the user from inner monologues like this:
 
 - *Did I already indicate that the melody is good, here?*
 - *Let me check the timer…*
 - *00:01:23…*
-- *Let's see if there is an annotation around that time…*
-- *Yeah, there is already one at 00:01:24, I have already handled that.*
+- *Let's see if there is already an annotation around that time…*
+- *Yeah, there is one at 00:01:24, I have already handled this.*
 
-All of this is handled by the program through the scrolling display of
-annotations around the current timer.
+All of this is automatically handled by the program through the
+scrolling display of annotations around the current timer, and the
+user can focus on adding new annotations or modifying existing ones.
 
 Annotations for *multiple events* are stored in a single **JSON file**
 with a simple format.  This format has the advantage of being
@@ -66,11 +66,12 @@ analysis, etc.).
 The program optionally **automatically synchronizes the annotation
 timer** with an external player (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
-annotation process, and can set the player's play head when the
-annotation timer is set to a specific time.  The automatic control of
-*MIDI instruments* is `available <midi_player.py>`_ (option ``--player
-midi_player``). Users can control *other kinds of players* by writing a
-few Python functions.
+`annotation process`_, and can set the player's play head when the
+annotation timer is set to a specific time.  *MIDI instruments* can be
+automatically controlled with the `provided MIDI
+controller <midi_player.py>`_ (option ``--player midi_player``). Users
+can control *other kinds of players* by writing a few Python
+functions.
 
 .. Concrete implementation details and features:
    
@@ -90,36 +91,81 @@ name of the local Python 3.4+ interpreter, and where
 ``<annotation_file>`` is the path to the JSON file used for saving and
 reading annotations.
 
-Annotation process
-==================
+Users can then control the annotation process by using a command
+shell. The main command is ``annotate``: it starts the real-time
+`annotation process`_ proper.
 
-After selecting an **event** to annotate—possibly giving a new event
-name—with the command ``select_event``, the ``annotate`` command
-launches the real-time annotation process, during which keyboard keys
-are converted into time-stamped annotations (see the screenshot_ in
-the introduction).
+Help
+====
+
+.. The help section comes relatively early because it helps users to
+   quickly test the program by themselves:
+
+Help can be obtained with the ``-h`` or ``--help`` option of
+``realtime_annotate.py``.
+
+Help on the commands of the ``realtime_annotate.py`` command shell is
+available through ``?`` or ``help``.
+
+Workflow
+========
+
+New annotation file
+-------------------
+
+When a new annotation file is created, a **list of annotation keys**
+must first be attached to it: this defines the *meaning of the keys*
+used for entering annotations.
+
+The possible annotations and annotation keys are configured by the
+user in a simple text file. For more information, see the built-in
+help: ``help load_keys``. An simple `example <music_annotations.txt>`_
+for annotating music recordings is provided.
+
+Typical workflow
+----------------
+A typical workflow starts by simply selecting an **event** to annotate
+(command ``select_event``). A *new event* can be created by simply
+giving a new event name. *Existing events* are listed with
+``list_events``).
+
+Selecting an event to be annotated **automatically sets the annotation
+timer** (to the annotation before the last time reached). If needed, a
+different annotation **starting time** can be set with the
+``set_time`` command. If a music player, etc. is controlled by the
+program (``--player`` option), its play head is set automatically at
+the same time.
+
+The selected event can then be annotated in real time with the
+``annotate`` command.
+
+.. _annotation process:
+
+Annotation process
+""""""""""""""""""
+
+The ``annotate`` command launches the real-time annotation process.
+Keyboard keys are converted into time-stamped annotations (see the
+screenshot_ in the introduction), and existing annotations
+automatically scroll on the screen.
 
 Typing a **key** adds one of the user-defined annotations (displayed
 at the bottom of the terminal).
 
-Any typed **digit** adds a **value** (or changes the value of) to the
+Any typed **digit** adds a **value** to (or changes the value of) the
 *last* annotation (for example, the glitch at 00:00:12.6 in the
 screenshot above has value 0).
-
-It is also possible to **add annotations** to existing annotations:
-the ``set_time`` command can be used to set the annotation timer time
-(00:00:19.1, in the example above), and new annotations will simply be
-added to the existing ones when running the ``annotate`` command.
 
 Existing annotations can also be **deleted**: the last annotation
 (from the list of previous annotations) is deleted with the delete
 key.
 
-Existing annotations are displayed in the "**Next annotation**" field:
-the user can thus see what annotations have already been entered. The
-next annotation is *highlighted during one second* before it scrolls
-down to the list of previous annotations (and is replaced by the new
-next annotation, if any).
+**Existing annotations** are displayed both in the "Next annotation"
+field and in the "Previous annotations" list: the user can thus see
+what annotations have already been entered. The next annotation is
+*highlighted during one second* before it **scrolls down** to the list
+of previous annotations (and is replaced by the new next annotation,
+if any).
 
 Installation and platforms
 ==========================
@@ -134,23 +180,6 @@ welcome. Support for earlier versions would require at least a
 replacement of the ``enum`` standard module. Windows support would
 require replacing the curses module with an alternative.
 
-
-Help
-====
-
-Help can be obtained with the ``-h`` or ``--help`` option of
-``realtime_annotate.py``.
-
-The program launches a command shell. Help with the commands of this
-shell is available through ``?`` or ``help``.
-
-Configuration of the annotations list
-=====================================
-
-The possible annotations and annotation keys are configured by the
-user in a simple text file. For more information, see the built-in
-help: ``help load_keys``. An simple `example <music_annotations.txt>`_
-for annotating music recordings is provided.
 
 Annotation file format
 ======================
