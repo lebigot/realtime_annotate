@@ -39,10 +39,12 @@ example, the play head of a music player can thus be synchronized with
 the user's annotation time stamps.
 
 When going through an existing annotated event, existing **annotations
-scroll on screen**. The user can thus see existing annotations, and
-conveniently add only annotations that were not already entered,
-*without having to check time stamps themselves*. The program thus
-frees the user from inner monologues like this one:
+scroll on screen**. An upcoming annotation is *highlighted for one
+second* before is scrolls down to the list of previous annotations:
+the user does not have to check the timer in order to see whether he
+has already entered some annotation). The user is thus freed from
+managing time and time stamps. There should be no more inner
+monologues like this one:
 
 - *Did I already indicate that the melody is good, here?*
 - *Let me check the timer…*
@@ -52,7 +54,7 @@ frees the user from inner monologues like this one:
 
 All of this is automatically handled by the program through the
 scrolling display of annotations around the current timer, and the
-user can focus on adding new annotations.
+user can better focus on the quality of his real-time annotations.
 
 Annotations for *multiple events* are stored in a single **JSON file**
 with a simple format.  This format has the advantage of being
@@ -191,14 +193,6 @@ in the help at the bottom of the ``annotate`` screen):
 - **Stopping** the annotation process is done with the space key. If a
   player controller is used (``--player`` option), the player
   is stopped.
-
-**Existing annotations** with time stamps around the current
-annotation timer are displayed in the "Next annotation" field and in
-the "Previous annotations" list (see the screenshot_). The user can
-thus see what annotations have already been entered. The next
-annotation is *highlighted during one second* before it **scrolls
-down** to the list of previous annotations (and is replaced by the new
-next annotation, if any).
 
 Annotation file format
 ======================
