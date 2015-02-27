@@ -106,9 +106,10 @@ class TimestampedAnnotation:
         self.time = time
         
         # The advantage of storing the annotation as an Enum instead
-        # of just a key (Enum value)is that it can have a nice string
-        # representation (Enum name), and that it preserve the
-        # associated key (which can then be saved to a file, etc.):
+        # of just a character (enumerated constant) is that it can
+        # have a nice string representation (Enum name), and that it
+        # preserve the associated character (which can then be saved to a
+        # file, etc.):
         self.annotation = annotation
     
     def set_value(self, value):
@@ -316,7 +317,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     time at the time of exit.
 
     Displays and updates the given annotation list based on
-    user command keys.
+    single characters entered by the user.
 
     stdscr -- curses.WindowObject for displaying information.
 
@@ -328,7 +329,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     annot_enum -- enum.Enum enumeration with all the possible
     annotations. The names are the full names of the annotations,
-    while the values are the corresponding keyboard keys.
+    while the values are the corresponding characters.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -522,10 +523,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
     def getkey():
         """
-        Get the user key command (if any) and process it.
+        Get the user command (if any) and process it.
 
         Before doing this, refreshes the screen, and schedules
-        the next command key check.
+        the next key check.
 
         This event is always scheduled for the next_getkey_counter
         time.
@@ -582,7 +583,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 
             else:
                 
-                # An annotation key was pressed:
+                # An annotation key was given:
                 annotations.insert(TimestampedAnnotation(
                     annotation_time, annotation_kind))
                 # Display update:
@@ -657,8 +658,8 @@ class AnnotateShell(cmd.Cmd):
 
             # Extraction of the file contents:
             #
-            # The key assignments (represented as an enum.Enum) might not
-            # be defined yet:
+            # The key assignments (represented as an enum.Enum)
+            # might not be defined yet:
 
             self.annot_enum = (
                 enum.Enum("AnnotationKind", file_contents["key_assignments"])
@@ -691,8 +692,8 @@ class AnnotateShell(cmd.Cmd):
             Save the updated annotations if wanted.
             """
             print()
-            if input("Do you want to save the annotations and key assignments"
-                     " (y/n)? [y] ") != "n":
+            if input("Do you want to save the annotations and key"
+                     " assignments (y/n)? [y] ") != "n":
                 self.do_save()
         atexit.register(save_if_needed)
 
@@ -961,9 +962,6 @@ class AnnotateShell(cmd.Cmd):
                     new_annotation = new_annot_enum(key)
                 except ValueError:
 
-                    # !!! Technically, *characters* are assigned to
-                    # annotations, not keyboard keys: this should be
-                    # made clear in this program AND in the doc:
                     print("Problem: key {} not found in new key assignments."
                           .format(key))
 
