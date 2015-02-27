@@ -656,9 +656,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             if key == "KEY_RIGHT"
                             else annotations.to_prev_annotation)()
                     except NoAnnotation:
-                        curses.beep()  # No next annotation
+                        curses.beep()  # No annotation to go to
                     else:
 
+                        # !!!! For KEY_LEFT, a multiple jump facility
+                        # could be implemented, where a KEY_LEFT
+                        # coming less than the getkey interval*1.5
+                        # after the current last annotation would go
+                        # backwards *twice*.
+                        
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
