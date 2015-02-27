@@ -229,7 +229,22 @@ class AnnotationList:
         """
         self.cursor = bisect.bisect(
             [annotation.time for annotation in self.list_], time)
-    
+
+    def to_next_annotation(self):
+        """
+        Move the cursor forward by one annotation, and return the time of
+        the annotation it passed.
+
+        If there is no annotation after the cursor, nothing happens
+        and NoAnnotation is raised.
+        """
+
+        if self.cursor == len(self):  # No next annotation
+            raise NoAnnotation
+
+        self.cursor += 1
+        return self[self.cursor-1].time
+
     def next_annotation(self):
         """
         Return the first annotation after the cursor, or None if there
@@ -580,7 +595,20 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 elif key == "\t":
                     #!!!!!!!! add doc in Commands AND README
                     # Jump to the next annotation:
-                    # !!!!!!!!!!
+                    try:
+                        new_time = annotations.to_next_annotation()
+                        player_module.set_time(*new_time.to_HMS())
+                        
+                        # !!!!! cancel next_annotation_upcoming_events
+                        # (here or later, as with Space)
+
+                        # !!!!!! update time, previous and next events
+                        
+                    except NoAnnotation:
+                        stdscr.beep()  # No next annotation
+                    else:
+                        
+                        # !!!!!!!!!!
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
 
