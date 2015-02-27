@@ -902,13 +902,17 @@ class AnnotateShell(cmd.Cmd):
         print("Key assignments loaded from file {}.".format(file_path))
                     
         try:
-            annot_enum = enum.unique(
+            new_annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
         except ValueError as err:  # Non-unique keyboard keys
             print("Error: all keyboard keys should be different.")
             return
 
-        self.annot_enum = annot_enum
+        # The old annotations and key assignments are saved, for a
+        # rollback in case of problem:
+        old_annot_num = self.annot_enum
+        
+        self.annot_enum = new_annot_enum
         self.do_list_keys()
         
         # Existing annotations use the old annotation kinds
@@ -921,38 +925,70 @@ class AnnotateShell(cmd.Cmd):
         # would be no way to interpret them. A solution to both of
         # these issues is to update all annotations
         # (self.all_annotations) so that they are interpreted with the
-        # new annot_enum, prompting the user for a key update when a
+        # new_annot_enum, prompting the user for a key update when a
         # key does not exist in the new key assignments
-        # (annot_enum). This is done below:
+        # (new_annot_enum). This is done below:
 
-        # Translations between old annotations *in
-        # self.all_annotations* (so that the program does not prompt
-        # the user for keys that were not used but have disappeared
-        # from the keys file), and new annotations:
-        annot_translations = {}
+        # List of annotation updates, in the form of
+        # (TimestampedAnnotation, old enum.Enum) pairs (for a possible
+        # rollback):
+        
+        updated_annotations = []
+        
         for (event_ref, annotations) in self.all_annotations.items():
+
             for timed_annotation in annotations:
 
-                old_annotation = timed_annotation.annotation
-                try:
-                    new_annotation = annot_translations[old_annotation]
-                except KeyError:
-                    print("Annotation key {} not found in key assignments."
-                          .format(old_annotation.value))
-                    while True:
-                        new_key = input("Key that {} should be replaced with: "
-                                        .format(old_annotation.value))
-                        try:
-                            new_annotation = annot_enum(new_key)
-                        except ValueError:
-                            print("Error: this is not a valid key.")
-                        else:
-                            annot_translations[old_annotation] = new_annotation
-                            break
-                    
+                # Do we have a new annotation with the same key?
+                key = timed_annotation.annotation.value
+
+                while True:
+
+                    try:
+                        new_annotation = new_annot_enum(key)
+                    except ValueError:
+
+                        # !!!!!! Test missing key
+                        
+                        # !!! Technically, *characters* are assigned
+                        # to annotations, not keyboard keys:
+                        print("Key {} not found in key assignments."
+                              .format(key))
+
+                        key = input(
+                            "New key that {} should be replaced with"
+                            " (or Enter, for reverting to the previous"
+                            " key assignments): ".format(key))
+
+                        # If the new key assignments are incorrect
+                        # (e.g., if there is no replacement in the new
+                        # annotations for an existing annotation key),
+                        # then the user needs a way out. He can cancel
+                        # the changes:
+
+                        if not key:
+
+
+                            # !!!! Test rollback OK
+                            
+                            # Both the new key assignments and the
+                            # annotation updates are canceled:
+                            self.annot_enum = old_annot_num
+                            # The old annotations are put back:
+                            for (timed_annotation, old_annotation) in (
+                                    updated_annotations):
+
+                                timed_annotation.annotation = old_annotation
+                            print("New key assignments canceled.")
+                            return
+                            
+                    else:
+                        break
+
+                updated_annotations.append((timed_annotation, 
+                                            timed_annotation.annotation))
+                
                 timed_annotation.annotation = new_annotation
-            
-        # !!!!!!!!!!!! test
             
     def complete_load_keys(self, text, line, begidx, endidx):
         """
