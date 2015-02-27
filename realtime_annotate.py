@@ -438,11 +438,38 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
 
-    def display_prev_annots():
+    # In order to cancel upcoming updates of the next annotation
+    # (highlight and transfer to the list of previous events), the
+    # corresponding events are stored in this list:
+    cancelable_events = []
+    def cancel_sched_events():
+        """
+        Cancel the scheduled events (except getting the next user key).
+
+        The events canceled are in cancelable_events.
+        """
+        while cancelable_events:
+            try:
+                # Highlighting events are not tracked, so they
+                # might have passed without this program knowing
+                # it, which makes the following fail:
+                scheduler.cancel(cancelable_events.pop())
+            except ValueError:
+                pass
+    
+    def display_annotations():
         """
         Display the list of previous annotations (erasing any text in the
-        region of previous annotations).
+        region of previous annotations), and the next annotation.
+
+        Schedule the next annotation list update (with the next
+        annotation going from the next annotation entry to the
+        previous annotations list).
         """
+
+        ####################
+        # Previous annotations:
+        
         ## If there is any annotation before the current time:
         if annotations.cursor:  # The slice below is cumbersome otherwise
 
@@ -463,42 +490,17 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         for line_idx in range(line_idx+1, 5+prev_annot_height):
             stdscr.move(line_idx, 0)
             stdscr.clrtoeol()
+
+        display_next_annotation()
         
-    display_prev_annots()
-    
-    # Now that the previous annotations are listed, the next
-    # annotation can be printed and its updates scheduled:
-
-    # In order to cancel upcoming updates of the next annotation
-    # (highlight and transfer to the list of previous events), the
-    # corresponding events are stored in this list:
-    cancelable_events = []
-    def cancel_sched_events():
-        """
-        Cancel the scheduled events (except getting the next user key).
-
-        The events canceled are in cancelable_events.
-        """
-        while cancelable_events:
-            try:
-                # Highlighting events are not tracked, so they
-                # might have passed without this program knowing
-                # it, which makes the following fail:
-                scheduler.cancel(cancelable_events.pop())
-            except ValueError:
-                pass
-    
     def display_next_annotation():
         """
-        Update the display of the next annotation with the current
-        next annotation in annotations and schedule its screen
-        update (going from the next annotation entry to the previous
-        annotations list).
+        Display the next annotation and schedules the corresponding
+        annotation list scrolling.
 
-        The previous annotations must be already displayed (otherwise
-        the scheduled update for the next annotation might break the
-        display).
+        The previous annotation list must be displayed already.
         """
+        
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
     
@@ -533,6 +535,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     2, x_display,
                     len(next_annotation_text), curses.A_STANDOUT)),
 
+                # The transfer of next_annotation will require the
+                # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
                                    transfer_next_annotation)
                 ]
@@ -557,7 +561,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
         display_next_annotation()
 
-    display_next_annotation()
+    display_annotations()
         
     ####################
     # User key handling:
@@ -582,7 +586,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
-    
         stdscr.addstr(3, 19, str(annotation_time))
         stdscr.clrtoeol()  # The time can have a varying size
 
@@ -641,18 +644,20 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
+                        nonlocal start_time, start_counter
                         start_time = new_time
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
+
+                        # !!!!!! debug
+                        stdscr.addstr(0, 40, str(counter_to_time(next_getkey_counter)))
 
                         # Any queued event must be canceled, as they
                         # are obsolete:
                         cancel_sched_events()
 
-                        # !!!!! Shouldn't the next action be with the prev?
                         # Update of the existing annotations:
-                        display_prev_annots()
-                        display_next_annotation()
+                        display_annotations()
 
                 elif key != " ":  # Space is a valid key
                     stdscr.addstr(0, 40, key)
