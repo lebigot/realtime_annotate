@@ -953,7 +953,7 @@ class AnnotateShell(cmd.Cmd):
 
             # First key tried for finding the new annotation
             # corresponding to old_annotation:
-            key = old_annotations.annotation.value
+            key = old_annotation.value
             
             while True:
 
@@ -962,12 +962,10 @@ class AnnotateShell(cmd.Cmd):
                     new_annotation = new_annot_enum(key)
                 except ValueError:
 
-                    # !!!!!! Test missing key
-
                     # !!! Technically, *characters* are assigned to
                     # annotations, not keyboard keys: this should be
                     # made clear in this program AND in the doc:
-                    print("Key {} not found in new key assignments."
+                    print("Problem: key {} not found in new key assignments."
                           .format(key))
 
                     key = input(
@@ -976,9 +974,6 @@ class AnnotateShell(cmd.Cmd):
                         " key assignments): ".format(key))
 
                     if not key:
-
-                        # !!!! Test rollback OK
-
                         # Both the new key assignments and the
                         # annotation updates are canceled:
                         self.annot_enum = old_annot_num
@@ -997,8 +992,6 @@ class AnnotateShell(cmd.Cmd):
             for timed_annotation in annotations:
                 timed_annotation.annotation = updates[
                     timed_annotation.annotation]
-
-        # !!!!!! Test updated printed in annotate
         
     def complete_load_keys(self, text, line, begidx, endidx):
         """
