@@ -507,9 +507,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         next_annotation = annotations.next_annotation()
         
         next_annotation_text = (
-            str(next_annotation)
+            (str(next_annotation) if next_annotation is not None else "<None>")
             # !! The terminal needs at least 19 columns:
-            if next_annotation is not None else "<None>")[:term_cols-x_display]
+            [:term_cols-1-x_display])
         
         stdscr.addstr(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
@@ -635,7 +635,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     try:
                         new_time = annotations.to_next_annotation()
                     except NoAnnotation:
-                        stdscr.beep()  # No next annotation
+                        curses.beep()  # No next annotation
                     else:
 
                         # The relationship between the annotation
