@@ -844,14 +844,6 @@ class AnnotateShell(cmd.Cmd):
 
         New keys can be added.
         """
-
-        # Loading a new keys file could make some existing annotations
-        # obsolete: this should be handled: otherwise the user can
-        # save the file, then be unable to reopen it, because some
-        # annotations cannot be interpreted. !!!!!!
-        #
-        # Update the docstring and indicate a method for changing
-        # keys (not meanings): make old key unbound in keys file.
         
         # Common error: no file name given:
         if not file_path:
@@ -910,6 +902,11 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("Key assignments can be listed with list_keys.")
 
+        # Consistency check between existing annotations and the new
+        # file:
+
+        #!!!!!!!!!!!!
+            
         self.annot_enum = annot_enum
             
             
