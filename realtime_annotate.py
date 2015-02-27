@@ -472,17 +472,19 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # In order to cancel upcoming updates of the next annotation
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
-    cancellable_events = []
+    cancelable_events = []
     def cancel_sched_events():
         """
         Cancel the scheduled events (except getting the next user key).
+
+        The events canceled are in cancelable_events.
         """
-        while cancellable_events:
+        while cancelable_events:
             try:
                 # Highlighting events are not tracked, so they
                 # might have passed without this program knowing
                 # it, which makes the following fail:
-                scheduler.cancel(cancellable_events.pop())
+                scheduler.cancel(cancelable_events.pop())
             except ValueError:
                 pass
     
@@ -501,17 +503,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         x_display = 19
     
         # Display
+        
         next_annotation = annotations.next_annotation()
-        next_annotation_text = (str(next_annotation)
-                                if next_annotation is not None else "<None>")
+        
+        next_annotation_text = (
+            str(next_annotation)
+            # !! The terminal needs at least 19 columns:
+            if next_annotation is not None else "<None>")[:term_cols-x_display]
+        
         stdscr.addstr(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
         if next_annotation is not None:
 
-            nonlocal cancellable_events
+            nonlocal cancelable_events
             
-            cancellable_events = [
+            cancelable_events = [
                 
                 # Visual clue about upcoming annotation:
                 scheduler.enterabs(
