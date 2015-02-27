@@ -86,7 +86,7 @@ class TimestampedAnnotation:
 
     Main attributes:
     - time (datetime.timedelta)
-    - annotation (enum.Enum)
+    - annotation (enum.Enum item)
 
     A value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
@@ -828,6 +828,10 @@ class AnnotateShell(cmd.Cmd):
         IMPORTANTT: keys are used for storing annotations in
         files. This has some important consequences:
 
+        # Update the docstring and indicate a method for changing
+        # keys (not meanings): make old key unbound in keys file. !!!!!
+
+        
         WARNINGS:
         
         1) A key cannot be modified. A key cannot be removed.
@@ -876,21 +880,24 @@ class AnnotateShell(cmd.Cmd):
                     print("Error: syntax error in line {}:\n{}".format(
                         line_num, line))
                     return
-                else:
-                    # Sanity check:
-                    if len(key) != 1:
-                        print("Error: keys must be single characters. Error"
-                              " in line {} with key '{}'."
-                              .format(line_num, key))
-                        return
-                    if key.isdigit():
-                        print("Error: digits are reserved keys.")
-                        return
-                    # The other reserved keys are space and delete,
-                    # but space cannot be entered in the file, and
-                    # delete is cumbersome to enter, so this case is
-                    # not checked.
-                    key_assignments[text] = key
+
+                # Sanity checks:
+                
+                if len(key) != 1:
+                    print("Error: keys must be single characters. Error"
+                          " in line {} with key '{}'."
+                          .format(line_num, key))
+                    return
+                
+                if key.isdigit():
+                    print("Error: digits are reserved keys.")
+                    return
+                
+                # The other reserved keys are space and delete,
+                # but space cannot be entered in the file, and
+                # delete is cumbersome to enter, so this case is
+                # not checked.
+                key_assignments[text] = key
 
         print("Key assignments loaded from file {}.".format(file_path))
                     
@@ -900,27 +907,52 @@ class AnnotateShell(cmd.Cmd):
         except ValueError as err:  # Non-unique keyboard keys
             print("Error: all keyboard keys should be different.")
             return
-        else:
-            print("Key assignments can be listed with list_keys.")
 
-        # Consistency check between existing annotations and the new
-        # file:
-
-        # Loading a new keys file could make some existing annotations
-        # obsolete: this should be handled: otherwise the user can
-        # save the file, then be unable to reopen it, because some
-        # annotations cannot be interpreted. !!!!!!
-        #
-        # Update the docstring and indicate a method for changing
-        # keys (not meanings): make old key unbound in keys file. !!!!!
-
-        
-        # @@@@@@ There is a problem: previous annotations are still
-        # displayed with the old meaning, since they are stored as
-        # elements of the old enumeration. FIX
-            
         self.annot_enum = annot_enum
+        self.do_list_keys()
+        
+        # Existing annotations use the old annotation kinds
+        # (self.annot_enum). These annotations contain text that may
+        # have been updated in the keys file, so it should be updated
+        # as well in self.all_annotations. They might also contain
+        # annotation keys that have disappeared from the key
+        # assignments (through renaming, etc.): saving them as keys
+        # would prevent the annotation file from being open, as there
+        # would be no way to interpret them. A solution to both of
+        # these issues is to update all annotations
+        # (self.all_annotations) so that they are interpreted with the
+        # new annot_enum, prompting the user for a key update when a
+        # key does not exist in the new key assignments
+        # (annot_enum). This is done below:
+
+        # Translations between old annotations *in
+        # self.all_annotations* (so that the program does not prompt
+        # the user for keys that were not used but have disappeared
+        # from the keys file), and new annotations:
+        annot_translations = {}
+        for (event_ref, annotations) in self.all_annotations.items():
+            for timed_annotation in annotations:
+
+                old_annotation = timed_annotation.annotation
+                try:
+                    new_annotation = annot_translations[old_annotation]
+                except KeyError:
+                    print("Annotation key {} not found in key assignments."
+                          .format(old_annotation.value))
+                    while True:
+                        new_key = input("Key that {} should be replaced with: "
+                                        .format(old_annotation.value))
+                        try:
+                            new_annotation = annot_enum(new_key)
+                        except ValueError:
+                            print("Error: this is not a valid key.")
+                        else:
+                            annot_translations[old_annotation] = new_annotation
+                            break
+                    
+                timed_annotation.annotation = new_annotation
             
+        # !!!!!!!!!!!! test
             
     def complete_load_keys(self, text, line, begidx, endidx):
         """
