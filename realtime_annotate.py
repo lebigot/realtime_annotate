@@ -596,9 +596,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             # Stopping the player is best done as soon as possible, so
             # as to keep the synchronization between self.time and the
-            # player time as well as possible:
+            # player time as well as possible, in case
+            # player_module.set_time() is a no-op but
+            # player_module.stop() works:
             player_module.stop()
-            
+
             # No new scheduling of a possible user key reading.
 
             # Existing scheduled events (highlighting and transfer of
@@ -628,8 +630,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     scheduler.enterabs(next_getkey_counter, 0, getkey)
     scheduler.run()
 
-    # The pause key was entered at the last next_getkey_counter:
-    return counter_to_time(next_getkey_counter)
+    # The pause key was entered at the last next_getkey_counter, so
+    # this is the time used for updating the event timer:
+    getkey_time = counter_to_time(next_getkey_counter)
+    player_module.set_time(*getkey_time)  # Explicit synchronization
+    return getkey_time
     
 class AnnotateShell(cmd.Cmd):
     """
@@ -805,9 +810,7 @@ class AnnotateShell(cmd.Cmd):
         the annotations. This can be used for modifying or updating
         the annotations associated with a file.
 
-        The loaded keys are displayed with the list_keys command.
-
-        The format is as follows:
+        The file format is as follows:
 
         # Musical annotations
         
@@ -815,8 +818,8 @@ class AnnotateShell(cmd.Cmd):
         e    end (0 = could be an end if needed)
         ...
 
-        The first letter is a keyboard key (case sensitive). Typing
-        this key will insert the annotation described afterwards (free
+        The first letter is a character (case sensitive). Typing this
+        character will insert the annotation described afterwards (free
         text).
 
         The key can be followed by any number of spaces, which are
@@ -825,29 +828,22 @@ class AnnotateShell(cmd.Cmd):
 
         Empty lines and lines starting by # are ignored.
 
-        IMPORTANTT: keys are used for storing annotations in
-        files. This has some important consequences:
+        WARNING
 
-        # Update the docstring and indicate a method for changing
-        # keys (not meanings): make old key unbound in keys file. !!!!!
-
+        Annotations are represented by their character only. Any
+        change in the key assignments of an annotation file must be
+        done with this in mind.
         
-        WARNINGS:
-        
-        1) A key cannot be modified. A key cannot be removed.
-        
-        2) Texts can change, but the meanings should probably not be
-        altered in a way that invalidates previous annotations (e.g.,
-        if "s" meant "start of a piece", then "s" should keep meaning
-        this, even if the text description changes).
+        KEY ASSIGNMENT CHANGES
 
-        3) The meanings can normally be refined or extended (e.g., if
-        "s" meant "start of a piece", it's OK to extend its meaning to
-        "start of a piece or of an improvisation", since the new
-        meaning encompasses the previous one and therefore does not
-        invalidate previous annotations).
-
+        The description text can be updated (usually in a way
+        consistent with the meaning of event annotations that use its
+        key).
+        
         New keys can be added.
+        
+        If a key which is used in events disappears, the user is
+        prompted for the replacement key.
         """
         
         # Common error: no file name given:
@@ -1121,7 +1117,8 @@ class AnnotateShell(cmd.Cmd):
         # "just" before when the user last stopped:
         self.time = (last_annotation.time if last_annotation is not None
                      else Time())
-        print("Time set to last annotation timestamp: {}.".format(self.time))
+        print("Back to preceding annotation. Annotation timer set to {}."
+              .format(self.time))
         
     def complete_select_event(self, text, line, begidx, endidx):
         """
