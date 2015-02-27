@@ -410,6 +410,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
+
+    def addstr_width(y, x, text, attr=curses.A_NORMAL):
+        """
+        Like stdscr.addstr, but truncates the string so that it does not
+        go beyond the last column, and so that there is no line
+        wrapping unless explicit.
+
+        text -- string with the text to be displayed. The only newline
+        can be at the end, and it might be removed if it is too far on
+        the right.
+        """
+        stdscr.addstr(y, x, text[:term_cols-1-x], attr)
     
     ## Annotations cursor:
     annotations.cursor_at_time(start_time)
@@ -419,21 +431,21 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
     stdscr.clear()
     
-    stdscr.addstr(0, 0, "Event:", curses.A_BOLD)
-    stdscr.addstr(0, 7, curr_event_ref)
+    addstr_width(0, 0, "Event:", curses.A_BOLD)
+    addstr_width(0, 7, curr_event_ref)
     
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
-    stdscr.addstr(2, 0, "Next annotation:", curses.A_BOLD)
+    addstr_width(2, 0, "Next annotation:", curses.A_BOLD)
         
-    stdscr.addstr(3, 0, "Annotation timer:", curses.A_BOLD)
+    addstr_width(3, 0, "Annotation timer:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
 
     # Help at the bottom of the screen:
     help_start_line = term_lines - (len(annot_enum)+6)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
-    stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
+    addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del>: delete previous annotation\n")
     stdscr.addstr("<Left>, <Right>: navigate in annotations\n")
@@ -455,7 +467,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     stdscr.setscrreg(6, 5+prev_annot_height)
     
-    stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
+    addstr_width(5, 0, "Previous annotations:", curses.A_BOLD)
 
     # In order to cancel upcoming updates of the next annotation
     # (highlight and transfer to the list of previous events), the
@@ -499,7 +511,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             for (line_idx, annotation) in enumerate(
                 annotations[annotations.cursor-1 : slice_end :-1], 6):
 
-                stdscr.addstr(line_idx, 0, str(annotation)[:term_cols-1])
+                addstr_width(line_idx, 0, str(annotation))
                 stdscr.clrtoeol()  # For existing annotations
 
         else:
@@ -527,12 +539,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         
         next_annotation = annotations.next_annotation()
         
-        next_annotation_text = (
-            (str(next_annotation) if next_annotation is not None else "<None>")
-            # !! The terminal needs at least 19 columns:
-            [:term_cols-1-x_display])
+        next_annotation_text = (str(next_annotation)
+                                if next_annotation is not None else "<None>")
         
-        stdscr.addstr(2, x_display, next_annotation_text)
+        addstr_width(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
         if next_annotation is not None:
@@ -571,7 +581,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         #
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
-        stdscr.addstr(6, 0, str(annotations.next_annotation()))
+        addstr_width(6, 0, str(annotations.next_annotation()))
         stdscr.refresh()  # Instant feedback
         
         # The cursor in the annotations list must be updated to
@@ -605,7 +615,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
-        stdscr.addstr(3, 19, str(annotation_time))
+        addstr_width(3, 19, str(annotation_time))
         stdscr.clrtoeol()  # The time can have a varying size
 
         try:
@@ -623,7 +633,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         (annotations.prev_annotation().set_value(int(key)))
                         # The screen must be updated so as to reflect
                         # the new value:
-                        stdscr.addstr(
+                        addstr_width(
                             6, 0,  str(annotations.prev_annotation()))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
@@ -641,7 +651,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         index_new_prev_annot = (
                             annotations.cursor-prev_annot_height)
                         if index_new_prev_annot >= 0:
-                            stdscr.addstr(
+                            addstr_width(
                                 5+prev_annot_height, 0,
                                 str(annotations[index_new_prev_annot]))
                         # Instant feedback:
@@ -650,8 +660,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     else:
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:
-                    
-                    #!!!!!!!! add doc in Commands pane AND README
                     
                     # Jump to the next or previous annotation:
                     try:
@@ -701,7 +709,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         display_annotations()
 
                 elif key != " ":  # Space is a valid key
-                    stdscr.addstr(0, 40, key)
+                    addstr_width(0, 40, key)
                     curses.beep()  # Unknown key
 
             else:  # A user annotation key was given:
@@ -710,7 +718,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     annotation_time, annotation_kind))
                 # Display update:
                 stdscr.scroll(-1)
-                stdscr.addstr(6, 0, str(annotations.prev_annotation()))
+                addstr_width(6, 0, str(annotations.prev_annotation()))
                 stdscr.refresh()  # Instant feedback
 
         # Looping through the scheduling of the next key check:
