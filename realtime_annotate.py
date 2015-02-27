@@ -14,7 +14,7 @@ the same times as the annotation process).
 (c) 2015 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "1.1"
+__version__ = "1.2"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # !! The optional player driven by this program must be defined by
@@ -572,7 +572,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     def transfer_next_annotation():
         """
-        Move the current next annotation (which does exist) to the
+        Move the current next annotation (which must exist) to the
         list of previous annotations, update the next annotation (if
         any), and schedule the next transfer (if necessary).
         """
@@ -662,6 +662,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:
                     
                     # Jump to the next or previous annotation:
+                    
                     try:
                         new_time = (
                             annotations.to_next_annotation
@@ -697,11 +698,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
 
-                        # Any queued event must be canceled, as they
-                        # are obsolete:
-                        cancel_sched_events()
+                        # Screen update of the existing annotations:
 
-                        # Update of the existing annotations:
+                        # Any queued event must be canceled, as they
+                        # are obsolete, since they are tied to the
+                        # time next_getkey_counter (instead of
+                        # new_time):
+                        cancel_sched_events()
                         #
                         # !!!! This is not efficient: for forward, a
                         # simple scroll down of the next annotation
