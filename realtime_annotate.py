@@ -86,7 +86,7 @@ class TimestampedAnnotation:
 
     Main attributes:
     - time (datetime.timedelta)
-    - annotation (enum.Enum item)
+    - annotation (enumerated constant)
 
     A value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
@@ -98,11 +98,10 @@ class TimestampedAnnotation:
     """
     def __init__(self, time, annotation):
         """
-        Annotation represented by the given keyboard key.
-
         time -- timestamp for the annotation, as a datetime.timedelta.
         
-        annotation -- annotation to be stored, as an enum.Enum.
+        annotation -- annotation to be stored, as an enumerated
+        constant.
         """
         self.time = time
         
