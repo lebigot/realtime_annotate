@@ -930,7 +930,7 @@ class AnnotateShell(cmd.Cmd):
         # annotations, automatically through a common key if possible,
         # or with the input of the user if a key has disappeared (who
         # either indicates the new annotation that replaces the old
-        # one, or if, this is not possible, cancels the new key
+        # one, or if this is not possible, cancels the new key
         # assignments).
 
         # The enumeration constant conversions are first determined:
