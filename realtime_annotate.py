@@ -596,7 +596,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             # Stopping the player is best done as soon as possible, so
             # as to keep the synchronization between self.time and the
-            # player time:
+            # player time as well as possible:
             player_module.stop()
             
             # No new scheduling of a possible user key reading.
