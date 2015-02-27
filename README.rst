@@ -199,7 +199,8 @@ help at the bottom of the ``annotate`` screen):
 Annotation file format
 ======================
 
-The annotation file JSON structure should be mostly self-explanatory.
+The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
+structure should be mostly self-explanatory.
 
 Annotation times are stored as ``[hours, minutes, seconds]``.
 ``hours`` and ``minutes`` are integers, and ``seconds`` is a
