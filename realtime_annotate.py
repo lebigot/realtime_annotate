@@ -804,6 +804,8 @@ class AnnotateShell(cmd.Cmd):
         the annotations. This can be used for modifying or updating
         the annotations associated with a file.
 
+        The loaded keys are displayed with the list_keys command.
+
         The format is as follows:
 
         # Musical annotations
@@ -1006,8 +1008,9 @@ class AnnotateShell(cmd.Cmd):
         List the key assignments for annotations (loaded by load_keys and
         saved in the annotation file).
         """
-        
-        #!!!!!!!!!!
+        print("Annotation keys:")
+        for annotation in self.annot_enum:
+            print("{}: {}".format(annotation.value, annotation.name))
         
     def do_select_event(self, arg):
         """
