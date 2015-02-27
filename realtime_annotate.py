@@ -970,8 +970,6 @@ class AnnotateShell(cmd.Cmd):
                         " key assignments): ".format(key))
 
                     if not key:
-                        # Both the new key assignments and the
-                        # annotation update is canceled:
                         self.annot_enum = old_annot_num
                         print("New key assignments canceled.")
                         self.do_list_keys()
