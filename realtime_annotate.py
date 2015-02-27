@@ -36,6 +36,9 @@ import sys
 import glob
 import json
 
+# Time interval between keyboard keys that are considered repeated:
+REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
+
 class Time(datetime.timedelta):
     # ! A datetime.timedelta is used instead of a datetime.time
     # because the internal scheduler of this program must be added to
@@ -655,16 +658,28 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             annotations.to_next_annotation
                             if key == "KEY_RIGHT"
                             else annotations.to_prev_annotation)()
+                        
                     except NoAnnotation:
                         curses.beep()  # No annotation to go to
                     else:
 
-                        # !!!! For KEY_LEFT, a multiple jump facility
-                        # could be implemented, where a KEY_LEFT
-                        # coming less than the getkey interval*1.5
-                        # after the current last annotation would go
-                        # backwards *twice*.
-                        
+                        if key == "KEY_LEFT":
+                            # In order to allow the user to move
+                            # beyond just the previous annotation,
+                            # there is a small time window after each
+                            # annotation during which going backwards
+                            # moves *two* annotations back. In effect,
+                            # this skips the previous annotation and
+                            # goes back to the one before:
+
+                            if (counter_to_time(next_getkey_counter)
+                                -new_time) < REPEAT_KEY_TIME:
+                                
+                                try:
+                                    new_time = annotations.to_prev_annotation()
+                                except NoAnnotation:
+                                    pass
+
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
@@ -678,6 +693,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         cancel_sched_events()
 
                         # Update of the existing annotations:
+                        #
+                        # !!!! This is not efficient: for forward, a
+                        # simple scroll down of the next annotation
+                        # would do. For backward movement
                         display_annotations()
 
                 elif key != " ":  # Space is a valid key
