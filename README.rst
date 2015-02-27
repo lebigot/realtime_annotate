@@ -39,12 +39,12 @@ example, the play head of a music player can thus be synchronized with
 the user's annotation time stamps.
 
 When going through an existing annotated event, existing **annotations
-scroll on screen**. An upcoming annotation is *highlighted for one
-second* before is scrolls down to the list of previous annotations:
-the user does not have to check the timer in order to see whether he
-has already entered some annotation). The user is thus freed from
-managing time and time stamps. There should be no more inner
-monologues like this one:
+automatically scroll on screen**. An upcoming annotation is
+*highlighted for one second* before is scrolls down to the list of
+previous annotations: the user does not have to check the timer in
+order to see whether he has already entered some annotation). The user
+is thus freed from managing time and time stamps. There should be no
+more inner monologues like this one:
 
 - *Did I already indicate that the melody is good, here?*
 - *Let me check the timer…*
@@ -55,6 +55,11 @@ monologues like this one:
 All of this is automatically handled by the program through the
 scrolling display of annotations around the current timer, and the
 user can better focus on the quality of his real-time annotations.
+
+It is also possible to **manually jump** to the next or previous
+annotations while annotating. The optional external player
+automatically moves its play head. This makes revising, adding or
+deleting annotations at a certain point in time convenient.
 
 Annotations for *multiple events* are stored in a single **JSON file**
 with a simple format.  This format has the advantage of being
@@ -69,8 +74,8 @@ The program optionally **automatically synchronizes** the annotation
 timer with an **external player** (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
 `annotation process`_, and can set the player's play head when the
-annotation timer is set to a specific time.  *MIDI instruments* can be
-automatically controlled with the `provided MIDI controller
+annotation timer is set to a different time.  *MIDI instruments* can
+be automatically controlled with the `provided MIDI controller
 <midi_player.py>`_. Users can control *other kinds of players* by
 writing a few Python functions.
 
