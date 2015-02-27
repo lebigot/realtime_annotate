@@ -1161,7 +1161,7 @@ class AnnotateShell(cmd.Cmd):
         # Existing events must not be clobbered:
         if new_name in self.all_annotations:
             print('Problem: event "{}" exists. You can delete it if needed.'
-                  " Event renaming aborted.".format(new_name))
+                  " Renaming aborted.".format(new_name))
             return
 
         try:
