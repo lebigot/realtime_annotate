@@ -438,19 +438,33 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
 
-def list_prev_annot(): # !!!!!!!!!!!
-    ## If there is any annotation before the current time:
-    if annotations.cursor:  # The slice below is cumbersome otherwise
+    def list_prev_annot():
+        """
+        Display the list of previous annotations (erasing any text in the
+        region of previous annotations).
+        """
+        ## If there is any annotation before the current time:
+        if annotations.cursor:  # The slice below is cumbersome otherwise
+
+            slice_end = annotations.cursor-1-prev_annot_height
+            if slice_end < 0:
+                slice_end = None  # For a Python slice
+
+            for (line_idx, annotation) in enumerate(
+                annotations[annotations.cursor-1 : slice_end :-1], 6):
+
+                stdscr.addstr(line_idx, 0, str(annotation))
+
+        else:
+            line_idx = 5  # Last "written" line
+
+        # The rest of the lines are erased:
+        for line_idx in range(line_idx+1, 5+prev_annot_height):
+            stdscr.move(line_idx, 0)
+            stdscr.clrtoeol()
         
-        slice_end = annotations.cursor-1-prev_annot_height
-        if slice_end < 0:
-            slice_end = None  # For a Python slice
-
-        for (line_idx, annotation) in enumerate(
-            annotations[annotations.cursor-1 : slice_end :-1], 6):
-
-            stdscr.addstr(line_idx, 0, str(annotation))
-
+    list_prev_annot()
+    
     # Now that the previous annotations are listed, the next
     # annotation can be printed and its updates scheduled:
 
