@@ -218,7 +218,7 @@ class AnnotationList:
     def __iter__(self):
         return iter(self.list_)
     
-    def move_cursor(self, time):
+    def cursor_at_time(self, time):
         """
         Set the internal cursor so that an annotation at the given
         time would be inserted in timestamp order.
@@ -258,7 +258,7 @@ class AnnotationList:
         the list).
 
         The cursor must be located so that the insertion is done in
-        timestamp order. Using move_cursor(annotation.time) does this
+        timestamp order. Using cursor_at_time(annotation.time) does this
         (but this call is not required, as the cursor can be set by
         other means too, including outside of this class).
         """
@@ -382,7 +382,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     (term_lines, term_cols) = stdscr.getmaxyx()
     
     ## Annotations cursor:
-    annotations.move_cursor(start_time)
+    annotations.cursor_at_time(start_time)
 
     ####################    
     # Information display at start:
@@ -580,7 +580,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     else:
                         curses.beep()  # Error: no previous annotation
-                # !!!!!! TAB
+                elif key == "\t":
+                    #!!!!!!!! add doc in Commands AND README
+                    # Jump to the next annotation:
+                    # !!!!!!!!!!
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
 
