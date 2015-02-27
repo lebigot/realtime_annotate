@@ -194,7 +194,8 @@ class AnnotationList:
       directly on the AnnotationList: len(), subscripting, and
       iteration.
     
-    - cursor: index between annotations (0 = before the first annotation).
+    - cursor: (positive) index between annotations (0 = before the
+    first annotation).
     """
     def __init__(self, list_=None, cursor=0):
         """
@@ -245,10 +246,7 @@ class AnnotationList:
         Return the annotation just before the cursor, or None if there
         is none.
         """
-        try:
-            return self[self.cursor-1]
-        except IndexError:
-            return None
+        return self[self.cursor-1] if self.cursor >= 1 else None
         
     def insert(self, annotation):
         """
