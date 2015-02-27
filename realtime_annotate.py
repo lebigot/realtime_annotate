@@ -976,7 +976,7 @@ class AnnotateShell(cmd.Cmd):
                         return
 
                 else:
-                    break
+                    break  # Equivalent new_annotation determined
 
             conversions[old_annotation] = new_annotation
 
