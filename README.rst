@@ -176,8 +176,10 @@ of a music player, etc.), which is convenient. If a music controller
 is used (see below_), this time synchronization can be automatic.
 
 Existing **annotations automatically scroll** on the
-screen. All **actions** are run with a *single* keyboard key (listed
-in the help at the bottom of the ``annotate`` screen):
+screen.
+
+All **actions** are run with a *single* keyboard key (listed in the
+help at the bottom of the ``annotate`` screen):
 
 - Typing the **key** of one of the user-defined annotations adds it with
   the current annotation timer as a time stamp.

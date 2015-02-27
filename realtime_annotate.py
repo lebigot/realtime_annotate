@@ -635,7 +635,7 @@ class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
     """
-    intro = "Type ? (or help) for help. Use <tab> for automatic completion."
+    intro = "Type ? (or help) for help. Use <Tab> for automatic completion."
     prompt = "> "
 
     def __init__(self, annotations_path):
