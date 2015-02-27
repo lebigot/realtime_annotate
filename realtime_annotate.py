@@ -1189,7 +1189,7 @@ class AnnotateShell(cmd.Cmd):
         # "just" before when the user last stopped:
         self.time = (prev_annotation.time if prev_annotation is not None
                      else Time())
-        print("Back to preceding annotation. Annotation timer set to {}."
+        print("Back to previous annotation. Annotation timer set to {}."
               .format(self.time))
         
     def complete_select_event(self, text, line, begidx, endidx):
