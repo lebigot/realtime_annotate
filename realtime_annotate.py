@@ -649,9 +649,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
 
-                        # !!!!!! debug
-                        stdscr.addstr(0, 40, str(counter_to_time(next_getkey_counter)))
-
                         # Any queued event must be canceled, as they
                         # are obsolete:
                         cancel_sched_events()
