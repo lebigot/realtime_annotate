@@ -580,7 +580,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     else:
                         curses.beep()  # Error: no previous annotation
-                
+                # !!!!!! TAB
+                elif key != " ":  # Space is a valid key
+                    curses.beep()  # Unknown key
+
             else:
                 
                 # An annotation key was given:
@@ -591,7 +594,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 stdscr.addstr(6, 0, str(annotations.last_annotation()))
                 stdscr.refresh()  # Instant feedback
 
-        
+        # Looping through the scheduling of the next key check:
         if key == " ":
 
             # Stopping the player is best done as soon as possible, so
@@ -616,8 +619,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     scheduler.cancel(event)
                 except ValueError:
                     pass
-
-
         else:
             next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
@@ -633,7 +634,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # The pause key was entered at the last next_getkey_counter, so
     # this is the time used for updating the event timer:
     getkey_time = counter_to_time(next_getkey_counter)
-    player_module.set_time(*getkey_time)  # Explicit synchronization
+    player_module.set_time(*getkey_time.to_HMS())  # Explicit synchronization
     return getkey_time
     
 class AnnotateShell(cmd.Cmd):
