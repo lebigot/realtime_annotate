@@ -845,6 +845,14 @@ class AnnotateShell(cmd.Cmd):
         New keys can be added.
         """
 
+        # Loading a new keys file could make some existing annotations
+        # obsolete: this should be handled: otherwise the user can
+        # save the file, then be unable to reopen it, because some
+        # annotations cannot be interpreted. !!!!!!
+        #
+        # Update the docstring and indicate a method for changing
+        # keys (not meanings): make old key unbound in keys file.
+        
         # Common error: no file name given:
         if not file_path:
             print("Error: please provide a file path.")
@@ -894,14 +902,17 @@ class AnnotateShell(cmd.Cmd):
         print("Key assignments loaded from file {}.".format(file_path))
                     
         try:
-            self.annot_enum = enum.unique(
+            annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
         except ValueError as err:  # Non-unique keyboard keys
             print("Error: all keyboard keys should be different.")
+            return
         else:
-            print("Key assignments are listed when running the annotate"
-                  " command.")
+            print("Key assignments can be listed with list_keys.")
 
+        self.annot_enum = annot_enum
+            
+            
     def complete_load_keys(self, text, line, begidx, endidx):
         """
         Complete the text with paths from the current directory.
