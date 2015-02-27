@@ -255,7 +255,7 @@ class AnnotationList:
         except IndexError:
             return None
 
-    def last_annotation(self):
+    def prev_annotation(self):
         """
         Return the annotation just before the cursor, or None if there
         is none.
@@ -277,7 +277,7 @@ class AnnotationList:
         self.list_.insert(self.cursor, annotation)
         self.cursor += 1
 
-    def delete_last(self):
+    def delete_prev(self):
         """
         Delete the annotation just before the cursor and update the
         cursor (which does not move compared to its following
@@ -417,7 +417,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     stdscr.addstr(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
-    stdscr.addstr("<Del>: delete last annotation\n")
+    stdscr.addstr("<Del>: delete previous annotation\n")
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
@@ -601,11 +601,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                 if key.isdigit():
                     if annotations.cursor:
-                        (annotations.last_annotation().set_value(int(key)))
+                        (annotations.prev_annotation().set_value(int(key)))
                         # The screen must be updated so as to reflect
                         # the new value:
                         stdscr.addstr(
-                            6, 0,  str(annotations.last_annotation()))
+                            6, 0,  str(annotations.prev_annotation()))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
@@ -614,7 +614,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # ASCII delete: delete the previous annotation
                     if annotations.cursor:
 
-                        annotations.delete_last()
+                        annotations.delete_prev()
                         # Corresponding screen update:
                         stdscr.scroll()
                         # The last line in the list of previous
@@ -630,13 +630,16 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     else:
                         curses.beep()  # Error: no previous annotation
-                elif key == "KEY_RIGHT":
+                elif key in {"KEY_RIGHT", "KEY_LEFT"}:
                     
                     #!!!!!!!! add doc in Commands pane AND README
                     
-                    # Jump to the next annotation:
+                    # Jump to the next or previous annotation:
                     try:
-                        new_time = annotations.to_next_annotation()
+                        new_time = (
+                            annotations.to_next_annotation
+                            if key == "KEY_RIGHT"
+                            else annotations.to_prev_annotation)()
                     except NoAnnotation:
                         curses.beep()  # No next annotation
                     else:
@@ -666,7 +669,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     annotation_time, annotation_kind))
                 # Display update:
                 stdscr.scroll(-1)
-                stdscr.addstr(6, 0, str(annotations.last_annotation()))
+                stdscr.addstr(6, 0, str(annotations.prev_annotation()))
                 stdscr.refresh()  # Instant feedback
 
         # Looping through the scheduling of the next key check:
@@ -1180,11 +1183,11 @@ class AnnotateShell(cmd.Cmd):
         print("Current event set to {}.".format(event_ref))
         print("{} annotations found.".format(len(annotations)))
 
-        last_annotation = annotations.last_annotation()
+        prev_annotation = annotations.prev_annotation()
         
-        # The time of the last annotation before the cursor is
+        # The time of the previous annotation before the cursor is
         # "just" before when the user last stopped:
-        self.time = (last_annotation.time if last_annotation is not None
+        self.time = (prev_annotation.time if prev_annotation is not None
                      else Time())
         print("Back to preceding annotation. Annotation timer set to {}."
               .format(self.time))
