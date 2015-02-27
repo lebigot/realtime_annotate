@@ -453,8 +453,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             for (line_idx, annotation) in enumerate(
                 annotations[annotations.cursor-1 : slice_end :-1], 6):
 
-                stdscr.addstr(line_idx, 0, str(annotation))
-                std.clrtoeol()  # For existing annotations
+                stdscr.addstr(line_idx, 0, str(annotation)[:term_cols])
+                stdscr.clrtoeol()  # For existing annotations
 
         else:
             line_idx = 5  # Last "written" line
