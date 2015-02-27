@@ -961,7 +961,7 @@ class AnnotateShell(cmd.Cmd):
         event reference. This event must first be set with
         select_event.
 
-        The annotations file must also contain annotation key
+        The annotation file must also contain annotation key
         definitions. This typically has to be done once after creating
         the file, with the command load_keys.
         """
@@ -1000,7 +1000,15 @@ class AnnotateShell(cmd.Cmd):
                 print("- {}".format(event_ref))
         else:
             print("No annotated event found.")
-            
+
+    def do_list_keys(self, arg=None):
+        """
+        List the key assignments for annotations (loaded by load_keys and
+        saved in the annotation file).
+        """
+        
+        #!!!!!!!!!!
+        
     def do_select_event(self, arg):
         """
         Set the given event reference as the current event.
