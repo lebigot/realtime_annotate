@@ -35,6 +35,11 @@ MIDI > Listen to MMC Input).
 *******************************************************************************
 """)
 
+# Play head setting is based on the following frame rate. It should
+# ideally match the frame rate of the MIDI controllers. The user can
+# change the FRAME_RATE value.
+FRAME_RATE = 25  # frames/s
+
 def out_port():
     """
     Return a MIDI port for output.
@@ -79,7 +84,8 @@ def set_time(hours, minutes, seconds):
     hours must be in [0; 255].
 
     Sub-second time setting is approximate, and is handled by setting
-    a frame number based on 25 frames/seconds.
+    a frame number based on FRAME_RATE frames/seconds. The player's
+    frame rate should be set to a value close to this.
     """
 
     assert 0 <= hours <= 255, (
@@ -88,9 +94,9 @@ def set_time(hours, minutes, seconds):
     # The seconds must be split into integer seconds and fractional seconds:
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
-        
+
     send_MMC_command(bytes([
         0x44, 0x06, 0x01,
-        hours, minutes, seconds, int(round(25*fractional_seconds)), 0]))
+        hours, minutes, seconds, int(FRAME_RATE*fractional_seconds), 0]))
 
 
