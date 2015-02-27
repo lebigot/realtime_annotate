@@ -915,39 +915,38 @@ class AnnotateShell(cmd.Cmd):
         self.annot_enum = new_annot_enum
         self.do_list_keys()
 
-        # Existing annotations use the old annotation kinds
-        # (self.annot_enum). These annotations contain text that may
-        # have been updated in the keys file, so it should be updated
-        # as well in self.all_annotations. They might also contain
+        # Existing annotations (self.all_annotations) use the old
+        # annotation kinds (old_annot_enum). These annotations contain
+        # text that may have been updated in the new key assignment
+        # file, so they should be updated. They might also contain
         # annotation keys that have disappeared from the key
-        # assignments (through renaming, etc.): saving them as keys
-        # would prevent the annotation file from being open, as there
-        # would be no way to interpret them. A solution to both of
-        # these issues is to update all annotations
-        # (self.all_annotations) so that they are interpreted with the
-        # new_annot_enum, prompting the user for a key update when a
-        # key does not exist in the new key assignments
-        # (new_annot_enum). This is done below.
-
-        # If the new key assignments are incorrect (e.g., if there is
-        # no replacement in the new annotations for an existing
-        # annotation key), then the user needs a way out. He can
-        # cancel the changes.
+        # assignments (through renaming, etc.): ignoring this would
+        # prevent the annotation file from being re-opened, as there
+        # would be no way to interpret them with the new
+        # annotations.
+        #
+        # A solution to both of these issues consists in first
+        # defining the conversions between the old and new
+        # annotations, automatically through a common key if possible,
+        # or with the input of the user if a key has disappeared (who
+        # either indicates the new annotation that replaces the old
+        # one, or if, this is not possible, cancels the new key
+        # assignments).
 
         # The enumeration constant conversions are first determined:
         # this makes it easier to let the user cancel the new key
         # assignments, in case they are incorrect (for example in the
-        # case where one of the old annotations does not fit in the
-        # new ones), as this is detected early.
+        # case where one of the old annotations does not correspond to
+        # any new one), as this is detected early.
 
         old_annotations = set()  # Set with all *used* annotations
         for (event_ref, annotations) in self.all_annotations.items():
             for timed_annotation in annotations:
                 old_annotations.add(timed_annotation.annotation)
 
-        # Calculation of the mapping "updates" from old to new
+        # Calculation of the mapping "conversions" from old to new
         # enumerated constants:
-        updates = {}
+        conversions = {}
 
         for old_annotation in old_annotations:
 
@@ -972,7 +971,7 @@ class AnnotateShell(cmd.Cmd):
 
                     if not key:
                         # Both the new key assignments and the
-                        # annotation updates are canceled:
+                        # annotation update is canceled:
                         self.annot_enum = old_annot_num
                         print("New key assignments canceled.")
                         self.do_list_keys()
@@ -981,13 +980,13 @@ class AnnotateShell(cmd.Cmd):
                 else:
                     break
 
-            updates[old_annotation] = new_annotation
+            conversions[old_annotation] = new_annotation
 
         # Now that all the necessary annotation constant conversions
         # are defined, they can be applied:
         for (event_ref, annotations) in self.all_annotations.items():
             for timed_annotation in annotations:
-                timed_annotation.annotation = updates[
+                timed_annotation.annotation = conversions[
                     timed_annotation.annotation]
         
     def complete_load_keys(self, text, line, begidx, endidx):
