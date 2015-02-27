@@ -692,7 +692,8 @@ class AnnotateShell(cmd.Cmd):
             Save the updated annotations if wanted.
             """
             print()
-            if input("Do you want to save the annotations (y/n)? [y] ") != "n":
+            if input("Do you want to save the annotations and key assignments"
+                     " (y/n)? [y] ") != "n":
                 self.do_save()
         atexit.register(save_if_needed)
 
@@ -905,7 +906,18 @@ class AnnotateShell(cmd.Cmd):
         # Consistency check between existing annotations and the new
         # file:
 
-        #!!!!!!!!!!!!
+        # Loading a new keys file could make some existing annotations
+        # obsolete: this should be handled: otherwise the user can
+        # save the file, then be unable to reopen it, because some
+        # annotations cannot be interpreted. !!!!!!
+        #
+        # Update the docstring and indicate a method for changing
+        # keys (not meanings): make old key unbound in keys file. !!!!!
+
+        
+        # @@@@@@ There is a problem: previous annotations are still
+        # displayed with the old meaning, since they are stored as
+        # elements of the old enumeration. FIX
             
         self.annot_enum = annot_enum
             
