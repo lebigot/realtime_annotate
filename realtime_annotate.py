@@ -908,8 +908,8 @@ class AnnotateShell(cmd.Cmd):
             print("Error: all keyboard keys should be different.")
             return
 
-        # The old annotations and key assignments are saved, for a
-        # rollback in case of problem:
+        # The old key assignments are saved, for a rollback in case of
+        # problem:
         old_annot_num = self.annot_enum
         
         self.annot_enum = new_annot_enum
