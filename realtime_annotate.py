@@ -245,6 +245,21 @@ class AnnotationList:
         self.cursor += 1
         return self[self.cursor-1].time
 
+    def to_prev_annotation(self):
+        """
+        Move the cursor backward by one annotation, and return the time of
+        the annotation it passed.
+
+        If there is no annotation before the cursor, nothing happens
+        and NoAnnotation is raised.
+        """
+
+        if self.cursor == 0:  # No previous annotation
+            raise NoAnnotation
+
+        self.cursor -= 1
+        return self[self.cursor].time
+    
     def next_annotation(self):
         """
         Return the first annotation after the cursor, or None if there
