@@ -1097,7 +1097,7 @@ class AnnotateShell(cmd.Cmd):
         for annotation in self.annot_enum:
             print("{}: {}".format(annotation.value, annotation.name))
         
-    def do_select_event(self, arg):
+    def do_select_event(self, event_ref):
         """
         Set the given event reference as the current event.
 
@@ -1108,11 +1108,11 @@ class AnnotateShell(cmd.Cmd):
 
         Annotations are attached to this event.
         """
-        self.curr_event_ref = arg
+        self.curr_event_ref = event_ref
 
         # Annotation list for the current event:
-        annotations = self.all_annotations[self.curr_event_ref]
-        print("Current event set to {}.".format(self.curr_event_ref))
+        annotations = self.all_annotations[event_ref]
+        print("Current event set to {}.".format(event_ref))
         print("{} annotations found.".format(len(annotations)))
 
         last_annotation = annotations.last_annotation()
@@ -1129,6 +1129,49 @@ class AnnotateShell(cmd.Cmd):
         """
         return [event_ref for event_ref in sorted(self.all_annotations)
                 if event_ref.startswith(text)]
+
+    def do_del_event(self, event_ref):
+        """
+        Delete the given event.
+        """
+        try:
+            del self.all_annotations[event_ref]
+        except KeyError:
+            print('Error: unknown event "{}".'.format(event_ref))
+            
+    complete_del_event = complete_select_event
+    
+    def do_rename_event(self, arg):
+        """
+        Rename the given event.
+
+        Syntax:
+        rename_event current_name -> new_name
+        """
+
+        try:
+            old_name, new_name = map(
+                # arg seems to be stripped already, but this is not
+                # documented, so this is done manually here:
+                lambda name: name.strip(), arg.split("->"))
+        except ValueError:
+            print("Syntax error. See help rename_event.")
+            return
+
+        # Existing events must not be clobbered:
+        if new_name in self.all_annotations:
+            print('Problem: event "{}" exists. You can delete it if needed.'
+                  " Event renaming aborted.".format(new_name))
+            return
+
+        try:
+            # Renaming:
+            self.all_annotations[new_name] = self.all_annotations.pop(old_name)
+        except KeyError:
+            print('Error: event "{}" not found.'.format(old_name))
+            return
+        
+    complete_rename_event = complete_select_event
         
 if __name__ == "__main__":
     
