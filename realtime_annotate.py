@@ -427,21 +427,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ## Scrolling region (for previous annotations):
     stdscr.scrollok(True)
     # Maximum number of previous annotations in window:
-    num_prev_annot = help_start_line-6
-    if num_prev_annot < 2:
+    prev_annot_height = help_start_line-6
+    if prev_annot_height < 2:
         # !! If the following is a problem, the help could be
         # optionally removed OR displayed with a special key, possibly
         # even as a window that can appear or disappear.
         raise TerminalNotHighEnough
 
-    stdscr.setscrreg(6, 5+num_prev_annot)
+    stdscr.setscrreg(6, 5+prev_annot_height)
     
     stdscr.addstr(5, 0, "Previous annotations:", curses.A_BOLD)
-    
+
+def list_prev_annot(): # !!!!!!!!!!!
     ## If there is any annotation before the current time:
     if annotations.cursor:  # The slice below is cumbersome otherwise
         
-        slice_end = annotations.cursor-1-num_prev_annot
+        slice_end = annotations.cursor-1-prev_annot_height
         if slice_end < 0:
             slice_end = None  # For a Python slice
 
@@ -582,10 +583,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         # The last line in the list of previous
                         # annotations might have to be updated:
                         index_new_prev_annot = (
-                            annotations.cursor-num_prev_annot)
+                            annotations.cursor-prev_annot_height)
                         if index_new_prev_annot >= 0:
                             stdscr.addstr(
-                                5+num_prev_annot, 0,
+                                5+prev_annot_height, 0,
                                 str(annotations[index_new_prev_annot]))
                         # Instant feedback:
                         stdscr.refresh()
