@@ -194,15 +194,14 @@ class AnnotationList:
       directly on the AnnotationList: len(), subscripting, and
       iteration.
     
-    - cursor: (positive) index between annotations (0 = before the
-    first annotation).
+    - cursor: index between annotations (0 = before the first
+    annotation, positive).
     """
     def __init__(self, list_=None, cursor=0):
         """
         list_ -- list of TimestampedAnnotations.
         
-        cursor -- insertion index for the next annotation (in
-        timestamp order).
+        cursor -- insertion index for the next annotation.
         """
         self.list_ = [] if list_ is None else list_
         self.cursor = cursor
