@@ -1150,7 +1150,7 @@ class AnnotateShell(cmd.Cmd):
         """
 
         try:
-            old_name, new_name = map(
+            current_name, new_name = map(
                 # arg seems to be stripped already, but this is not
                 # documented, so this is done manually here:
                 lambda name: name.strip(), arg.split("->"))
@@ -1166,9 +1166,10 @@ class AnnotateShell(cmd.Cmd):
 
         try:
             # Renaming:
-            self.all_annotations[new_name] = self.all_annotations.pop(old_name)
+            self.all_annotations[new_name] = self.all_annotations.pop(
+                current_name)
         except KeyError:
-            print('Error: event "{}" not found.'.format(old_name))
+            print('Error: event "{}" not found.'.format(current_name))
             return
         
     complete_rename_event = complete_select_event
