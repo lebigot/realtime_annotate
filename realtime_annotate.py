@@ -630,15 +630,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
 
         stdscr.scroll()
+        
         # The last line in the list of previous annotations might have
         # to be updated with an annotation that was not displayed
         # previously:
         index_new_prev_annot = (
             annotations.cursor-prev_annot_height)
         if index_new_prev_annot >= 0:
-            addstr_width(
-                5+prev_annot_height, 0,
-                str(annotations[index_new_prev_annot]))
+            addstr_width(5+prev_annot_height, 0,
+                         str(annotations[index_new_prev_annot]))
 
         if next_annot_update:
             # Corresponding cursor movement:
@@ -735,25 +735,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             # annotation during which going backwards
                             # moves *two* annotations back. In effect,
                             # this skips the previous annotation and
-                            # goes back to the one before:
+                            # goes back to the one before (if any):
 
-                            if (counter_to_time(next_getkey_counter)
-                                -new_time) < REPEAT_KEY_TIME:
-                                
-                                try:
-                                    new_time = annotations.to_prev_annotation()
-                                except NoAnnotation:
-                                    # Since the origin time of some
-                                    # players is not 0 (e.g. Logic Pro
-                                    # X, which uses 1:00:00), the time
-                                    # is not set to 0 when trying to
-                                    # go before the first annotation:
-                                    pass
-                                else:
-                                    # This requires an update of the
-                                    # annotation list (on screen and
-                                    # through the cursor):
-                                    scroll_backwards()
+                            if ((counter_to_time(next_getkey_counter)
+                                 -new_time) < REPEAT_KEY_TIME
+                                and annotations.cursor > 1):
+
+                                scroll_backwards()
+                                new_time = annotations.prev_annotation().time
 
                     # Conclusion of the annotation navigation handling:
                     if new_time is not None:
