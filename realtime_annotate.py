@@ -676,8 +676,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # this skips the previous annotation and
                 # goes back to the one before (if any):
 
-                if ((counter_to_time(next_getkey_counter)
-                     -new_time) < REPEAT_KEY_TIME
+                if (key_time-new_time < REPEAT_KEY_TIME
                     and annotations.cursor > 1):
 
                     new_time = (annotations[annotations.cursor-2]
@@ -751,7 +750,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     
                     # Conclusion of the annotation navigation handling:
                     if new_time is None:
-                        curses.beep()  # Error
+                        curses.beep()  # Navigation impossible
                     else:
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
