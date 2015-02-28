@@ -99,14 +99,14 @@ class TimestampedAnnotation:
     that only annotations that have a value store one (in memory, on
     disk, etc.).
     """
-    def __init__(self, time, annotation):
+    def __init__(self, timestamp, annotation):
         """
-        time -- timestamp for the annotation, as a datetime.timedelta.
+        timestamp -- timestamp for the annotation, as a datetime.timedelta.
 
         annotation -- annotation to be stored, as an enumerated
         constant.
         """
-        self.time = time
+        self.time = timestamp
 
         # The advantage of storing the annotation as an Enum instead
         # of just a character (enumerated constant) is that it can
@@ -116,6 +116,9 @@ class TimestampedAnnotation:
         self.annotation = annotation
 
     def set_value(self, value):
+        # !! This method exists mostly as a way of showing through
+        # code that the value attribute can be set (it is optional,
+        # and not set in __init__()).
         """
         Set the annotation's value.
         """
@@ -169,7 +172,7 @@ class TimestampedAnnotation:
             annotation_kinds(annot[0]))
 
         if len(annot) > 1:
-            result.value = annot[1]
+            result.set_value(annot[1])
 
         return result
 
