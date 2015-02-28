@@ -567,17 +567,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
-                                   transfer_next_annotation)
+                                   scroll_next_annotation)
                 ]
 
-    def transfer_next_annotation():
+    def scroll_next_annotation():
         """
         Move the current next annotation to the list of previous
-        annotations, update the next annotation (if any), and schedule
-        the next transfer (if necessary).
+        annotations, update the next annotation (if any) so that the
+        displayed annotations remain consistent with the annotation
+        cursor, and schedule the next scrolling (if necessary).
 
         A next annotation must be present (both on screen and in
-        annotations) when calling this function.
+        annotations, in a consistent way) when calling this function.
         """
 
         # Transfer on screen to the list of next annotations:
@@ -665,7 +666,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:
                     
-                    # Jump to the next or previous annotation:
+                    # Screen and cursor update:
+                    if key == "KEY_RIGHT":
+                        next_annotation = annotations.next_annotation()
+                        if next_annotation is None:
+                            curses.beep()
+                        else:
+                            scroll_next_annotation()
+                            # !!!!!! update with new
                     
                     try:
                         new_time = (
