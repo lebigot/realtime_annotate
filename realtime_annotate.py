@@ -231,38 +231,6 @@ class AnnotationList:
         self.cursor = bisect.bisect(
             [annotation.time for annotation in self.list_], time)
 
-    # !!! Still used?
-    def to_next_annotation(self):
-        """
-        Move the cursor forward by one annotation, and return the time of
-        the annotation it passed.
-
-        If there is no annotation after the cursor, nothing happens
-        and NoAnnotation is raised.
-        """
-
-        if self.cursor == len(self):  # No next annotation
-            raise NoAnnotation
-
-        self.cursor += 1
-        return self[self.cursor-1].time
-
-    # !!! Still used?    
-    def to_prev_annotation(self):
-        """
-        Move the cursor backward by one annotation, and return the time of
-        the annotation it passed.
-
-        If there is no annotation before the cursor, nothing happens
-        and NoAnnotation is raised.
-        """
-
-        if self.cursor == 0:  # No previous annotation
-            raise NoAnnotation
-
-        self.cursor -= 1
-        return self[self.cursor].time
-    
     def next_annotation(self):
         """
         Return the first annotation after the cursor, or None if there
@@ -581,14 +549,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                    scroll_forwards)
                 ]
 
-        # else:
-        #     curses.beep()
-        #     stdscr.refresh()
-        #     stdscr.nodelay(False)  #!!!!! debug
-        #     if stdscr.getkey() == "f":
-        #         1/0
-        #     stdscr.nodelay(True)  #!!!!! debug
-
     def scroll_forwards():
         """
         Move the annotations forwards in time.
@@ -756,17 +716,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                  -new_time) < REPEAT_KEY_TIME
                                 and annotations.cursor > 1):
 
-                                #  There is a problem with a double
-                                #  Left key pressed after the last
-                                #  annotation: the Next annotation is
-                                #  correctly displayed, then replaced
-                                #  immediately by the next one.
-
-                                curses.beep()
-
-                                # !!!!! This does not go back!
-                                
-                                new_time = annotations.prev_annotation().time
+                                new_time = (annotations[annotations.cursor-2]
+                                            .time)
                                 scroll = scroll_backwards
 
                             else:
