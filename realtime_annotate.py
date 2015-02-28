@@ -149,8 +149,6 @@ class TimestampedAnnotation:
             
         return [self.time.to_HMS(), annotation]
 
-
-
     @classmethod
     def from_builtins_fmt(cls, annotation_kinds, timed_annotation):
         """
@@ -583,13 +581,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                    scroll_forwards)
                 ]
 
-        else:
-            1/0
-            # curses.beep()
-            # stdscr.refresh()
-            # stdscr.nodelay(False)  #!!!!! debug
-            # stdscr.getkey()
-            # stdscr.nodelay(True)  #!!!!! debug
+        # else:
+        #     curses.beep()
+        #     stdscr.refresh()
+        #     stdscr.nodelay(False)  #!!!!! debug
+        #     if stdscr.getkey() == "f":
+        #         1/0
+        #     stdscr.nodelay(True)  #!!!!! debug
 
     def scroll_forwards():
         """
@@ -644,7 +642,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if not only_scroll_previous:
             # Corresponding cursor movement:
             annotations.cursor -= 1
-            display_next_annotation()  # !!!! Is like called twice!!!?
+            display_next_annotation()
         
         stdscr.scroll()
 
@@ -718,16 +716,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # The new annotation time is put in new_time,
                     # below. If changing the time is impossible
                     # (e.g. if the user tries to go beyond the last
-                    # annotation), new_time takes the value None.
+                    # annotation), new_time takes the value None. It
+                    # is important to change the annotation timer time
+                    # with respect to the scheduler time early:
+                    # otherwise, time scheduling is broken (like for
+                    # instance the automatic scrolling of
+                    # annotations). The appropriate scrolling
+                    # operation scroll is also calculate (and is None
+                    # if no scrolling is needed).
                     
-                    # Screen and cursor update:
                     if key == "KEY_RIGHT":
                         next_annotation = annotations.next_annotation()
                         if next_annotation is None:
                             new_time = None                            
                             curses.beep()
                         else:
-                            scroll_forwards()
+                            scroll = scroll_forwards
                             new_time = next_annotation.time
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
@@ -758,11 +762,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                 #  correctly displayed, then replaced
                                 #  immediately by the next one.
                                 
-                                scroll_backwards()
+                                scroll = scroll_backwards
                                 new_time = annotations.prev_annotation().time
+
+                            else:
+                                scroll = None
 
                     # Conclusion of the annotation navigation handling:
                     if new_time is not None:
+                        
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
@@ -770,7 +778,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         start_time = new_time
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
-
+                        
+                        if scroll is not None:
+                            # It is important to do the scrolling
+                            # *after* synchronizing the annotation and
+                            # scheduler timers: otherwise the
+                            # scheduled automatic scrolling is
+                            # set to an incorrect time:
+                            scroll()
+                            
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
 
