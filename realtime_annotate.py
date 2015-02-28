@@ -712,7 +712,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         display_annotations()
 
                 elif key != " ":  # Space is a valid key
-                    addstr_width(0, 40, key)
                     curses.beep()  # Unknown key
 
             else:  # A user annotation key was given:
