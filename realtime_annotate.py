@@ -76,7 +76,7 @@ class Time(datetime.timedelta):
         (hours, minutes) = divmod(total_seconds, 3600)
         (minutes, seconds) = divmod(minutes, 60)
         return (int(hours), int(minutes), seconds)
-    
+
     def __str__(self):
         """
         ...HH:MM:SS.d format.
@@ -102,19 +102,19 @@ class TimestampedAnnotation:
     def __init__(self, time, annotation):
         """
         time -- timestamp for the annotation, as a datetime.timedelta.
-        
+
         annotation -- annotation to be stored, as an enumerated
         constant.
         """
         self.time = time
-        
+
         # The advantage of storing the annotation as an Enum instead
         # of just a character (enumerated constant) is that it can
         # have a nice string representation (Enum name), and that it
         # preserve the associated character (which can then be saved to a
         # file, etc.):
         self.annotation = annotation
-    
+
     def set_value(self, value):
         """
         Set the annotation's value.
@@ -126,10 +126,10 @@ class TimestampedAnnotation:
         # The fact that Enums can have a nice-looking name is
         # convenient:
         result = "{} {}".format(self.time, self.annotation.name)
-        
+
         if hasattr(self, "value"):
             result += " [value {}]".format(self.value)
-            
+
         return result
 
     def to_builtins_fmt(self):
@@ -146,7 +146,7 @@ class TimestampedAnnotation:
         annotation = [self.annotation.value]
         if hasattr(self, "value"):
             annotation.append(self.value)
-            
+
         return [self.time.to_HMS(), annotation]
 
     @classmethod
@@ -167,12 +167,12 @@ class TimestampedAnnotation:
             Time(**dict(zip(("hours", "minutes", "seconds"),
                             timed_annotation[0]))),
             annotation_kinds(annot[0]))
-        
+
         if len(annot) > 1:
             result.value = annot[1]
-            
+
         return result
-        
+
 class NoAnnotation(Exception):
     """
     Raised when a requested annotation cannot be found.
@@ -182,26 +182,26 @@ class TerminalNotHighEnough(Exception):
     """
     Raised when the terminal is not high enough for a proper display.
     """
-    
+
 class AnnotationList:
     """
     List of annotations (for a single reference) sorted by timestamp,
     with a live cursor between annotations.
 
     Main attributes:
-    
+
     - list_: list of TimestampedAnnotations, sorted by increasing
       timestamps. List-like operations on this list can be performed
       directly on the AnnotationList: len(), subscripting, and
       iteration.
-    
+
     - cursor: index between annotations (0 = before the first
     annotation, positive).
     """
     def __init__(self, list_=None, cursor=0):
         """
         list_ -- list of TimestampedAnnotations.
-        
+
         cursor -- insertion index for the next annotation.
         """
         self.list_ = [] if list_ is None else list_
@@ -218,7 +218,7 @@ class AnnotationList:
 
     def __iter__(self):
         return iter(self.list_)
-    
+
     def cursor_at_time(self, time):
         """
         Set the internal cursor so that an annotation at the given
@@ -247,7 +247,7 @@ class AnnotationList:
         is none.
         """
         return self[self.cursor-1] if self.cursor >= 1 else None
-        
+
     def insert(self, annotation):
         """
         Insert the given annotation at the cursor location and moves
@@ -269,7 +269,7 @@ class AnnotationList:
         cursor (which does not move compared to its following
         annotation).
         """
-        self.cursor -= 1        
+        self.cursor -= 1
         del self.list_[self.cursor]
 
     def to_builtins_fmt(self):
@@ -295,7 +295,7 @@ class AnnotationList:
         annotation_kinds -- enumeration (enum.Enum) for interpreting
         the annotations. Its values must correspond to the annotation
         values stored in annotations.
-        
+
         annotations -- annotation list in the form returned by
         to_builtins_fmt().
         """
@@ -307,7 +307,7 @@ class AnnotationList:
                 for annotation in annotations["annotation_list"]
             ]
         )
-        
+
 def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                    annot_enum):
     """
@@ -320,9 +320,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr -- curses.WindowObject for displaying information.
 
     curr_event_ref -- reference of the event (recording...)  being annotated.
-    
+
     start_time -- starting annotation time (Time object).
-    
+
     annotations -- AnnotationList to be updated.
 
     annot_enum -- enum.Enum enumeration with all the possible
@@ -341,8 +341,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # start_counter, so that there is not large discrepancy between
     # the time in the player and this time measured by this
     # function:
-    player_module.start()    
-    
+    player_module.start()
+
     def time_to_counter(time):
         """
         Return the scheduler counter corresponding to the given
@@ -363,7 +363,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     ####################
     # Basic settings for the terminal:
-    
+
     ## The terminal's default is better than curses's default:
     curses.use_default_colors()
     ## For looping without waiting for the user:
@@ -373,9 +373,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ## No need to have a cursor displayed at its position:
     stdscr.leaveok(True)
 
-    ####################    
+    ####################
     # Initializations:
-    
+
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
 
@@ -390,22 +390,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         the right.
         """
         stdscr.addstr(y, x, text[:term_cols-1-x], attr)
-    
+
     ## Annotations cursor:
     annotations.cursor_at_time(start_time)
 
-    ####################    
+    ####################
     # Information display at start:
-    
+
     stdscr.clear()
-    
+
     addstr_width(0, 0, "Event:", curses.A_BOLD)
     addstr_width(0, 7, curr_event_ref)
-    
+
     stdscr.hline(1, 0, curses.ACS_HLINE, term_cols)
 
     addstr_width(2, 0, "Next annotation:", curses.A_BOLD)
-        
+
     addstr_width(3, 0, "Annotation timer:", curses.A_BOLD)
 
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
@@ -420,9 +420,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
-        
+
     ## Previous annotations:
-    
+
     ## Scrolling region (for previous annotations):
     stdscr.scrollok(True)
     # Maximum number of previous annotations in window:
@@ -434,7 +434,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         raise TerminalNotHighEnough
 
     stdscr.setscrreg(6, 5+prev_annot_height)
-    
+
     addstr_width(5, 0, "Previous annotations:", curses.A_BOLD)
 
     # In order to cancel upcoming updates of the next annotation
@@ -456,7 +456,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             except ValueError:
                 pass
         cancelable_events[:] = []  # cancelable_events = [] would be local
-    
+
     def display_annotations():
         # !! This function is only here so that the code be more organized.
         """
@@ -471,7 +471,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
 
         # Previous annotations:
-        
+
         ## If there is any annotation before the current time:
         if annotations.cursor:  # The slice below is cumbersome otherwise
 
@@ -494,7 +494,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         #     stdscr.clrtoeol()
 
         display_next_annotation()
-        
+
     def display_next_annotation():
         """
         Display the next annotation.
@@ -505,17 +505,17 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         The previous annotation list must be displayed already.
         """
-        
+
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
-    
+
         # Display
-        
+
         next_annotation = annotations.next_annotation()
-        
+
         next_annotation_text = (str(next_annotation)
                                 if next_annotation is not None else "<None>")
-        
+
         addstr_width(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
@@ -527,9 +527,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if next_annotation is not None:
 
             nonlocal cancelable_events
-            
+
             cancelable_events = [
-                
+
                 # Visual clue about upcoming annotation:
                 scheduler.enterabs(
                     # The chosen delay must be larger than the time
@@ -556,7 +556,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         The current next annotation is moved to the list of previous
         annotations, and the next annotation (if any) is updated.  The
         screen is then refreshed.
-        
+
         The annotation cursor is moved forward, and the next scrolling
         is scheduled (if necessary).
 
@@ -569,11 +569,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
         addstr_width(6, 0, str(annotations.next_annotation()))
-        
+
         # The cursor in the annotations list must be updated to
         # reflect the screen update:
         annotations.cursor += 1
-    
+
         display_next_annotation()
 
         stdscr.refresh()  # Instant feedback
@@ -581,14 +581,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     def scroll_backwards(only_scroll_previous=False):
         """
         Move the annotations backwards in time.
-        
+
         Scroll the list of previous annotations backwards in time
         once, and the next annotation (if any) is updated. The screen
         is then refreshed.
 
         The annotation cursor is moved backwards once, and the next
         scrolling is scheduled.
-        
+
         There must be an annotation before the cursor when calling
         this function.
 
@@ -603,7 +603,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # Corresponding cursor movement:
             annotations.cursor -= 1
             display_next_annotation()
-        
+
         stdscr.scroll()
 
         # The last line in the list of previous annotations might have
@@ -616,7 +616,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         # Instant feedback:
         stdscr.refresh()
-        
+
     ####################
     # User key handling:
 
@@ -625,7 +625,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # (with respect to the annotation times in annotations): the
     # two are always paired.
     next_getkey_counter = start_counter
-    
+
     def getkey():
         """
         Get the user command (if any) and process it.
@@ -684,7 +684,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # annotations). The appropriate scrolling
                     # operation scroll is also calculate (and is None
                     # if no scrolling is needed).
-                    
+
                     if key == "KEY_RIGHT":
                         next_annotation = annotations.next_annotation()
                         if next_annotation is None:  # No next annotation
@@ -696,14 +696,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
                         if prev_annotation is None:
-                            new_time = None                            
+                            new_time = None
                             curses.beep()
                         else:
 
                             # The annotation lists do not change, only
                             # the annotation timer.
                             new_time = prev_annotation.time
-                                
+
                             # In order to allow the user to move
                             # beyond just the previous annotation,
                             # there is a small time window after each
@@ -725,7 +725,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     # Conclusion of the annotation navigation handling:
                     if new_time is not None:
-                        
+
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
@@ -733,7 +733,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         start_time = new_time
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
-                        
+
                         if scroll is not None:
                             # It is important to do the scrolling
                             # *after* synchronizing the annotation and
@@ -741,12 +741,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             # scheduled automatic scrolling is
                             # set to an incorrect time:
                             scroll()
-                            
+
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
 
             else:  # A user annotation key was given:
-                
+
                 annotations.insert(TimestampedAnnotation(
                     annotation_time, annotation_kind))
                 # Display update:
@@ -771,7 +771,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # canceled (otherwise the scheduler will not quit because
             # it has events waiting in the queue):
             cancel_sched_events()
-            
+
         else:
             next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
@@ -781,7 +781,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # the loop).
             scheduler.enterabs(next_getkey_counter, 0, getkey)
 
-    display_annotations()            
+    display_annotations()
     scheduler.enterabs(next_getkey_counter, 0, getkey)
     scheduler.run()
 
@@ -790,7 +790,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     getkey_time = counter_to_time(next_getkey_counter)
     player_module.set_time(*getkey_time.to_HMS())  # Explicit synchronization
     return getkey_time
-    
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -806,10 +806,10 @@ class AnnotateShell(cmd.Cmd):
         super().__init__()
 
         self.annotations_path = annotations_path
-        
+
         # Current event to be annotated:
         self.curr_event_ref = None
-        
+
         # Reading of the existing annotations:
         if annotations_path.exists():
 
@@ -844,7 +844,7 @@ class AnnotateShell(cmd.Cmd):
             self.annot_enum = None
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
-            
+
         # Automatic (optional) saving of the annotations, both for
         # regular quitting and for exceptions:
         def save_if_needed():
@@ -874,10 +874,10 @@ class AnnotateShell(cmd.Cmd):
         """
         self._time = time
         player_module.set_time(*time.to_HMS())
-    
+
     def emptyline(self):
         pass  # No repetition of the last command
-    
+
     def do_save(self, arg=None):
         """
         Save the current annotations to file after making a copy of any
@@ -894,14 +894,14 @@ class AnnotateShell(cmd.Cmd):
         else:
             # A new file must be created:
             print("Creating a new annotation file...")
-            
+
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
 
             # Serializable version of the possible annotations:
             annot_enum_for_file = (
                 None if self.annot_enum is None
-                # The order of the enumerations is preserved:                
+                # The order of the enumerations is preserved:
                 else [(annot.name, annot.value) for annot in self.annot_enum]
             )
 
@@ -923,10 +923,10 @@ class AnnotateShell(cmd.Cmd):
             json.dump({"annotations": all_annotations_for_file,
                        "key_assignments": annot_enum_for_file},
                       annotations_file, indent=2)
-            
+
         print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
-    
+
     def do_exit(self, arg=None):
         """
         Exit this program and optionally save the annotations.
@@ -968,7 +968,7 @@ class AnnotateShell(cmd.Cmd):
         The file format is as follows:
 
         # Musical annotations
-        
+
         s    start (between pieces, before the beginning)
         e    end (0 = could be an end if needed)
         ...
@@ -988,19 +988,19 @@ class AnnotateShell(cmd.Cmd):
         Annotations are represented by their character only. Any
         change in the key assignments of an annotation file must be
         done with this in mind.
-        
+
         KEY ASSIGNMENT CHANGES
 
         The description text can be updated (usually in a way
         consistent with the meaning of event annotations that use its
         key).
-        
+
         New keys can be added.
-        
+
         If a key which is used in events disappears, the user is
         prompted for the replacement key.
         """
-        
+
         # Common error: no file name given:
         if not file_path:
             print("Error: please provide a file path.")
@@ -1015,16 +1015,16 @@ class AnnotateShell(cmd.Cmd):
         except IOError as err:
             print("Error: cannot open '{}': {}".format(file_path, err))
             return
-        
+
         with keys_file:
             for (line_num, line) in enumerate(keys_file, 1):
-                
+
                 line = line.rstrip()
 
                 # Empty lines and comments are skipped:
                 if not line or line.startswith("#"):
                     continue
-                
+
                 try:
                     key, text = line.split(None, 1)
                 except ValueError:
@@ -1033,17 +1033,17 @@ class AnnotateShell(cmd.Cmd):
                     return
 
                 # Sanity checks:
-                
+
                 if len(key) != 1:
                     print("Error: keys must be single characters. Error"
                           " in line {} with key '{}'."
                           .format(line_num, key))
                     return
-                
+
                 if key.isdigit():
                     print("Error: digits are reserved keys.")
                     return
-                
+
                 # The other reserved keys are space and delete,
                 # but space cannot be entered in the file, and
                 # delete is cumbersome to enter, so this case is
@@ -1051,7 +1051,7 @@ class AnnotateShell(cmd.Cmd):
                 key_assignments[text] = key
 
         print("Key assignments loaded from file {}.".format(file_path))
-                    
+
         try:
             new_annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
@@ -1062,7 +1062,7 @@ class AnnotateShell(cmd.Cmd):
         # The old key assignments are saved, for a rollback in case of
         # problem:
         old_annot_num = self.annot_enum
-        
+
         self.annot_enum = new_annot_enum
         self.do_list_keys()
 
@@ -1104,7 +1104,7 @@ class AnnotateShell(cmd.Cmd):
             # First key tried for finding the new annotation
             # corresponding to old_annotation:
             key = old_annotation.value
-            
+
             while True:
 
                 try:
@@ -1137,7 +1137,7 @@ class AnnotateShell(cmd.Cmd):
             for timed_annotation in annotations:
                 timed_annotation.annotation = conversions[
                     timed_annotation.annotation]
-        
+
     def complete_load_keys(self, text, line, begidx, endidx):
         """
         Complete the text with paths from the current directory.
@@ -1156,7 +1156,7 @@ class AnnotateShell(cmd.Cmd):
             ##     str(path.relative_to(directory))
             ##     for path in directory.glob("*")
             ##     ])
-            
+
             return [
                 # The completions must only include file names
                 # *without the prefix in "line" (otherwise the
@@ -1165,7 +1165,7 @@ class AnnotateShell(cmd.Cmd):
                 str(path.relative_to(directory))
                 for path in directory.glob("*")
                 ]
-    
+
         else:
             # Direct expansion:
 
@@ -1183,16 +1183,16 @@ class AnnotateShell(cmd.Cmd):
                 start = ""
 
             # The escape() takes care of characters that are
-            # interpreted by glob(), like *:                
+            # interpreted by glob(), like *:
             glob_expr = "{}*".format(glob.escape(start+text))
             ## print("GLOB expr", glob_expr)
-                
+
             return [
                 # Only the part after begidx must be returned:
                 glob_result[len(start):]
                 for glob_result in glob.glob(glob_expr)
                 ]
-        
+
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
@@ -1208,20 +1208,20 @@ class AnnotateShell(cmd.Cmd):
             print("Error: please load key assignments first (load_keys"
                   " command).")
             return
-        
+
         if self.curr_event_ref is None:
             print("Error: please select an event to be annotated",
                   "with select_event.")
             return
 
         try:
-            
+
             # The real-time loop displays information in a curses window:
             self.time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.time,
                 self.all_annotations[self.curr_event_ref],
                 self.annot_enum)
-            
+
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
         else:
@@ -1247,13 +1247,13 @@ class AnnotateShell(cmd.Cmd):
         print("Annotation keys:")
         for annotation in self.annot_enum:
             print("{}: {}".format(annotation.value, annotation.name))
-        
+
     def do_select_event(self, event_ref):
         """
         Set the given event reference as the current event.
 
         If the event does not exist yet, it is created.
-        
+
         The current list of references can be obtained with
         list_events.
 
@@ -1267,14 +1267,14 @@ class AnnotateShell(cmd.Cmd):
         print("{} annotations found.".format(len(annotations)))
 
         prev_annotation = annotations.prev_annotation()
-        
+
         # The time of the previous annotation before the cursor is
         # "just" before when the user last stopped:
         self.time = (prev_annotation.time if prev_annotation is not None
                      else Time())
         print("Back to previous annotation. Annotation timer set to {}."
               .format(self.time))
-        
+
     def complete_select_event(self, text, line, begidx, endidx):
         """
         Complete event references with the known references.
@@ -1290,9 +1290,9 @@ class AnnotateShell(cmd.Cmd):
             del self.all_annotations[event_ref]
         except KeyError:
             print('Error: unknown event "{}".'.format(event_ref))
-            
+
     complete_del_event = complete_select_event
-    
+
     def do_rename_event(self, arg):
         """
         Rename the given event.
@@ -1323,14 +1323,14 @@ class AnnotateShell(cmd.Cmd):
         except KeyError:
             print('Error: event "{}" not found.'.format(current_name))
             return
-        
+
     complete_rename_event = complete_select_event
-        
+
 if __name__ == "__main__":
-    
+
     import argparse
     import collections
-    
+
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
@@ -1348,7 +1348,7 @@ if __name__ == "__main__":
               " annotation timer."
               " Annotations times can thus be"
               " synchronized with the elapsed time in a piece of music, etc."))
-    
+
     parser.add_argument(
         "annotation_file",
         help=("Path to the annotation file (it will be created if it does not"
@@ -1363,5 +1363,5 @@ if __name__ == "__main__":
         player_module = sys.modules[__name__]  # This module
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args: None)
-        
+
     AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
