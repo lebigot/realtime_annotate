@@ -870,15 +870,15 @@ class AnnotateShell(cmd.Cmd):
         return self._time
 
     @time.setter
-    def time(self, time):
+    def time(self, time_):
         """
         Set both the annotation timer and the player time to the given
         time.
 
-        time -- Time object.
+        time_ -- Time object.
         """
-        self._time = time
-        player_module.set_time(*time.to_HMS())
+        self._time = time_
+        player_module.set_time(*time_.to_HMS())
 
     def emptyline(self):
         pass  # No repetition of the last command
