@@ -213,26 +213,25 @@ class AnnotationList:
     def __len__(self):
         return len(self.list_)
 
-    def __getitem__(self, slice):
+    def __getitem__(self, slice_):
         """
         Return the annotations from the given slice.
         """
-        return self.list_[slice]
+        return self.list_[slice_]
 
     def __iter__(self):
         return iter(self.list_)
 
-    def cursor_at_time(self, time):
+    def cursor_at_time(self, timestamp):
         """
         Set the internal cursor so that an annotation at the given
         time would be inserted in timestamp order.
 
-        time -- the cursor is put between two annotations, so that the
-        given time is between their timestamps (datetime.timedelta
-        object).
+        timestamp -- the cursor is put between two annotations, so
+        that the given timestamp is between their timestamps.
         """
         self.cursor = bisect.bisect(
-            [annotation.time for annotation in self.list_], time)
+            [annotation.time for annotation in self.list_], timestamp)
 
     def next_annotation(self):
         """
