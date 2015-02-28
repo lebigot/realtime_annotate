@@ -1131,7 +1131,7 @@ class AnnotateShell(cmd.Cmd):
         # any new one), as this is detected early.
 
         old_annotations = set()  # Set with all *used* annotations
-        for (event_ref, annotations) in self.all_annotations.items():
+        for annotations in self.all_annotations.values():
             for timed_annotation in annotations:
                 old_annotations.add(timed_annotation.annotation)
 
