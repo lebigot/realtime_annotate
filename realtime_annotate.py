@@ -532,7 +532,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
         Display the next annotation.
 
-        Its highlighting and next scrolling down are scheduled.
+        Its highlighting and next scrolling down are scheduled (and
+        any previously scheduled highlighting and scrolling down is
+        canceled).
 
         The previous annotation list must be displayed already.
         """
@@ -552,12 +554,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         if next_annotation is not None:
 
-            nonlocal cancelable_events
-
             # Any queued event must be canceled, as they are made
             # obsolete by the handling of the next annotation
             # highlighting and scrolling below:
             cancel_sched_events()
+
+            nonlocal cancelable_events
             
             cancelable_events = [
                 
@@ -609,7 +611,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         stdscr.refresh()  # Instant feedback
 
-    def scroll_backwards(next_annot_update=True):
+    def scroll_backwards(only_scroll_previous=False):
         """
         Move the annotations backwards in time.
         
@@ -623,14 +625,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         There must be an annotation before the cursor when calling
         this function.
 
-        next_annot_update -- if false, the next annotation is not
-        updated, and the annotation cursor is not updated either: only
-        the list of previous annotations is scrolled. This case is
+        only_scroll_previous -- if true, only the list of previous
+        annotations is scrolled (the next annotation is not updated,
+        and the annotation cursor is not updated either). This case is
         useful for updating the list of previous annotations after
         deleting the annotation before the cursor.
         """
 
-        if next_annot_update:
+        if not only_scroll_previous:
             # Corresponding cursor movement:
             annotations.cursor -= 1
             display_next_annotation()  # !!!! Is like called twice!!!?
@@ -648,9 +650,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # Instant feedback:
         stdscr.refresh()
 
-        stdscr.refresh()
-        stdscr.nodelay(False)  #!!!!! debug
-        stdscr.getkey()
+        # curses.beep()
+        # stdscr.refresh()
+        # stdscr.nodelay(False)  #!!!!! debug
+        # stdscr.getkey()
+        # stdscr.nodelay(True)  #!!!!! debug
         
     ####################
     # User key handling:
@@ -745,6 +749,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                  -new_time) < REPEAT_KEY_TIME
                                 and annotations.cursor > 1):
 
+                                #  There is a problem with a double
+                                #  Left key pressed after the last
+                                #  annotation: the Next annotation is
+                                #  correctly displayed, then replaced
+                                #  immediately by the next one.
+                                
                                 scroll_backwards()
                                 new_time = annotations.prev_annotation().time
 
