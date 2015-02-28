@@ -582,7 +582,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
         addstr_width(6, 0, str(annotations.next_annotation()))
-        stdscr.refresh()  # Instant feedback
         
         # The cursor in the annotations list must be updated to
         # reflect the screen update:
@@ -590,6 +589,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     
         display_next_annotation()
 
+        stdscr.refresh()  # Instant feedback
+        
     display_annotations()
         
     ####################
