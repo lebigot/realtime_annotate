@@ -310,6 +310,24 @@ class AnnotationList:
             ]
         )
 
+def cancel_sched_events(events):
+    """
+    Cancel the scheduled events (except getting the next user key) and
+    empties their list.
+
+    events -- list of events, where each event was returned by a
+    sched.scheduler. Some events can be already passed.
+    """
+    for event in events:
+        try:
+            # Highlighting events are not tracked, so they
+            # might have passed without this program knowing
+            # it, which makes the following fail:
+            scheduler.cancel(event)
+        except ValueError:
+            pass
+    events[:] = []  # cancelable_events = [] would be local
+
 def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                    annot_enum):
     """
@@ -443,21 +461,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
     cancelable_events = []
-    def cancel_sched_events():
-        """
-        Cancel the scheduled events (except getting the next user key).
-
-        The events canceled are in cancelable_events, which is emptied.
-        """
-        for event in cancelable_events:
-            try:
-                # Highlighting events are not tracked, so they
-                # might have passed without this program knowing
-                # it, which makes the following fail:
-                scheduler.cancel(event)
-            except ValueError:
-                pass
-        cancelable_events[:] = []  # cancelable_events = [] would be local
 
     def display_annotations():
         # !! This function is only here so that the code be more organized.
@@ -524,7 +527,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # Any queued event must be canceled, as they are made
         # obsolete by the handling of the next annotation
         # highlighting and scrolling below:
-        cancel_sched_events()
+        cancel_sched_events(cancelable_events)
 
         if next_annotation is not None:
 
@@ -772,7 +775,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # the next annotation to the previous annotations) must be
             # canceled (otherwise the scheduler will not quit because
             # it has events waiting in the queue):
-            cancel_sched_events()
+            cancel_sched_events(cancelable_events)
 
         else:
             next_getkey_counter += 0.1  # Seconds
