@@ -729,18 +729,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         next_annotation = annotations.next_annotation()
                         if next_annotation is None:  # No next annotation
                             new_time = None
-                            stdscr.addstr(0, 40, " ") #!!!!!!!!
-                            stdscr.clrtoeol() #!!!! debug
                             curses.beep()
                         else:
                             new_time = next_annotation.time
-                            stdscr.addstr(0, 40, str(new_time)) #!!!! debug
                             scroll = scroll_forwards
-
-                            # !!!!!!!!!! Starting from the beginning
-                            # and Right x * until end end ends up
-                            # highlighting None?!
-
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
                         if prev_annotation is None:
