@@ -475,21 +475,21 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
     cancelable_events = []
+    
     def cancel_sched_events():
         """
         Cancel the scheduled events (except getting the next user key).
 
         The events canceled are in cancelable_events, which is emptied.
         """
-        for event in cancelable_events:
+        while cancelable_events:
             try:
                 # Highlighting events are not tracked, so they
                 # might have passed without this program knowing
                 # it, which makes the following fail:
-                scheduler.cancel(event)
+                scheduler.cancel(cancelable_events.pop())
             except ValueError:
                 pass
-        cancelable_events = []
     
     def display_annotations():
         # !! This function is only here so that the code be more organized.
@@ -582,7 +582,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
                                    scroll_forwards)
                 ]
-            
+
+        else:
+            1/0
+            # curses.beep()
+            # stdscr.refresh()
+            # stdscr.nodelay(False)  #!!!!! debug
+            # stdscr.getkey()
+            # stdscr.nodelay(True)  #!!!!! debug
+
     def scroll_forwards():
         """
         Move the annotations forwards in time.
@@ -650,12 +658,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         # Instant feedback:
         stdscr.refresh()
-
-        # curses.beep()
-        # stdscr.refresh()
-        # stdscr.nodelay(False)  #!!!!! debug
-        # stdscr.getkey()
-        # stdscr.nodelay(True)  #!!!!! debug
         
     ####################
     # User key handling:
