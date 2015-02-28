@@ -1095,7 +1095,7 @@ class AnnotateShell(cmd.Cmd):
         try:
             new_annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
-        except ValueError as err:  # Non-unique keyboard keys
+        except ValueError:  # Non-unique keyboard keys
             print("Error: all keyboard keys should be different.")
             return
 
