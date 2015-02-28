@@ -233,6 +233,7 @@ class AnnotationList:
         self.cursor = bisect.bisect(
             [annotation.time for annotation in self.list_], time)
 
+    # !!! Still used?
     def to_next_annotation(self):
         """
         Move the cursor forward by one annotation, and return the time of
@@ -248,6 +249,7 @@ class AnnotationList:
         self.cursor += 1
         return self[self.cursor-1].time
 
+    # !!! Still used?    
     def to_prev_annotation(self):
         """
         Move the cursor backward by one annotation, and return the time of
@@ -526,8 +528,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         
     def display_next_annotation():
         """
-        Display the next annotation and schedules the corresponding
-        annotation list scrolling.
+        Scroll the annotation list forward.
+
+        The next annotation is displayed and its highlighting and next
+        scrolling down is scheduled.
 
         The previous annotation list must be displayed already.
         """
@@ -567,10 +571,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
-                                   scroll_next_annotation)
+                                   scroll_forward)
                 ]
 
-    def scroll_next_annotation():
+    def scroll_forward():
         """
         Move the current next annotation to the list of previous
         annotations, update the next annotation (if any) so that the
@@ -594,6 +598,27 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         display_next_annotation()
 
         stdscr.refresh()  # Instant feedback
+
+    def scroll_back():
+        """
+        Scroll backwards in time once.
+
+        There must be an annotation before the cursor.
+        """
+        annotations.delete_prev()
+        # Corresponding screen update:
+        stdscr.scroll()
+        # The last line in the list of previous
+        # annotations might have to be updated:
+        index_new_prev_annot = (
+            annotations.cursor-prev_annot_height)
+        if index_new_prev_annot >= 0:
+            addstr_width(
+                5+prev_annot_height, 0,
+                str(annotations[index_new_prev_annot]))
+        # Instant feedback:
+        stdscr.refresh()
+
         
     display_annotations()
         
@@ -646,22 +671,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         curses.beep()
                 elif key == "\x7f":
                     # ASCII delete: delete the previous annotation
-                    if annotations.cursor:
-
-                        annotations.delete_prev()
-                        # Corresponding screen update:
-                        stdscr.scroll()
-                        # The last line in the list of previous
-                        # annotations might have to be updated:
-                        index_new_prev_annot = (
-                            annotations.cursor-prev_annot_height)
-                        if index_new_prev_annot >= 0:
-                            addstr_width(
-                                5+prev_annot_height, 0,
-                                str(annotations[index_new_prev_annot]))
-                        # Instant feedback:
-                        stdscr.refresh()
-
+                    if annotations.cursor:  # Any previous annotation?
+                        scroll_back()
                     else:
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:
@@ -672,20 +683,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         if next_annotation is None:
                             curses.beep()
                         else:
-                            scroll_next_annotation()
-                            # !!!!!! update with new
-                    
-                    try:
-                        new_time = (
-                            annotations.to_next_annotation
-                            if key == "KEY_RIGHT"
-                            else annotations.to_prev_annotation)()
-                        
-                    except NoAnnotation:
-                        curses.beep()  # No annotation to go to
-                    else:
+                            scroll_forward()
+                            new_time = next_annotation.time
+                    else:  # KEY_LEFT
+                        prev_annotation = annotations.prev_annotation()
+                        if prev_annotation is None:
+                            curses.beep()
+                        else:
 
-                        if key == "KEY_LEFT":
+                            # The annotation lists do not change, only
+                            # the annotation timer.
+                            new_time = prev_annotation.time
+                                
                             # In order to allow the user to move
                             # beyond just the previous annotation,
                             # there is a small time window after each
@@ -700,8 +709,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                 try:
                                     new_time = annotations.to_prev_annotation()
                                 except NoAnnotation:
+                                    # Since the origin time of some
+                                    # players is not 0 (e.g. Logic Pro
+                                    # X, which uses 1:00:00), the time
+                                    # is not set to 0 when trying to
+                                    # go before the first annotation:
                                     pass
+                                else:
+                                    # This requires an update of the
+                                    # annotation list:
+                                    # !!!!!!!!!!
 
+                                
                         # The relationship between the annotation
                         # timer and the scheduler timer must be
                         # updated:
