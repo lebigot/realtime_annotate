@@ -944,18 +944,18 @@ class AnnotateShell(cmd.Cmd):
         return self.do_exit(arg)
     do_EOF.__doc__ = do_exit.__doc__
 
-    def do_set_time(self, time):
+    def do_set_time(self, time_):
         """
         Set the current annotation timer to the given time.
 
         If a player is used, this time should typically be the play
         head location.
 
-        time -- time in S, M:S or H:M:S format.
+        time_ -- time in S, M:S or H:M:S format.
         """
         try:
             # No need to have the program crash and exit for a small error:
-            time_parts = list(map(float, time.split(":", 2)))
+            time_parts = list(map(float, time_.split(":", 2)))
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
