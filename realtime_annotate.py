@@ -479,16 +479,17 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
         Cancel the scheduled events (except getting the next user key).
 
-        The events canceled are in cancelable_events.
+        The events canceled are in cancelable_events, which is emptied.
         """
-        while cancelable_events:
+        for event in cancelable_events:
             try:
                 # Highlighting events are not tracked, so they
                 # might have passed without this program knowing
                 # it, which makes the following fail:
-                scheduler.cancel(cancelable_events.pop())
+                scheduler.cancel(event)
             except ValueError:
                 pass
+        cancelable_events = []
     
     def display_annotations():
         # !! This function is only here so that the code be more organized.
