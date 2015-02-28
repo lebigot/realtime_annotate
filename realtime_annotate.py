@@ -708,7 +708,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # ASCII delete: delete the previous annotation
                     if annotations.cursor:  # Any previous annotation?
                         annotations.delete_prev()
-                        scroll_backwards(next_annot_update=False)
+                        scroll_backwards(only_scroll_previous=True)
                     else:
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:  # Navigation
@@ -731,8 +731,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             new_time = None                            
                             curses.beep()
                         else:
-                            scroll = scroll_forwards
                             new_time = next_annotation.time
+                            scroll = scroll_forwards
+
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
                         if prev_annotation is None:
@@ -761,9 +762,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                 #  annotation: the Next annotation is
                                 #  correctly displayed, then replaced
                                 #  immediately by the next one.
+
+                                curses.beep()
                                 
-                                scroll = scroll_backwards
                                 new_time = annotations.prev_annotation().time
+                                scroll = scroll_backwards
 
                             else:
                                 scroll = None
