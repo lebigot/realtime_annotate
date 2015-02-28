@@ -527,8 +527,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         #     stdscr.clrtoeol()
 
         display_next_annotation()
-
-    display_annotations()
         
     def display_next_annotation():
         """
@@ -581,7 +579,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
                                    scroll_forwards)
                 ]
-
+            
     def scroll_forwards():
         """
         Move the annotations forwards in time.
@@ -704,7 +702,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         scroll_backwards(next_annot_update=False)
                     else:
                         curses.beep()  # Error: no previous annotation
-                elif key in {"KEY_RIGHT", "KEY_LEFT"}:
+                elif key in {"KEY_RIGHT", "KEY_LEFT"}:  # Navigation
 
                     # The new annotation time is put in new_time,
                     # below. If changing the time is impossible
@@ -757,14 +755,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                     # through the cursor):
                                     scroll_backwards()
 
-                        if new_time is not None:
-                            # The relationship between the annotation
-                            # timer and the scheduler timer must be
-                            # updated:
-                            nonlocal start_time, start_counter
-                            start_time = new_time
-                            start_counter = next_getkey_counter
-                            player_module.set_time(*new_time.to_HMS())
+                    # Conclusion of the annotation navigation handling:
+                    if new_time is not None:
+                        # The relationship between the annotation
+                        # timer and the scheduler timer must be
+                        # updated:
+                        nonlocal start_time, start_counter
+                        start_time = new_time
+                        start_counter = next_getkey_counter
+                        player_module.set_time(*new_time.to_HMS())
 
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
@@ -805,6 +804,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # the loop).
             scheduler.enterabs(next_getkey_counter, 0, getkey)
 
+    display_annotations()            
     scheduler.enterabs(next_getkey_counter, 0, getkey)
     scheduler.run()
 
