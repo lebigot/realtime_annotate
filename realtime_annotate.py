@@ -572,9 +572,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     def transfer_next_annotation():
         """
-        Move the current next annotation (which must exist) to the
-        list of previous annotations, update the next annotation (if
-        any), and schedule the next transfer (if necessary).
+        Move the current next annotation to the list of previous
+        annotations, update the next annotation (if any), and schedule
+        the next transfer (if necessary).
+
+        A next annotation must be present (both on screen and in
+        annotations) when calling this function.
         """
 
         # Transfer on screen to the list of next annotations:
