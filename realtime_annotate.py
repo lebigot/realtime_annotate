@@ -354,33 +354,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # of previous annotations) are handled by the following scheduler:
     scheduler = sched.scheduler(time.monotonic)
 
-    # Counters for the event scheduling:
-    start_counter = time.monotonic()
-
-    # Starting the player is better done close to setting
-    # start_counter, so that there is not large discrepancy between
-    # the time in the player and this time measured by this
-    # function:
-    player_module.start()
-
-    def time_to_counter(timestamp):
-        """
-        Return the scheduler counter corresponding to the given
-        annotation timestamp.
-
-        timestamp -- time (datetime.timedelta, including Time).
-        """
-        return (timestamp-start_time).total_seconds() + start_counter
-
-    def counter_to_time(counter):
-        """
-        Return the annotation timestamp corresponding to the given
-        scheduler counter.
-
-        counter -- scheduler counter (in seconds).
-        """
-        return start_time + datetime.timedelta(seconds=counter-start_counter)
-
     ####################
     # Basic settings for the terminal:
 
@@ -457,6 +430,43 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     addstr_width(5, 0, "Previous annotations:", curses.A_BOLD)
 
+    ####################
+    # Synchronization between the annotation timer, the scheduler
+    # timer and the player timer:
+
+    # Counters for the event scheduling:
+    start_counter = time.monotonic()
+
+    # Starting the player is better done close to setting
+    # start_counter, so that there is not large discrepancy between
+    # the time in the player and this time measured by this
+    # function:
+    player_module.start()
+
+    def time_to_counter(timestamp):
+        """
+        Return the scheduler counter corresponding to the given
+        annotation timestamp.
+
+        timestamp -- time (datetime.timedelta, including Time).
+        """
+        return (timestamp-start_time).total_seconds() + start_counter
+
+    def counter_to_time(counter):
+        """
+        Return the annotation timestamp corresponding to the given
+        scheduler counter.
+
+        counter -- scheduler counter (in seconds).
+        """
+        return start_time + datetime.timedelta(seconds=counter-start_counter)
+
+    ####################
+    # Display of annotations
+
+    # Annotations require times from the annotation timer, so this
+    # comes after setting the timers above.
+    
     # In order to cancel upcoming updates of the next annotation
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
@@ -687,7 +697,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_update = lambda: None  # No display update needed
 
         return (new_time, display_update)
-    
+
+
     ####################
     # User key handling:
 
