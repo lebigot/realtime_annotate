@@ -510,7 +510,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         The previous annotation list must be displayed already.
         """
-
+        
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
 
@@ -524,14 +524,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         addstr_width(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
+        nonlocal cancelable_events
+        
         # Any queued event must be canceled, as they are made
         # obsolete by the handling of the next annotation
         # highlighting and scrolling below:
         cancel_sched_events(scheduler, cancelable_events)
 
         if next_annotation is not None:
-
-            nonlocal cancelable_events
 
             cancelable_events = [
 
