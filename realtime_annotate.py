@@ -1369,7 +1369,6 @@ class AnnotateShell(cmd.Cmd):
 if __name__ == "__main__":
 
     import argparse
-    import collections
 
     parser = argparse.ArgumentParser(description=__doc__)
 
