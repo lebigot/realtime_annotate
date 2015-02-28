@@ -624,27 +624,27 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         this function.
 
         next_annot_update -- if false, the next annotation is not
-        updated, and the annotation cursor is not updated either; this
-        case is useful for updating the list of previous annotations
-        after deleting the annotation before the cursor.
+        updated, and the annotation cursor is not updated either: only
+        the list of previous annotations is scrolled. This case is
+        useful for updating the list of previous annotations after
+        deleting the annotation before the cursor.
         """
-
-        stdscr.scroll()
-        
-        # The last line in the list of previous annotations might have
-        # to be updated with an annotation that was not displayed
-        # previously:
-        index_new_prev_annot = (
-            annotations.cursor-prev_annot_height)
-        if index_new_prev_annot >= 0:
-            addstr_width(5+prev_annot_height, 0,
-                         str(annotations[index_new_prev_annot]))
 
         if next_annot_update:
             # Corresponding cursor movement:
             annotations.cursor -= 1
             display_next_annotation()
-            
+        
+        stdscr.scroll()
+
+        # The last line in the list of previous annotations might have
+        # to be updated with an annotation that was not displayed
+        # previously:
+        index_new_prev_annot = annotations.cursor-prev_annot_height
+        if index_new_prev_annot >= 0:
+            addstr_width(5+prev_annot_height, 0,
+                         str(annotations[index_new_prev_annot]))
+
         # Instant feedback:
         stdscr.refresh()
 
