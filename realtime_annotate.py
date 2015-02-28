@@ -796,6 +796,71 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     player_module.set_time(*getkey_time.to_HMS())  # Explicit synchronization
     return getkey_time
 
+def key_assignments_from_file(file_path):
+    """
+    Return the key assignments found in the given file.
+
+    The file syntax is detailed in AnnotateShell.do_load_keys().
+
+    Prints information and error messages. Returns None in case of
+    problem (so that the user can remain in the AnnotateShell).
+
+    file_path -- file path, as a string.
+    """
+
+    # Common error: no file name given:
+    if not file_path:
+        print("Error: please provide a file path.")
+        return
+
+    # It is convenient to keep the annotations in the same order
+    # as in the file:
+    key_assignments = collections.OrderedDict()
+
+    try:
+        keys_file = open(file_path)
+    except IOError as err:
+        print("Error: cannot open '{}': {}".format(file_path, err))
+        return
+
+    with keys_file:
+        for (line_num, line) in enumerate(keys_file, 1):
+
+            line = line.rstrip()
+
+            # Empty lines and comments are skipped:
+            if not line or line.startswith("#"):
+                continue
+
+            try:
+                key, text = line.split(None, 1)
+            except ValueError:
+                print("Error: syntax error in line {}:\n{}".format(
+                    line_num, line))
+                return
+
+            # Sanity checks:
+
+            if len(key) != 1:
+                print("Error: keys must be single characters. Error"
+                      " in line {} with key '{}'."
+                      .format(line_num, key))
+                return
+
+            if key.isdigit():
+                print("Error: digits are reserved keys.")
+                return
+
+            # The other reserved keys are space and delete,
+            # but space cannot be entered in the file, and
+            # delete is cumbersome to enter, so this case is
+            # not checked.
+            key_assignments[text] = key
+
+    print("Key assignments loaded from file {}.".format(file_path))
+
+    return key_assignments
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -1006,57 +1071,7 @@ class AnnotateShell(cmd.Cmd):
         prompted for the replacement key.
         """
 
-        # Common error: no file name given:
-        if not file_path:
-            print("Error: please provide a file path.")
-            return
-
-        # It is convenient to keep the annotations in the same order
-        # as in the file:
-        key_assignments = collections.OrderedDict()
-
-        try:
-            keys_file = open(file_path)
-        except IOError as err:
-            print("Error: cannot open '{}': {}".format(file_path, err))
-            return
-
-        with keys_file:
-            for (line_num, line) in enumerate(keys_file, 1):
-
-                line = line.rstrip()
-
-                # Empty lines and comments are skipped:
-                if not line or line.startswith("#"):
-                    continue
-
-                try:
-                    key, text = line.split(None, 1)
-                except ValueError:
-                    print("Error: syntax error in line {}:\n{}".format(
-                        line_num, line))
-                    return
-
-                # Sanity checks:
-
-                if len(key) != 1:
-                    print("Error: keys must be single characters. Error"
-                          " in line {} with key '{}'."
-                          .format(line_num, key))
-                    return
-
-                if key.isdigit():
-                    print("Error: digits are reserved keys.")
-                    return
-
-                # The other reserved keys are space and delete,
-                # but space cannot be entered in the file, and
-                # delete is cumbersome to enter, so this case is
-                # not checked.
-                key_assignments[text] = key
-
-        print("Key assignments loaded from file {}.".format(file_path))
-
+        key_assignments = key_assignments_from_file(file_path)
         try:
             new_annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
