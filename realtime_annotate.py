@@ -491,16 +491,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 pass
     
     def display_annotations():
+        # !! This function is only here so that the code be more organized.
         """
-        Display the list of previous annotations (erasing any text in the
-        region of previous annotations), and the next annotation.
+        Display the list of previous annotations, and the next annotation.
 
         Schedule the next annotation list update (with the next
         annotation going from the next annotation entry to the
         previous annotations list).
+
+        The lines used for the display must be empty before calling
+        this function.
         """
 
-        ####################
         # Previous annotations:
         
         ## If there is any annotation before the current time:
@@ -514,24 +516,25 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 annotations[annotations.cursor-1 : slice_end :-1], 6):
 
                 addstr_width(line_idx, 0, str(annotation))
-                stdscr.clrtoeol()  # For existing annotations
+                # stdscr.clrtoeol()  # For existing annotations
 
-        else:
-            line_idx = 5  # Last "written" line
+        # else:
+        #     line_idx = 5  # Last "written" line
 
-        # The rest of the lines are erased:
-        for line_idx in range(line_idx+1, 5+prev_annot_height):
-            stdscr.move(line_idx, 0)
-            stdscr.clrtoeol()
+        # # The rest of the lines are erased:
+        # for line_idx in range(line_idx+1, 5+prev_annot_height):
+        #     stdscr.move(line_idx, 0)
+        #     stdscr.clrtoeol()
 
         display_next_annotation()
+
+    display_annotations()
         
     def display_next_annotation():
         """
-        Scroll the annotation list forward.
+        Display the next annotation.
 
-        The next annotation is displayed and its highlighting and next
-        scrolling down is scheduled.
+        Its highlighting and next scrolling down are scheduled.
 
         The previous annotation list must be displayed already.
         """
@@ -552,6 +555,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if next_annotation is not None:
 
             nonlocal cancelable_events
+
+            # Any queued event must be canceled, as they are made
+            # obsolete by the handling of the next annotation
+            # highlighting and scrolling below:
+            cancel_sched_events()
             
             cancelable_events = [
                 
@@ -571,15 +579,19 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time), 0,
-                                   scroll_forward)
+                                   scroll_forwards)
                 ]
 
-    def scroll_forward():
+    def scroll_forwards():
         """
-        Move the current next annotation to the list of previous
-        annotations, update the next annotation (if any) so that the
-        displayed annotations remain consistent with the annotation
-        cursor, and schedule the next scrolling (if necessary).
+        Move the annotations forwards in time.
+
+        The current next annotation is moved to the list of previous
+        annotations, and the next annotation (if any) is updated.  The
+        screen is then refreshed.
+        
+        The annotation cursor is moved forward, and the next scrolling
+        is scheduled (if necessary).
 
         A next annotation must be present (both on screen and in
         annotations, in a consistent way) when calling this function.
@@ -599,29 +611,45 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         stdscr.refresh()  # Instant feedback
 
-    def scroll_back():
+    def scroll_backwards(next_annot_update=True):
         """
-        Scroll backwards in time once.
+        Move the annotations backwards in time.
+        
+        Scroll the list of previous annotations backwards in time
+        once, and the next annotation (if any) is updated. The screen
+        is then refreshed.
 
-        There must be an annotation before the cursor.
+        The annotation cursor is moved backwards once, and the next
+        scrolling is scheduled.
+        
+        There must be an annotation before the cursor when calling
+        this function.
+
+        next_annot_update -- if false, the next annotation is not
+        updated, and the annotation cursor is not updated either; this
+        case is useful for updating the list of previous annotations
+        after deleting the annotation before the cursor.
         """
-        annotations.delete_prev()
-        # Corresponding screen update:
+
         stdscr.scroll()
-        # The last line in the list of previous
-        # annotations might have to be updated:
+        # The last line in the list of previous annotations might have
+        # to be updated with an annotation that was not displayed
+        # previously:
         index_new_prev_annot = (
             annotations.cursor-prev_annot_height)
         if index_new_prev_annot >= 0:
             addstr_width(
                 5+prev_annot_height, 0,
                 str(annotations[index_new_prev_annot]))
+
+        if next_annot_update:
+            # Corresponding cursor movement:
+            annotations.cursor -= 1
+            display_next_annotation()
+            
         # Instant feedback:
         stdscr.refresh()
 
-        
-    display_annotations()
-        
     ####################
     # User key handling:
 
@@ -672,22 +700,30 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 elif key == "\x7f":
                     # ASCII delete: delete the previous annotation
                     if annotations.cursor:  # Any previous annotation?
-                        scroll_back()
+                        annotations.delete_prev()
+                        scroll_backwards(next_annot_update=False)
                     else:
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT"}:
+
+                    # The new annotation time is put in new_time,
+                    # below. If changing the time is impossible
+                    # (e.g. if the user tries to go beyond the last
+                    # annotation), new_time takes the value None.
                     
                     # Screen and cursor update:
                     if key == "KEY_RIGHT":
                         next_annotation = annotations.next_annotation()
                         if next_annotation is None:
+                            new_time = None                            
                             curses.beep()
                         else:
-                            scroll_forward()
+                            scroll_forwards()
                             new_time = next_annotation.time
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
                         if prev_annotation is None:
+                            new_time = None                            
                             curses.beep()
                         else:
 
@@ -717,30 +753,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                     pass
                                 else:
                                     # This requires an update of the
-                                    # annotation list:
-                                    # !!!!!!!!!!
+                                    # annotation list (on screen and
+                                    # through the cursor):
+                                    scroll_backwards()
 
-                                
-                        # The relationship between the annotation
-                        # timer and the scheduler timer must be
-                        # updated:
-                        nonlocal start_time, start_counter
-                        start_time = new_time
-                        start_counter = next_getkey_counter
-                        player_module.set_time(*new_time.to_HMS())
-
-                        # Screen update of the existing annotations:
-
-                        # Any queued event must be canceled, as they
-                        # are obsolete, since they are tied to the
-                        # time next_getkey_counter (instead of
-                        # new_time):
-                        cancel_sched_events()
-                        #
-                        # !!!! This is not efficient: for forward, a
-                        # simple scroll down of the next annotation
-                        # would do. For backward movement
-                        display_annotations()
+                        if new_time is not None:
+                            # The relationship between the annotation
+                            # timer and the scheduler timer must be
+                            # updated:
+                            nonlocal start_time, start_counter
+                            start_time = new_time
+                            start_counter = next_getkey_counter
+                            player_module.set_time(*new_time.to_HMS())
 
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
