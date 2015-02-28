@@ -595,7 +595,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         annotations, in a consistent way) when calling this function.
         """
 
-        # Transfer on screen to the list of next annotations:
+        # Transfer on screen to the list of previous annotations:
         #
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
@@ -633,7 +633,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if next_annot_update:
             # Corresponding cursor movement:
             annotations.cursor -= 1
-            display_next_annotation()
+            display_next_annotation()  # !!!! Is like called twice!!!?
         
         stdscr.scroll()
 
@@ -648,6 +648,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # Instant feedback:
         stdscr.refresh()
 
+        stdscr.refresh()
+        stdscr.nodelay(False)  #!!!!! debug
+        stdscr.getkey()
+        
     ####################
     # User key handling:
 
