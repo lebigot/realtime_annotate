@@ -363,14 +363,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # function:
     player_module.start()
 
-    def time_to_counter(time):
+    def time_to_counter(timestamp):
         """
         Return the scheduler counter corresponding to the given
         annotation timestamp.
 
-        time -- time (datetime.timedelta, including Time).
+        timestamp -- time (datetime.timedelta, including Time).
         """
-        return (time-start_time).total_seconds() + start_counter
+        return (timestamp-start_time).total_seconds() + start_counter
 
     def counter_to_time(counter):
         """
