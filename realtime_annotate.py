@@ -551,12 +551,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         addstr_width(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
-        if next_annotation is not None:
+        # Any queued event must be canceled, as they are made
+        # obsolete by the handling of the next annotation
+        # highlighting and scrolling below:
+        cancel_sched_events()
 
-            # Any queued event must be canceled, as they are made
-            # obsolete by the handling of the next annotation
-            # highlighting and scrolling below:
-            cancel_sched_events()
+        if next_annotation is not None:
 
             nonlocal cancelable_events
             
@@ -727,12 +727,19 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     
                     if key == "KEY_RIGHT":
                         next_annotation = annotations.next_annotation()
-                        if next_annotation is None:
-                            new_time = None                            
+                        if next_annotation is None:  # No next annotation
+                            new_time = None
+                            stdscr.addstr(0, 40, " ") #!!!!!!!!
+                            stdscr.clrtoeol() #!!!! debug
                             curses.beep()
                         else:
                             new_time = next_annotation.time
+                            stdscr.addstr(0, 40, str(new_time)) #!!!! debug
                             scroll = scroll_forwards
+
+                            # !!!!!!!!!! Starting from the beginning
+                            # and Right x * until end end ends up
+                            # highlighting None?!
 
                     else:  # KEY_LEFT
                         prev_annotation = annotations.prev_annotation()
@@ -764,6 +771,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                                 #  immediately by the next one.
 
                                 curses.beep()
+
+                                # !!!!! This does not go back!
                                 
                                 new_time = annotations.prev_annotation().time
                                 scroll = scroll_backwards
