@@ -510,7 +510,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         display_next_annotation()
 
-    def display_next_annotation():
+    def display_next_annotation(only_renew_events=False):
         """
         Display the next annotation.
 
@@ -519,20 +519,28 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         canceled).
 
         The previous annotation list must be displayed already.
+
+        only_renew_events -- if True, the next annotation text is not
+        updated. Its highlighting and scrolling events are
+        re-scheduled as normal. This is useful when the
+        synchronization between the annotation time and the scheduler
+        time is modified.
         """
+
+        next_annotation = annotations.next_annotation()
 
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
 
         # Display
-
-        next_annotation = annotations.next_annotation()
-
-        next_annotation_text = (str(next_annotation)
-                                if next_annotation is not None else "<None>")
-
-        addstr_width(2, x_display, next_annotation_text)
-        stdscr.clrtoeol()
+        next_annotation_text = (
+            str(next_annotation)
+            if next_annotation is not None else "<None>")
+        
+        # Having only_renew_events is only a (very small) optimization:
+        if not only_renew_events:
+            addstr_width(2, x_display, next_annotation_text)
+            stdscr.clrtoeol()
 
         nonlocal cancelable_events
 
@@ -704,8 +712,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # events, if any, since the user sees them in the
                     # annotation timer time, but they are scheduled in
                     # the old scheduler time:
-                    # !!!!!!!! 
-                    display_update = lambda: None  # No display update needed
+                    def display_update():
+                        display_next_annotation(only_renew_events=True)
 
         return (new_time, display_update)
 
