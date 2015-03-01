@@ -197,6 +197,10 @@ help at the bottom of the ``annotate`` screen):
   (from the list of previous annotations) is deleted with the delete
   key.
 
+- **Changing the annotation timer** is done with the arrow keys (left
+  and right for navigating annotations, and up and down for moving the
+  timer by ± 1 second).
+  
 - **Stopping** the annotation process is done with the space key. If a
   player controller is used (``--player`` option), the player
   is stopped.
