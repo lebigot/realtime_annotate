@@ -646,7 +646,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                          str(annotations[index_new_prev_annot]))
 
         # Instant feedback:
-        stdscr.refresh()  #$$$$$$$ or can be put somewhere better (for KEY_DOWN's multiple scrolls)
+        stdscr.refresh()
 
     def navigate(key, key_time, time_sync, annotations):
         """
@@ -799,7 +799,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
         nonlocal next_getkey_counter
 
-        # $$$$$$$$ Test with annotations that are at the exact same
+        # $$$ Test with annotations that are at the exact same
         # time. This probably works, because the scheduler handles
         # events in order: two scrollings will be performed before
         # checking if the user types the next key.
