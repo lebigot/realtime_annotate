@@ -656,14 +656,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         annotations -- AnnotationList which is navigated
         through the key.
         """
-        # The new annotation time is put in new_time, below. If
-        # changing the time is impossible (e.g. if the user tries to
-        # go beyond the last annotation), new_time takes the value
-        # None. It is important to change the annotation timer time
-        # with respect to the scheduler time early: otherwise, time
-        # scheduling is broken (like for instance the automatic
-        # scrolling of annotations). The appropriate scrolling
-        # operation is also calculated.
+        # The new annotation time is put in new_time and the screen
+        # update function in display_update, below. If changing the
+        # time is impossible (e.g. if the user tries to go beyond the
+        # last annotation), new_time takes the value None. It is
+        # important to change the annotation timer time with respect
+        # to the scheduler time early: otherwise, time scheduling is
+        # broken (like for instance the automatic scrolling of
+        # annotations). This is why the screen display is not run, but
+        # only calculated.
 
         if key == "KEY_RIGHT":
             next_annotation = annotations.next_annotation()
