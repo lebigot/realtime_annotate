@@ -635,9 +635,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     def navigate(key, key_time, annotations):
         """
         Given a navigation key entered at the given time for the given
-        annotations, return the new time to be used and a display
-        update function (to be called *after* updating the
-        annotation time with the new time).
+        annotations, return the new time for the annotation timer, and
+        a display update function, that must be called, *after*
+        updating the synchronization between the annotation time and
+        the scheduler time.
 
         The returned time is None if the navigation is impossible
         (like trying to go past the last annotation, etc.), and a beep
@@ -699,6 +700,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_update = scroll_backwards
 
                 else:
+                    # It is important to update the Next annotation
+                    # events, if any, since the user sees them in the
+                    # annotation timer time, but they are scheduled in
+                    # the old scheduler time:
+                    # !!!!!!!! 
                     display_update = lambda: None  # No display update needed
 
         return (new_time, display_update)
