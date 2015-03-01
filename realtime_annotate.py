@@ -38,6 +38,9 @@ import json
 
 # Time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
+# Amount of time when going back by a (generally) fixed amount of time
+# during the annotation process:
+BACK_TIME = datetime.timedelta(seconds=1)
 
 class Time(datetime.timedelta):
     # ! A datetime.timedelta is used instead of a datetime.time
@@ -646,12 +649,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
         next annotation, if any. KEY_RIGHT goes to the previous
         annotation, if any, or two annotations back, if key_time is
-        close to the previous annotation. KEY_DOWN moves back either
-        by one second, or to the previous annotation, whichever is
-        closer.
+        close to the previous annotation. KEY_DOWN is like KEY_LEFT,
+        except that if the previous annotation is further than 1
+        second before key_time, the time goes back by 1 second (this
+        allows the user to scroll back in time even in the absence of
+        recent annotations).
 
         key_time -- time at which the key is considered
-        pressed (compatible with the annotation times).
+        pressed (compatible with a datetime.timedelta).
 
         annotations -- AnnotationList which is navigated
         through the key.
@@ -666,6 +671,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # annotations). This is why the screen display is not run, but
         # only calculated.
 
+        # $$$$$$$ When the time is changed, I believe that the Next
+        # annotation scrolling events should be updated: they will not
+        # take place at the same scheduler time.
+        
         if key == "KEY_RIGHT":
             next_annotation = annotations.next_annotation()
             if next_annotation is None:  # No next annotation
@@ -675,31 +684,42 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 new_time = next_annotation.time
                 display_update = scroll_forwards
         else:  # KEY_LEFT or KEY_DOWN
+            
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
             if prev_annotation is None:
+                if key == "KEY_DOWN":
+                    new_time = key_time - BACK_TIME
+                    display_update = lambda: None
+                # !!!!!!!
                 new_time = None
                 display_update = None
             else:
 
                 new_time = prev_annotation.time
 
-                # In order to allow the user to move
-                # beyond just the previous annotation,
-                # there is a small time window after each
-                # annotation during which going backwards
-                # moves *two* annotations back. In effect,
-                # this skips the previous annotation and
-                # goes back to the one before (if any):
+                if key == "KEY_DOWN":
+                    # Either we 
 
-                if (key_time-new_time < REPEAT_KEY_TIME
-                    and annotations.cursor > 1):
+                #!!!!!!
+                
+                    # In order to allow the user to move
+                    # beyond just the previous annotation,
+                    # there is a small time window after each
+                    # annotation during which going backwards
+                    # moves *two* annotations back. In effect,
+                    # this skips the previous annotation and
+                    # goes back to the one before (if any):
 
-                    new_time = annotations[annotations.cursor-2].time
-                    display_update = scroll_backwards
+                    if (key_time-new_time < REPEAT_KEY_TIME
+                        and annotations.cursor > 1):
 
-                else:
-                    display_update = lambda: None  # No display update needed
+                        new_time = annotations[annotations.cursor-2].time
+                        display_update = scroll_backwards
+
+                    else:
+                        # No display update needed:
+                        display_update = lambda: None
 
         return (new_time, display_update)
 
