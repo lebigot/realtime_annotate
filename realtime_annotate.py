@@ -385,9 +385,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ####################
     # Initializations:
 
+    
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
 
+    # $$$ Window resizing could be handled, with
+    # signal.signal(signal.SIGWINCH, resize_handler). This would
+    # involve drawing the screen again.
+        
     def addstr_width(y, x, text, attr=curses.A_NORMAL):
         """
         Like stdscr.addstr, but truncates the string so that it does not
