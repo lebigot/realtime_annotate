@@ -1366,7 +1366,7 @@ class AnnotateShell(cmd.Cmd):
         """
 
         if not event_ref:  # Can be the empty string
-            print("Error: print provide an event reference.")
+            print("Error: please provide an event reference.")
             return
         
         self.curr_event_ref = event_ref
