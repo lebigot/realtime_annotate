@@ -17,7 +17,7 @@ the same times as the annotation process).
 __version__ = "1.2"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
-# !! The optional player driven by this program must be defined by
+# $$ The optional player driven by this program must be defined by
 # functions in a module stored in a variable named player_module. See
 # the main program for two examples.
 
@@ -43,7 +43,7 @@ REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 BACK_TIME = datetime.timedelta(seconds=1)
 
 class Time(datetime.timedelta):
-    # ! A datetime.timedelta is used instead of a datetime.time
+    # $ A datetime.timedelta is used instead of a datetime.time
     # because the internal scheduler of this program must be added to
     # the current annotation timestamp so as to update it. This cannot
     # be done with datetime.time objects (which cannot be added to a
@@ -51,17 +51,6 @@ class Time(datetime.timedelta):
     """
     Timestamp compatible with a datetime.timedelta.
     """
-
-    def __add__(self, other):
-        """
-        other -- object that can be added to a datetime.timedelta.
-        """
-        # ! A datetime.timedelta apparently does not return an element
-        # of the type of self, so this is done manually here:
-        new_time = other+self  # The order is important!
-        # ! The class of the object cannot be changed, because it is a
-        # built-in type:
-        return Time(new_time.days, new_time.seconds, new_time.microseconds)
 
     def to_HMS(self):
         """
@@ -86,6 +75,28 @@ class Time(datetime.timedelta):
         """
         return "{:02}:{:02}:{:04.1f}".format(*self.to_HMS())
 
+    def __sub__(self, other):
+        """
+        Subtraction.
+        
+        Returns a Time object.
+        
+        other -- datetime.timedelta.
+        """
+        return self + (-other)
+
+    def __add__(self, other):
+        """
+        other -- object that can be added to a datetime.timedelta.
+        """
+        # $ A datetime.timedelta apparently does not return an element
+        # of the type of self, so this is done manually here:
+        new_time = other+self  # The order is important$
+        # $ The class of the object cannot be changed, because it is a
+        # built-in type:
+        return Time(new_time.days, new_time.seconds, new_time.microseconds)
+
+    
 class TimestampedAnnotation:
     """
     Annotation made at a specific time.
@@ -119,7 +130,7 @@ class TimestampedAnnotation:
         self.annotation = annotation
 
     def set_value(self, value):
-        # !! This method exists mostly as a way of showing through
+        # $$ This method exists mostly as a way of showing through
         # code that the value attribute can be set (it is optional,
         # and not set in __init__()).
         """
@@ -424,7 +435,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # Maximum number of previous annotations in window:
     prev_annot_height = help_start_line-6
     if prev_annot_height < 2:
-        # !! If the following is a problem, the help could be
+        # $$ If the following is a problem, the help could be
         # optionally removed OR displayed with a special key, possibly
         # even as a window that can appear or disappear.
         raise TerminalNotHighEnough
@@ -476,7 +487,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     cancelable_events = []
 
     def display_annotations():
-        # !! This function is only here so that the code be more organized.
+        # $$ This function is only here so that the code be more organized.
         """
         Display the list of previous annotations, and the next annotation.
 
@@ -513,7 +524,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         display_next_annotation()
 
-    def display_next_annotation():
+    def display_next_annotation(only_renew_events=False):
         """
         Display the next annotation.
 
@@ -522,20 +533,28 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         canceled).
 
         The previous annotation list must be displayed already.
+
+        only_renew_events -- if True, the next annotation text is not
+        updated. Its highlighting and scrolling events are
+        re-scheduled as normal. This is useful when the
+        synchronization between the annotation time and the scheduler
+        time is modified.
         """
+
+        next_annotation = annotations.next_annotation()
 
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
 
         # Display
-
-        next_annotation = annotations.next_annotation()
-
-        next_annotation_text = (str(next_annotation)
-                                if next_annotation is not None else "<None>")
-
-        addstr_width(2, x_display, next_annotation_text)
-        stdscr.clrtoeol()
+        next_annotation_text = (
+            str(next_annotation)
+            if next_annotation is not None else "<None>")
+        
+        # Having only_renew_events is only a (very small) optimization:
+        if not only_renew_events:
+            addstr_width(2, x_display, next_annotation_text)
+            stdscr.clrtoeol()
 
         nonlocal cancelable_events
 
@@ -638,9 +657,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     def navigate(key, key_time, annotations):
         """
         Given a navigation key entered at the given time for the given
-        annotations, return the new time to be used and a display
-        update function (to be called *after* updating the
-        annotation time with the new time).
+        annotations, return the new time for the annotation timer, and
+        a display update function, that *must* be called, and this
+        must be done *after* updating the synchronization between the
+        annotation time and the scheduler time (if not the new time is
+        not None).
 
         The returned time is None if the navigation is impossible
         (like trying to go past the last annotation, etc.), and a beep
@@ -649,17 +670,19 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
         next annotation, if any. KEY_RIGHT goes to the previous
         annotation, if any, or two annotations back, if key_time is
-        close to the previous annotation. KEY_DOWN is like KEY_LEFT,
-        except that if the previous annotation is further than 1
-        second before key_time, the time goes back by 1 second (this
-        allows the user to scroll back in time even in the absence of
-        recent annotations).
+        close to the previous annotation. KEY_DOWN is like KEY_LEFT:
+        the annotation timer goes towards the previous annotation, but
+        with a maximum jump of BACK_TIME towards it; KEY_DOWN also
+        jumps backwards by BACK_TIME if the timer is before the first
+        annotation.
 
         key_time -- time at which the key is considered
         pressed (compatible with a datetime.timedelta).
 
-        annotations -- AnnotationList which is navigated
-        through the key.
+        annotations -- AnnotationList which is navigated through the
+        key. Its cursor must be where key_time would put it with
+        cursor_at_time(), i.e. key_time is a time between
+        .prev_annotation() and .next_annotation().
         """
         # The new annotation time is put in new_time and the screen
         # update function in display_update, below. If changing the
@@ -671,9 +694,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # annotations). This is why the screen display is not run, but
         # only calculated.
 
-        # $$$$$$$ When the time is changed, I believe that the Next
-        # annotation scrolling events should be updated: they will not
-        # take place at the same scheduler time.
+        # $$$$$$ Have the user send instead a synchronization function
+        # and apply it here? (and only update the screen if needed)?
         
         if key == "KEY_RIGHT":
             next_annotation = annotations.next_annotation()
@@ -689,37 +711,44 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             prev_annotation = annotations.prev_annotation()
             if prev_annotation is None:
                 if key == "KEY_DOWN":
+                    # Moving before the first annotation:
                     new_time = key_time - BACK_TIME
-                    display_update = lambda: None
-                # !!!!!!!
-                new_time = None
-                display_update = None
+                    def display_update():
+                        display_next_annotation(only_renew_events=True)
+                else:
+                    new_time = None
+                    display_update = None
             else:
 
                 new_time = prev_annotation.time
 
-                if key == "KEY_DOWN":
-                    # Either we 
+                # In order to allow the user to move
+                # beyond just the previous annotation,
+                # there is a small time window after each
+                # annotation during which going backwards
+                # moves *two* annotations back. In effect,
+                # this skips the previous annotation and
+                # goes back to the one before (if any):
+                if (key_time-new_time < REPEAT_KEY_TIME
+                    and annotations.cursor > 1):
+                    new_time = annotations[annotations.cursor-2].time
+                    
+                if (key == "KEY_DOWN" and key_time - new_time > BACK_TIME):
+                    # Going back by two annotations is too big for
+                    # KEY_DOWN:
+                    new_time = key_time - BACK_TIME
 
-                #!!!!!!
-                
-                    # In order to allow the user to move
-                    # beyond just the previous annotation,
-                    # there is a small time window after each
-                    # annotation during which going backwards
-                    # moves *two* annotations back. In effect,
-                    # this skips the previous annotation and
-                    # goes back to the one before (if any):
-
-                    if (key_time-new_time < REPEAT_KEY_TIME
-                        and annotations.cursor > 1):
-
-                        new_time = annotations[annotations.cursor-2].time
-                        display_update = scroll_backwards
-
-                    else:
-                        # No display update needed:
-                        display_update = lambda: None
+                # At most one scrolling step is needed, because the
+                # cursor never gets beyond two annotations before:
+                if new_time < prev_annotation.time:
+                    display_update = scroll_backwards
+                else:
+                    # It is important to update the Next annotation
+                    # events, if any, since the user sees them in the
+                    # annotation timer time, but they are scheduled in
+                    # the old scheduler time:
+                    def display_update():
+                        display_next_annotation(only_renew_events=True)
 
         return (new_time, display_update)
 
@@ -778,8 +807,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         scroll_backwards(only_scroll_previous=True)
                     else:
                         curses.beep()  # Error: no previous annotation
-                elif key in {"KEY_RIGHT", "KEY_LEFT"}:  # Navigation
-
+                elif key in {"KEY_RIGHT", "KEY_LEFT", "KEY_DOWN"}:
+                    # Navigation
                     (new_time, display_update) = navigate(
                         key, counter_to_time(next_getkey_counter),
                         annotations)
@@ -1031,7 +1060,7 @@ class AnnotateShell(cmd.Cmd):
                 else [(annot.name, annot.value) for annot in self.annot_enum]
             )
 
-            # !! Another architecture would consist in only keep in
+            # $$ Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
             # annotations for those events that the user touched. This
             # would save memory and processing time, at the cost of
@@ -1335,6 +1364,11 @@ class AnnotateShell(cmd.Cmd):
 
         Annotations are attached to this event.
         """
+
+        if not event_ref:  # Can be the empty string
+            print("Error: print provide an event reference.")
+            return
+        
         self.curr_event_ref = event_ref
 
         # Annotation list for the current event:
