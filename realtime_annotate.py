@@ -641,7 +641,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         The returned time is None if the navigation is impossible
         (like trying to go past the last annotation, etc.), and a beep
-        is emitted. In this case, display_update() is meaningless.
+        is emitted. In this case, display_update() is None.
 
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
         next annotation, if any. KEY_RIGHT goes to the previous
@@ -669,11 +669,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             next_annotation = annotations.next_annotation()
             if next_annotation is None:  # No next annotation
                 new_time = None
-                display_update = None
             else:
                 new_time = next_annotation.time
                 display_update = scroll_forwards
-        else:  # KEY_LEFT
+        else:  # KEY_LEFT or KEY_DOWN
+            # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
             if prev_annotation is None:
                 new_time = None
@@ -701,6 +701,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 else:
                     display_update = lambda: None  # No display update needed
 
+        if new_time is None:
+            display_update = None
+            
         return (new_time, display_update)
 
 
