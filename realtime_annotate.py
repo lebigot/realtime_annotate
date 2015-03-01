@@ -38,9 +38,9 @@ import json
 
 # Time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
-# Amount of time when going back by a (generally) fixed amount of time
-# during the annotation process:
-BACK_TIME = datetime.timedelta(seconds=1)
+# Time step when moving backward and forward in time during the
+# annotation process:
+NAVIG_STEP = datetime.timedelta(seconds=1)
 
 class Time(datetime.timedelta):
     # $ A datetime.timedelta is used instead of a datetime.time
@@ -659,7 +659,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
         next annotation, if any. KEY_LEFT goes to the previous
         annotation, if any, or two annotations back, if key_time is
-        close to the previous annotation. KEY_DOWN goes back BACK_TIME
+        close to the previous annotation. KEY_DOWN goes back NAVIG_STEP
         in time.
 
         key_time -- time at which the key is considered
@@ -726,26 +726,52 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # the old scheduler time:
                     display_next_annotation()
 
-        else:  # KEY_DOWN
+        else:  # KEY_DOWN or KEY_UP
 
-            target_time = key_time - BACK_TIME
+            if key == "KEY_UP":
+
+                # Time to be reached:
+                target_time = key_time + NAVIG_STEP
+                
+                # Function for moving to the next annotation *in the
+                # chosen direction*:
+                next_annot = annotations.next_annotation
+
+                # Screen update for going to the next annotation *in
+                # the chosen direction*:
+                scroll = scroll_forwards
+
+                # Function that returns true as long as the target
+                # time is not yet reached (going in the chosen
+                # direction):
+                def target_time_not_reached(time_):
+                    return time_ < target_time
+
+            else:  # KEY_DOWN:
+
+                target_time = key_time - NAVIG_STEP                
+                next_annot = annotations.prev_annotation
+                scroll = scroll_backwards
+                def target_time_not_reached(time_):
+                    return time_ > target_time
             
-            # The previous annotations are passed one by one(because
-            # the screen update uses scroll_backwards(), which moves
-            # by one annotation), so as to reach target_time:
+            # The previous annotations are passed one by one (because
+            # the screen update uses scroll_*(), which moves by one
+            # annotation), so as to reach target_time:
             while True:
+
+                # Next annotation in the considered direction:
+                annotation = next_annot()
                 
-                prev_annotation = annotations.prev_annotation()
-                
-                if prev_annotation is None:
+                if annotation is None:
                     break
 
-                prev_annot_time = prev_annotation.time
+                annotation_time = annotation.time
                 
-                if prev_annot_time > target_time:
-                    # The previous annotation must be passed over:
-                    time_sync(prev_annot_time)
-                    scroll_backwards()
+                if target_time_not_reached(annotation_time):
+                    # The annotation must be passed over:
+                    time_sync(annotation_time)
+                    scroll()
                 else:
                     break
                     
@@ -811,7 +837,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         scroll_backwards(only_scroll_previous=True)
                     else:
                         curses.beep()  # Error: no previous annotation
-                elif key in {"KEY_RIGHT", "KEY_LEFT", "KEY_DOWN"}:
+                elif key in {"KEY_RIGHT", "KEY_LEFT", "KEY_DOWN", "KEY_UP"}:
 
                     # Navigation:
 
