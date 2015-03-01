@@ -643,10 +643,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         (like trying to go past the last annotation, etc.), and a beep
         is emitted. In this case, display_update() is meaningless.
 
-        key -- KEY_RIGHT or KEY_LEFT. KEY_RIGHT goes to the next
-        annotation, if any. KEY_RIGHT goes to the previous annotation,
-        if any, or two annotations back, if key_time is close to the
-        previous annotation.
+        key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
+        next annotation, if any. KEY_RIGHT goes to the previous
+        annotation, if any, or two annotations back, if key_time is
+        close to the previous annotation. KEY_DOWN moves back either
+        by one second, or to the previous annotation, whichever is
+        closer.
 
         key_time -- time at which the key is considered
         pressed (compatible with the annotation times).
