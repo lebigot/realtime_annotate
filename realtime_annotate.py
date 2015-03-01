@@ -682,8 +682,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 display_update = None
             else:
 
-                # The annotation lists do not change, only
-                # the annotation timer.
                 new_time = prev_annotation.time
 
                 # In order to allow the user to move
