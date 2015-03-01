@@ -638,7 +638,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         annotations, return the new time for the annotation timer, and
         a display update function, that must be called, *after*
         updating the synchronization between the annotation time and
-        the scheduler time.
+        the scheduler time (if not the new time is not None).
 
         The returned time is None if the navigation is impossible
         (like trying to go past the last annotation, etc.), and a beep
