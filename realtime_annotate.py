@@ -213,7 +213,9 @@ class AnnotationList:
       iteration.
 
     - cursor: index between annotations (0 = before the first
-    annotation, positive).
+    annotation, positive). The cursor corresponds to a time between
+    the two annotations (their timestamp included, since they can have
+    the same timestamp).
     """
     def __init__(self, list_=None, cursor=0):
         """
@@ -748,6 +750,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         """
         nonlocal next_getkey_counter
 
+        # $$$$$$$$ Test with annotations that are at the exact same
+        # time. This probably works, because the scheduler handles
+        # events in order: two scrollings will be performed before
+        # checking if the user types the next key.
+        
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
         addstr_width(3, 19, str(annotation_time))
