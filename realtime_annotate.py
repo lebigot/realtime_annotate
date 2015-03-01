@@ -524,7 +524,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         display_next_annotation()
 
-    def display_next_annotation(only_renew_events=False):
+    def display_next_annotation():
         """
         Display the next annotation.
 
@@ -533,12 +533,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         canceled).
 
         The previous annotation list must be displayed already.
-
-        only_renew_events -- if True, the next annotation text is not
-        updated. Its highlighting and scrolling events are
-        re-scheduled as normal. This is useful when the
-        synchronization between the annotation time and the scheduler
-        time is modified.
         """
 
         next_annotation = annotations.next_annotation()
@@ -551,10 +545,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             str(next_annotation)
             if next_annotation is not None else "<None>")
         
-        # Having only_renew_events is only a (very small) optimization:
-        if not only_renew_events:
-            addstr_width(2, x_display, next_annotation_text)
-            stdscr.clrtoeol()
+        addstr_width(2, x_display, next_annotation_text)
+        stdscr.clrtoeol()
 
         nonlocal cancelable_events
 
@@ -716,7 +708,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # Moving before the first annotation:
                     new_time = key_time - BACK_TIME
                     def display_update():
-                        display_next_annotation(only_renew_events=True)
+                        display_next_annotation()
                 else:
                     new_time = None
                     display_update = None
@@ -734,15 +726,16 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 if key_time-new_time < REPEAT_KEY_TIME:
                     if annotations.cursor > 1:
                         new_time = annotations[annotations.cursor-2].time
-                    
+                    elif key == "KEY_LEFT":
+                        # It is not possible to go before the first
+                        # annotation, with KEY_LEFT, since it jumps to
+                        # the previous annotation:
+                        curses.beep()        # $$$$ ALL BEEPS SHOULD be here!
+
                 if (key == "KEY_DOWN" and key_time - new_time > BACK_TIME):
                     # Going back by two annotations is too big for
                     # KEY_DOWN:
                     new_time = key_time - BACK_TIME
-                else:
-                    # It is not possible to go beyond the first
-                    # annotation:
-                    curses.beep()
 
                 # At most one scrolling step is needed, because the
                 # cursor never gets beyond two annotations before:
@@ -754,9 +747,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # annotation timer time, but they are scheduled in
                     # the old scheduler time:
                     def display_update():
-                        display_next_annotation(only_renew_events=True)
-
-        # $$$$ The beep could be here!
+                        display_next_annotation()
         
         return (new_time, display_update)
 
