@@ -646,111 +646,86 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # Instant feedback:
         stdscr.refresh()
 
-    def navigate(key, key_time, annotations):
+    def navigate(key, key_time, time_sync, annotations):
         """
         Given a navigation key entered at the given time for the given
-        annotations, return the new time for the annotation timer, and
-        a display update function, that *must* be called, and this
-        must be done *after* updating the synchronization between the
-        annotation time and the scheduler time (if not the new time is
-        not None).
+        annotations, update the annotation time and screen.
 
-        The returned time is None if the navigation is impossible
-        (like trying to go past the last annotation, etc.), and a beep
-        is emitted. In this case, display_update() is None.
-
+        Beeps are emitted for impossible operations (like going to the
+        previous annotation when there is none).
+        
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
-        next annotation, if any. KEY_RIGHT goes to the previous
+        next annotation, if any. KEY_LEFT goes to the previous
         annotation, if any, or two annotations back, if key_time is
-        close to the previous annotation. KEY_DOWN is like KEY_LEFT:
-        the annotation timer goes towards the previous annotation, but
-        with a maximum jump of BACK_TIME towards it; KEY_DOWN also
-        jumps backwards by BACK_TIME if the timer is before the first
-        annotation.
+        close to the previous annotation. KEY_DOWN goes back BACK_TIME
+        in time.
 
         key_time -- time at which the key is considered
         pressed (compatible with a datetime.timedelta).
 
+        time_sync -- function that takes a new Time for the annotation
+        timer and synchronizes the scheduler counter with it, along
+        with the external player time.
+        
         annotations -- AnnotationList which is navigated through the
         key. Its cursor must be where key_time would put it with
         cursor_at_time(), i.e. key_time is a time between
         .prev_annotation() and .next_annotation().
         """
-        # The new annotation time is put in new_time and the screen
-        # update function in display_update, below. If changing the
-        # time is impossible (e.g. if the user tries to go beyond the
-        # last annotation), new_time takes the value None. It is
-        # important to change the annotation timer time with respect
-        # to the scheduler time early: otherwise, time scheduling is
-        # broken (like for instance the automatic scrolling of
-        # annotations). This is why the screen display is not run, but
-        # only calculated.
+        # It is important to synchronize the times early: otherwise,
+        # time scheduling is broken (like for instance the automatic
+        # scrolling of annotations). This is why the screen display is
+        # only run after performing the time synchronization.
 
-        # $$$$$$ Have the user send instead a synchronization function
-        # and apply it here? (and only update the screen if needed)?
-        
         if key == "KEY_RIGHT":
+
             next_annotation = annotations.next_annotation()
-            if next_annotation is None:  # No next annotation
-                new_time = None
-                display_update = None
+            if next_annotation is not None:
+                time_sync(next_annotation.time)
+                scroll_forwards()
             else:
-                new_time = next_annotation.time
-                display_update = scroll_forwards
-        else:  # KEY_LEFT or KEY_DOWN
+                curses.beep()
+        
+        elif key == "KEY_LEFT":
             
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
             
             if prev_annotation is None:
-                # The cursor is before the first annotation:
-                if key == "KEY_DOWN":
-                    # Moving before the first annotation:
-                    new_time = key_time - BACK_TIME
-                    def display_update():
-                        display_next_annotation()
-                else:
-                    new_time = None
-                    display_update = None
+                curses.beep()
             else:
 
                 new_time = prev_annotation.time
 
-                # In order to allow the user to move
-                # beyond just the previous annotation,
-                # there is a small time window after each
-                # annotation during which going backwards
-                # moves *two* annotations back. In effect,
-                # this skips the previous annotation and
-                # goes back to the one before (if any):
+                # In order to allow the user to move beyond just the
+                # previous annotation, there is a small time window
+                # after each annotation during which going backwards
+                # moves *two* annotations back. In effect, this skips
+                # the previous annotation and goes back to the one
+                # before (if any):
                 if key_time-new_time < REPEAT_KEY_TIME:
+
                     if annotations.cursor > 1:
-                        new_time = annotations[annotations.cursor-2].time
-                    elif key == "KEY_LEFT":
+                        # There is an annotation before the previous
+                        # one: we go there:
+                        time_sync(annotations[annotations.cursor-2].time)
+                        scroll_backwards()
+                    else:
                         # It is not possible to go before the first
                         # annotation, with KEY_LEFT, since it jumps to
                         # the previous annotation:
-                        curses.beep()        # $$$$ ALL BEEPS SHOULD be here!
+                        curses.beep()
 
-                if (key == "KEY_DOWN" and key_time - new_time > BACK_TIME):
-                    # Going back by two annotations is too big for
-                    # KEY_DOWN:
-                    new_time = key_time - BACK_TIME
-
-                # At most one scrolling step is needed, because the
-                # cursor never gets beyond two annotations before:
-                if new_time < prev_annotation.time:
-                    display_update = scroll_backwards
                 else:
+                    time_sync(new_time)
                     # It is important to update the Next annotation
                     # events, if any, since the user sees them in the
                     # annotation timer time, but they are scheduled in
                     # the old scheduler time:
-                    def display_update():
-                        display_next_annotation()
-        
-        return (new_time, display_update)
+                    display_next_annotation()
 
+        else:  # KEY_DOWN
+            pass  # $$$$$$$$$ implement
 
     ####################
     # User key handling:
@@ -807,29 +782,24 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     else:
                         curses.beep()  # Error: no previous annotation
                 elif key in {"KEY_RIGHT", "KEY_LEFT", "KEY_DOWN"}:
-                    # Navigation
-                    (new_time, display_update) = navigate(
-                        key, counter_to_time(next_getkey_counter),
-                        annotations)
 
-                    # Conclusion of the annotation navigation handling:
-                    if new_time is None:
-                        curses.beep()  # Navigation impossible
-                    else:
-                        # The relationship between the annotation
-                        # timer and the scheduler timer must be
-                        # updated:
+                    # Navigation:
+
+                    def time_sync(new_time):
+                        """
+                        Update the synchronization between the annotation
+                        timer and the scheduler counter, and with the external
+                        player.
+
+                        new_time -- new annotation time (Time object).
+                        """
                         nonlocal start_time, start_counter
                         start_time = new_time
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
-
-                        # It is important to do the screen update
-                        # (scrolling,...)  *after* synchronizing the
-                        # annotation and scheduler timers: otherwise
-                        # the scheduled automatic scrolling is set to
-                        # an incorrect time:
-                        display_update()
+                        
+                    navigate(key, counter_to_time(next_getkey_counter),
+                             time_sync, annotations)
 
                 elif key != " ":  # Space is a valid key
                     curses.beep()  # Unknown key
