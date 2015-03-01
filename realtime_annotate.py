@@ -727,6 +727,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_next_annotation()
 
         else:  # KEY_DOWN or KEY_UP
+
+            # $$$$$$ There can be a crash (the reason is not printed
+            # on screen) when pressing KEY_DOWN repeatedly very
+            # fast. It is not related to the external player. Maybe
+            # curses?
             
             if key == "KEY_UP":
 
