@@ -666,10 +666,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         pressed (compatible with a datetime.timedelta).
 
         time_sync -- function that takes a new Time for the annotation
-        timer and synchronizes the scheduler counter with it. It also
-        takes a second, optional argument update_player: if
-        update_player is True (default), the external player play head
-        is also updated.
+        timer and synchronizes the scheduler counter with it, along
+        with the external player play head time.
         
         annotations -- AnnotationList which is navigated through the
         key. Its cursor must be where key_time would put it with
@@ -771,15 +769,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 annotation_time = annotation.time
                 
                 if target_time_not_reached(annotation_time):
-                    
-                    # The annotation must be passed over.
-                    
-                    # Syncing a player in a fast sequence can trip it
-                    # (this is the case of Logic Pro X). Since this is
-                    # not needed anyway: the player is not updated
-                    # until the very end:
-                    time_sync(annotation_time, update_player=False)
-                    
+                    # The annotation must be passed over:
+                    time_sync(annotation_time)
                     scroll()
                 else:
                     break
@@ -850,22 +841,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     # Navigation:
 
-                    def time_sync(new_time, update_player=True):
+                    def time_sync(new_time):
                         """
                         Update the synchronization between the annotation
-                        timer and the scheduler counter, and
-                        optionally with the external player.
+                        timer and the scheduler counter, and with the
+                        external player time.
 
                         new_time -- new annotation time (Time object).
-
-                        update_player -- if True, also update the play
-                        head time of the external player.
                         """
                         nonlocal start_time, start_counter
                         start_time = new_time
                         start_counter = next_getkey_counter
-                        if update_player:
-                            player_module.set_time(*new_time.to_HMS())
+                        player_module.set_time(*new_time.to_HMS())
                         
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
