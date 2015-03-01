@@ -695,8 +695,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 if (key_time-new_time < REPEAT_KEY_TIME
                     and annotations.cursor > 1):
 
-                    new_time = (annotations[annotations.cursor-2]
-                                .time)
+                    new_time = annotations[annotations.cursor-2].time
                     display_update = scroll_backwards
 
                 else:
