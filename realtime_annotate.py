@@ -91,7 +91,7 @@ class Time(datetime.timedelta):
         """
         # $ A datetime.timedelta apparently does not return an element
         # of the type of self, so this is done manually here:
-        new_time = other+self  # The order is important$
+        new_time = other+self  # The order is important!
         # $ The class of the object cannot be changed, because it is a
         # built-in type:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
@@ -709,7 +709,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
+            
             if prev_annotation is None:
+                # The cursor is before the first annotation:
                 if key == "KEY_DOWN":
                     # Moving before the first annotation:
                     new_time = key_time - BACK_TIME
@@ -729,14 +731,18 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # moves *two* annotations back. In effect,
                 # this skips the previous annotation and
                 # goes back to the one before (if any):
-                if (key_time-new_time < REPEAT_KEY_TIME
-                    and annotations.cursor > 1):
-                    new_time = annotations[annotations.cursor-2].time
+                if key_time-new_time < REPEAT_KEY_TIME:
+                    if annotations.cursor > 1:
+                        new_time = annotations[annotations.cursor-2].time
                     
                 if (key == "KEY_DOWN" and key_time - new_time > BACK_TIME):
                     # Going back by two annotations is too big for
                     # KEY_DOWN:
                     new_time = key_time - BACK_TIME
+                else:
+                    # It is not possible to go beyond the first
+                    # annotation:
+                    curses.beep()
 
                 # At most one scrolling step is needed, because the
                 # cursor never gets beyond two annotations before:
@@ -750,6 +756,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     def display_update():
                         display_next_annotation(only_renew_events=True)
 
+        # $$$$ The beep could be here!
+        
         return (new_time, display_update)
 
 
