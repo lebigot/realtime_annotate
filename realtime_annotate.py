@@ -736,7 +736,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # $$$$$$ There can be a crash (the reason is not printed
             # on screen) when pressing KEY_DOWN repeatedly very
             # fast. It is not related to the external player. Maybe
-            # curses?
+            # curses? Maybe I could use a sleep() in
+            # scroll_backwards() so as to have enough time to see the
+            # screen changes?
             
             if key == "KEY_UP":
 
