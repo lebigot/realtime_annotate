@@ -466,7 +466,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     # Annotations require times from the annotation timer, so this
     # comes after setting the timers above.
-    
+
     # In order to cancel upcoming updates of the next annotation
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
@@ -520,7 +520,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         The previous annotation list must be displayed already.
         """
-        
+
         # Coordinate for the display (aligned with the running timer):
         x_display = 19
 
@@ -535,7 +535,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         stdscr.clrtoeol()
 
         nonlocal cancelable_events
-        
+
         # Any queued event must be canceled, as they are made
         # obsolete by the handling of the next annotation
         # highlighting and scrolling below:
@@ -669,6 +669,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             next_annotation = annotations.next_annotation()
             if next_annotation is None:  # No next annotation
                 new_time = None
+                display_update = None
             else:
                 new_time = next_annotation.time
                 display_update = scroll_forwards
@@ -677,6 +678,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             prev_annotation = annotations.prev_annotation()
             if prev_annotation is None:
                 new_time = None
+                display_update = None
             else:
 
                 # The annotation lists do not change, only
@@ -701,9 +703,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 else:
                     display_update = lambda: None  # No display update needed
 
-        if new_time is None:
-            display_update = None
-            
         return (new_time, display_update)
 
 
@@ -766,7 +765,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     (new_time, display_update) = navigate(
                         key, counter_to_time(next_getkey_counter),
                         annotations)
-                    
+
                     # Conclusion of the annotation navigation handling:
                     if new_time is None:
                         curses.beep()  # Navigation impossible
