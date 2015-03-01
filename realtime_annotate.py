@@ -646,7 +646,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                          str(annotations[index_new_prev_annot]))
 
         # Instant feedback:
-        stdscr.refresh()
+        stdscr.refresh()  #$$$$$$$ or can be put somewhere better (for KEY_DOWN's multiple scrolls)
 
     def navigate(key, key_time, time_sync, annotations):
         """
@@ -697,7 +697,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 curses.beep()
             else:
 
-                new_time = prev_annotation.time
+                prev_annot_time = prev_annotation.time
 
                 # In order to allow the user to move beyond just the
                 # previous annotation, there is a small time window
@@ -705,7 +705,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # moves *two* annotations back. In effect, this skips
                 # the previous annotation and goes back to the one
                 # before (if any):
-                if key_time-new_time < REPEAT_KEY_TIME:
+                if key_time-prev_annot_time < REPEAT_KEY_TIME:
 
                     if annotations.cursor > 1:
                         # There is an annotation before the previous
@@ -719,7 +719,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         curses.beep()
 
                 else:
-                    time_sync(new_time)
+                    time_sync(prev_annot_time)
                     # It is important to update the Next annotation
                     # events, if any, since the user sees them in the
                     # annotation timer time, but they are scheduled in
@@ -727,8 +727,31 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_next_annotation()
 
         else:  # KEY_DOWN
-            pass  # $$$$$$$$$ implement
 
+            target_time = key_time - BACK_TIME
+            
+            # The previous annotations are passed one by one(because
+            # the screen update uses scroll_backwards(), which moves
+            # by one annotation), so as to reach target_time:
+            while True:
+                
+                prev_annotation = annotations.prev_annotation()
+                
+                if prev_annotation is None:
+                    break
+
+                prev_annot_time = prev_annotation.time
+                
+                if prev_annot_time > target_time:
+                    # The previous annotation must be passed over:
+                    time_sync(prev_annot_time)
+                    scroll_backwards()
+                else:
+                    break
+                    
+            time_sync(target_time)
+            display_next_annotation()
+            
     ####################
     # User key handling:
 
