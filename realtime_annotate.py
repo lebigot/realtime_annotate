@@ -614,6 +614,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         stdscr.refresh()  # Instant feedback
 
+
     def scroll_backwards(only_scroll_previous=False):
         """
         Move the annotations backwards in time.
@@ -651,7 +652,16 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                          str(annotations[index_new_prev_annot]))
 
         # Instant feedback:
+
+        # !!!!!! debug
+        # curses.beep()
+        # time.sleep(1)
+        
         stdscr.refresh()
+        # !!!!!! debug
+        # curses.beep()
+        # curses.beep()
+        # time.sleep(1)
 
     def navigate(key, key_time, time_sync, annotations):
         """
@@ -734,11 +744,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         else:  # KEY_DOWN or KEY_UP
 
             # $$$$$$ There can be a crash (the reason is not printed
-            # on screen) when pressing KEY_DOWN repeatedly very
-            # fast. It is not related to the external player. Maybe
-            # curses? Maybe I could use a sleep() in
-            # scroll_backwards() so as to have enough time to see the
-            # screen changes?
+            # on screen) when pressing KEY_DOWN repeatedly very fast
+            # (with 1, 2 or multiple annotations in an event). It is
+            # not related to the external player. Maybe curses? Maybe
+            # I could use a sleep() in scroll_backwards() so as to
+            # have enough time to see the screen changes?
             
             if key == "KEY_UP":
 
