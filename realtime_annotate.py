@@ -567,6 +567,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         if next_annotation is not None:
 
+            # The event scrolling must be scheduled *before* checking
+            # for a user key, because it is a requirement of getkey()
+            # that any annotation *at* or before the
+            # next_getkey_counter is in the list of previous
+            # annotation list.
+            
             cancelable_events = [
 
                 # Visual clue about upcoming annotation:
