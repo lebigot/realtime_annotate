@@ -815,10 +815,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         the next key check.
 
         This event is always scheduled for the next_getkey_counter
-        scheduler counter, with a priority of getkey_priority. It is
-        guaranteed that any annotation *at* or before the
-        corresponding time is displayed on screen in the list of
-        previous annotations.
+        scheduler counter, with a priority of getkey_priority.
+
+        It is guaranteed that the next annotation has a time stamp
+        strictly after the next_getkey_counter time. Similarly, the
+        list of previous annotations contains annotations that have a
+        time stamp *at or* before the next_getkey_counter time.
         """
 
         # $$ The guarantee in case of a next_getkey_counter that falls
