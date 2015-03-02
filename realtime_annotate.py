@@ -751,14 +751,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_next_annotation()
 
         else:  # KEY_DOWN or KEY_UP
-
-            # $$$$$$ There can be a crash (the reason is not printed
-            # on screen) when pressing KEY_DOWN repeatedly very fast
-            # (with 1, 2 or multiple annotations in an event). The
-            # screen typically freezes, before quitting. It is not
-            # related to the external player. Maybe curses? Maybe I
-            # could use a sleep() in scroll_backwards() so as to have
-            # enough time to see the screen changes?
             
             if key == "KEY_UP":
 
