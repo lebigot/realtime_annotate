@@ -566,12 +566,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         cancel_sched_events(scheduler, cancelable_events)
 
         if next_annotation is not None:
-
-            # The event scrolling must be scheduled *before* checking
-            # for a user key, because it is a requirement of getkey()
-            # that any annotation *at* or before the
-            # next_getkey_counter is in the list of previous
-            # annotation list.
             
             cancelable_events = [
 
@@ -588,6 +582,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     2, x_display,
                     len(next_annotation_text), curses.A_STANDOUT)),
 
+                # The event scrolling must be scheduled *before*
+                # checking for a user key, because it is a requirement
+                # of getkey() that any annotation *at* or before the
+                # next_getkey_counter is in the list of previous
+                # annotation list.
+
+                
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time),
@@ -661,16 +662,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                          str(annotations[index_new_prev_annot]))
 
         # Instant feedback:
-
-        # !!!!!! debug
-        # curses.beep()
-        # time.sleep(1)
-        
         stdscr.refresh()
-        # !!!!!! debug
-        # curses.beep()
-        # curses.beep()
-        # time.sleep(1)
 
     def navigate(key, key_time, time_sync, annotations):
         """
