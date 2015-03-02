@@ -211,15 +211,18 @@ Annotation file format
 The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
 structure should be mostly self-explanatory.
 
-Annotation times are stored as ``[hours, minutes, seconds]``.
-``hours`` and ``minutes`` are integers, and ``seconds`` is a
-float. ``minutes`` and ``seconds`` are in the [0; 60) interval.  There
-is no limit on the number of hours.
+Annotation **time stamps** are stored as ``[hours, minutes,
+seconds]``.  ``hours`` and ``minutes`` are integers, and ``seconds``
+is a float. ``minutes`` and ``seconds`` are in the [0; 60) interval.
+There is no limit on the number of hours. Negative hours are possible,
+for annotations made before time 0; the formula for calculating the
+number of seconds of a time stamp remains valid: -1:59:0 means
+-1 hour + 59 minutes = -1 minute.
 
-Annotations are stored as an array. This array contains the annotation
-key (e.g. "i" for "interesting moment"). If the annotation has an
-attached numerical value (number in 0–9), then the array contains a
-second element with this value.
+**Annotations** are stored as an array. This array contains the
+*annotation key* (e.g. "i" for "interesting moment"). If the
+annotation has an *attached numerical value* (number in 0–9), then the
+array contains a second element with this value.
 
 The JSON file also contains an object with the annotation keys and
 their meaning. This part of the file can be conveniently updated by
