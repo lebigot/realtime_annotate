@@ -757,20 +757,32 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # the chosen direction*:
                 scroll = scroll_forwards
 
-                # Function that returns true as long as the target
-                # time is not yet reached (going in the chosen
-                # direction):
-                def target_time_not_reached(time_):
-                    # $$$$ Study equality case
-                    return time_ < target_time
+                def must_scroll(time_):
+                    """
+                    Return true if scrolling is needed in order to reach a
+                    situation where the next and previous annotations
+                    are correctly displayed.
+                    
+                    time_ -- time stamp of an annotation in the Next
+                    annotation field.
+                    """
+                    # Any annotation at the same time as the
+                    # annotation timer must be in the list of previous
+                    # annotations, in order to satisfy the getkey()
+                    # requirement:
+                    return time_ <= target_time
 
             else:  # KEY_DOWN:
 
                 target_time = key_time - NAVIG_STEP                
                 next_annot = annotations.prev_annotation
                 scroll = scroll_backwards
-                def target_time_not_reached(time_):
-                    # $$$$ Study equality case                    
+                def must_scroll(time_):
+                    """
+                    time_ -- time stamp of the latest previous annotation
+                    displayed on screen.
+                    """
+                    # 
                     return time_ > target_time
             
             # The previous annotations are passed one by one (because
@@ -786,7 +798,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                 annotation_time = annotation.time
                 
-                if target_time_not_reached(annotation_time):
+                if must_scroll(annotation_time):
                     # The annotation must be passed over:
                     time_sync(annotation_time)
                     scroll()
