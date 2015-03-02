@@ -777,8 +777,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 next_annot = annotations.prev_annotation
                 scroll = scroll_backwards
                 def target_time_not_reached(time_):
-                    # $$$$$$$$ what happns in case of quality?? PUT
-                    # priority in next annotation scrolling?
                     return time_ > target_time
             
             # The previous annotations are passed one by one (because
