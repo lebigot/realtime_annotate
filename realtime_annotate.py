@@ -769,6 +769,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # time is not yet reached (going in the chosen
                 # direction):
                 def target_time_not_reached(time_):
+                    # $$$$ Study equality case
                     return time_ < target_time
 
             else:  # KEY_DOWN:
@@ -777,6 +778,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 next_annot = annotations.prev_annotation
                 scroll = scroll_backwards
                 def target_time_not_reached(time_):
+                    # $$$$ Study equality case                    
                     return time_ > target_time
             
             # The previous annotations are passed one by one (because
