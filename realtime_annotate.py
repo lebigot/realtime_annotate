@@ -243,6 +243,9 @@ class AnnotationList:
         Set the internal cursor so that an annotation at the given
         time would be inserted in timestamp order.
 
+        The cursor is put *after* any annotation with the same time
+        stamp.
+
         timestamp -- the cursor is put between two annotations, so
         that the given timestamp is between their timestamps.
         """
@@ -574,15 +577,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # enough time to target the previous annotation
                     # and change its value before it is replaced by
                     # the next annotation).
-                    time_to_counter(next_annotation.time)-1, 0,
+                    time_to_counter(next_annotation.time)-1, getkey_priority-1,
                     lambda: stdscr.chgat(
                     2, x_display,
                     len(next_annotation_text), curses.A_STANDOUT)),
 
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
-                scheduler.enterabs(time_to_counter(next_annotation.time), 0,
-                                   scroll_forwards)
+                scheduler.enterabs(time_to_counter(next_annotation.time),
+                                   getkey_priority-1, scroll_forwards)
                 ]
 
     def scroll_forwards():
@@ -745,10 +748,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             # $$$$$$ There can be a crash (the reason is not printed
             # on screen) when pressing KEY_DOWN repeatedly very fast
-            # (with 1, 2 or multiple annotations in an event). It is
-            # not related to the external player. Maybe curses? Maybe
-            # I could use a sleep() in scroll_backwards() so as to
-            # have enough time to see the screen changes?
+            # (with 1, 2 or multiple annotations in an event). The
+            # screen typically freezes, before quitting. It is not
+            # related to the external player. Maybe curses? Maybe I
+            # could use a sleep() in scroll_backwards() so as to have
+            # enough time to see the screen changes?
             
             if key == "KEY_UP":
 
@@ -775,6 +779,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 next_annot = annotations.prev_annotation
                 scroll = scroll_backwards
                 def target_time_not_reached(time_):
+                    # $$$$$$$$ what happns in case of quality?? PUT
+                    # priority in next annotation scrolling?
                     return time_ > target_time
             
             # The previous annotations are passed one by one (because
@@ -808,7 +814,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # (with respect to the annotation times in annotations): the
     # two are always paired.
     next_getkey_counter = start_counter
-
+    # Priority of getkey() for the scheduler:
+    getkey_priority = 1
+    
     def getkey():
         """
         Get the user command (if any) and process it.
@@ -817,8 +825,17 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         the next key check.
 
         This event is always scheduled for the next_getkey_counter
-        scheduler counter.
+        scheduler counter, with a priority of getkey_priority. It is
+        guaranteed that any annotation *at* or before the
+        corresponding time is displayed on screen in the list of
+        previous annotations.
         """
+
+        # $$ The guarantee in case of a next_getkey_counter that falls
+        # precisely on one or more annotations is important, as the
+        # program must know in what state the screen is so as to
+        # update it correctly.
+        
         nonlocal next_getkey_counter
 
         # $$$ Test with annotations that are at the exact same
@@ -916,10 +933,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # tasks take time (compared to using a
             # relative waiting time at each iteration of
             # the loop).
-            scheduler.enterabs(next_getkey_counter, 0, getkey)
+            scheduler.enterabs(next_getkey_counter, getkey_priority, getkey)
 
     display_annotations()
-    scheduler.enterabs(next_getkey_counter, 0, getkey)
+    scheduler.enterabs(next_getkey_counter, getkey_priority, getkey)
     scheduler.run()
 
     # The pause key was entered at the last next_getkey_counter, so
