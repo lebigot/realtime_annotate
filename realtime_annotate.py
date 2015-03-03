@@ -687,8 +687,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         annotations -- AnnotationList which is navigated through the
         key. Its cursor must be where key_time would put it with
-        cursor_at_time(), i.e. key_time is a time between
-        .prev_annotation() and .next_annotation().
+        cursor_at_time(), i.e.  .prev_annotation().time <= key_time <
+        .next_annotation().time.
         """
         # It is important to synchronize the times early: otherwise,
         # time scheduling is broken (like for instance the automatic
