@@ -1478,8 +1478,7 @@ class AnnotateShell(cmd.Cmd):
         """
         Rename the given event.
 
-        Syntax:
-        rename_event current_name -> new_name
+        Syntax: rename_event current_name -> new_name
         """
 
         try:
