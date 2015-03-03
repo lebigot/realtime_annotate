@@ -78,9 +78,9 @@ class Time(datetime.timedelta):
     def __sub__(self, other):
         """
         Subtraction.
-        
+
         Returns a Time object.
-        
+
         other -- datetime.timedelta.
         """
         return self + (-other)
@@ -96,7 +96,7 @@ class Time(datetime.timedelta):
         # built-in type:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
 
-    
+
 class TimestampedAnnotation:
     """
     Annotation made at a specific time.
@@ -388,14 +388,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ####################
     # Initializations:
 
-    
+
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
 
     # $$$ Window resizing could be handled, with
     # signal.signal(signal.SIGWINCH, resize_handler). This would
     # involve drawing the screen again.
-        
+
     def addstr_width(y, x, text, attr=curses.A_NORMAL):
         """
         Like stdscr.addstr, but truncates the string so that it does not
@@ -519,7 +519,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 slice_end = None  # For a Python slice
 
             for (line_idx, annotation) in enumerate(
-                annotations[annotations.cursor-1 : slice_end :-1], 6):
+                    annotations[annotations.cursor-1 : slice_end :-1], 6):
 
                 addstr_width(line_idx, 0, str(annotation))
                 # stdscr.clrtoeol()  # For existing annotations
@@ -554,7 +554,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         next_annotation_text = (
             str(next_annotation)
             if next_annotation is not None else "<None>")
-        
+
         addstr_width(2, x_display, next_annotation_text)
         stdscr.clrtoeol()
 
@@ -566,7 +566,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         cancel_sched_events(scheduler, cancelable_events)
 
         if next_annotation is not None:
-            
+
             cancelable_events = [
 
                 # Visual clue about upcoming annotation:
@@ -579,8 +579,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # the next annotation).
                     time_to_counter(next_annotation.time)-1, getkey_priority-1,
                     lambda: stdscr.chgat(
-                    2, x_display,
-                    len(next_annotation_text), curses.A_STANDOUT)),
+                        2, x_display,
+                        len(next_annotation_text), curses.A_STANDOUT)),
 
                 # The event scrolling must be scheduled *before*
                 # checking for a user key, because it is a requirement
@@ -588,7 +588,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # next_getkey_counter is in the list of previous
                 # annotation list.
 
-                
+
                 # The transfer of next_annotation will require the
                 # list of previous annotations to be displayed:
                 scheduler.enterabs(time_to_counter(next_annotation.time),
@@ -671,7 +671,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         Beeps are emitted for impossible operations (like going to the
         previous annotation when there is none).
-        
+
         key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
         next annotation, if any. KEY_LEFT goes to the previous
         annotation, if any, or two annotations back, if key_time is
@@ -684,7 +684,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         time_sync -- function that takes a new Time for the annotation
         timer and synchronizes the scheduler counter with it, along
         with the external player play head time.
-        
+
         annotations -- AnnotationList which is navigated through the
         key. Its cursor must be where key_time would put it with
         cursor_at_time(), i.e. key_time is a time between
@@ -703,12 +703,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 scroll_forwards()
             else:
                 curses.beep()
-        
+
         elif key == "KEY_LEFT":
-            
+
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
-            
+
             if prev_annotation is None:
                 curses.beep()
             else:
@@ -743,12 +743,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     display_next_annotation()
 
         else:  # KEY_DOWN or KEY_UP
-            
+
             if key == "KEY_UP":
 
                 # Time to be reached:
                 target_time = key_time + NAVIG_STEP
-                
+
                 # Function for moving to the next annotation *in the
                 # chosen direction*:
                 next_annot = annotations.next_annotation
@@ -762,7 +762,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     Return true if scrolling is needed in order to reach a
                     situation where the next and previous annotations
                     are correctly displayed.
-                    
+
                     time_ -- time stamp of an annotation in the Next
                     annotation field.
                     """
@@ -774,7 +774,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             else:  # KEY_DOWN:
 
-                target_time = key_time - NAVIG_STEP                
+                target_time = key_time - NAVIG_STEP
                 next_annot = annotations.prev_annotation
                 scroll = scroll_backwards
                 def must_scroll(time_):
@@ -782,9 +782,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     time_ -- time stamp of the latest previous annotation
                     displayed on screen.
                     """
-                    # 
+                    #
                     return time_ > target_time
-            
+
             # The previous annotations are passed one by one (because
             # the screen update uses scroll_*(), which moves by one
             # annotation), so as to reach target_time:
@@ -792,22 +792,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                 # Next annotation in the considered direction:
                 annotation = next_annot()
-                
+
                 if annotation is None:
                     break
 
                 annotation_time = annotation.time
-                
+
                 if must_scroll(annotation_time):
                     # The annotation must be passed over:
                     time_sync(annotation_time)
                     scroll()
                 else:
                     break
-                    
+
             time_sync(target_time)
             display_next_annotation()
-            
+
     ####################
     # User key handling:
 
@@ -818,7 +818,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     next_getkey_counter = start_counter
     # Priority of getkey() for the scheduler:
     getkey_priority = 1
-    
+
     def getkey():
         """
         Get the user command (if any) and process it.
@@ -839,14 +839,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # precisely on one or more annotations is important, as the
         # program must know in what state the screen is so as to
         # update it correctly.
-        
+
         nonlocal next_getkey_counter
 
         # $$$ Test with annotations that are at the exact same
         # time. This probably works, because the scheduler handles
         # events in order: two scrollings will be performed before
         # checking if the user types the next key.
-        
+
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
         addstr_width(3, 19, str(annotation_time))
@@ -864,11 +864,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                 if key.isdigit():
                     if annotations.cursor:
-                        (annotations.prev_annotation().set_value(int(key)))
+                        annotations.prev_annotation().set_value(int(key))
                         # The screen must be updated so as to reflect
                         # the new value:
                         addstr_width(
-                            6, 0,  str(annotations.prev_annotation()))
+                            6, 0, str(annotations.prev_annotation()))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
@@ -896,7 +896,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         start_time = new_time
                         start_counter = next_getkey_counter
                         player_module.set_time(*new_time.to_HMS())
-                        
+
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
 
@@ -1052,14 +1052,17 @@ class AnnotateShell(cmd.Cmd):
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
                 {
-                 # self.annot_enum is guaranteed by this program to
-                 # not be None if there is any annotation: the user is
-                 # forced to load key assignments before any
-                 # annotation can be made:
-                 event_ref:
-                 AnnotationList.from_builtins_fmt(self.annot_enum, annotations)
-                 for (event_ref, annotations)
-                 in file_contents["annotations"].items()})
+                    # self.annot_enum is guaranteed by this program to
+                    # not be None if there is any annotation: the user is
+                    # forced to load key assignments before any
+                    # annotation can be made:
+                    event_ref:
+                    AnnotationList.from_builtins_fmt(
+                        self.annot_enum, annotations)
+
+                    for (event_ref, annotations)
+                    in file_contents["annotations"].items()
+                })
 
             self.do_list_events()
 
@@ -1436,7 +1439,7 @@ class AnnotateShell(cmd.Cmd):
         if not event_ref:  # Can be the empty string
             print("Error: please provide an event reference.")
             return
-        
+
         self.curr_event_ref = event_ref
 
         # Annotation list for the current event:
