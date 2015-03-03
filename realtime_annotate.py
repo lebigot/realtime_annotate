@@ -1271,13 +1271,13 @@ class AnnotateShell(cmd.Cmd):
             for timed_annotation in annotations:
                 old_annotations.add(timed_annotation.annotation)
 
-        # $$$ It would be nice if values could also be mapped to (like
-        # unifying multiple annotations to a single annotation, with b
-        # -> b0, s -> b, e -> b). However, putting this mapping in the
-        # keys file could mess things up, as it should only be applied
-        # once. Maybe giving an optional mapping file argument would
-        # work? This could even replace the automatic mapping
-        # calculation.
+        # $$$ It would be more general if values could also be mapped
+        # to (like unifying multiple annotations to a single
+        # annotation, with b -> b0, s -> b, e -> b). Putting this
+        # mapping in the keys file could mess things up, as it should
+        # only be applied once. Maybe giving an optional mapping file
+        # argument would work? This could even replace the automatic
+        # mapping calculation.
 
         # Calculation of the mapping "conversions" from old to new
         # enumerated constants:
