@@ -392,7 +392,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
 
-    # $$$ Window resizing could be handled, with
+    # $$$ POSSIBLE FEATURE: Window resizing could be handled, with
     # signal.signal(signal.SIGWINCH, resize_handler). This would
     # involve drawing the screen again.
 
@@ -842,10 +842,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         nonlocal next_getkey_counter
 
+        # $$$ POSSIBLE FEATURE: Let the user decide what KEY_LEFT and
+        # KEY_RIGHT do: jump to the previous/next annotation, *of a
+        # certain type or not*. This would be useful, for example, for
+        # going from "bookmark" to bookmark (user bookmark, start of a
+        # music piece, etc.).
+
+        # $$$ POSSIBLE FEATURE: Stop the timers *while allowing the
+        # user to move through annotations*. This can be useful for
+        # editing them (currently, the piece keeps playing and the
+        # annotations scrolling, which is not completely comfortable).
+
         # $$$ Test with annotations that are at the exact same
         # time. This probably works, because the scheduler handles
-        # events in order: two scrollings will be performed before
-        # checking if the user types the next key.
+        # events in priority order: two scrollings will be performed
+        # before checking if the user types the next key, so
+        # everything should work.
 
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
@@ -1271,13 +1283,13 @@ class AnnotateShell(cmd.Cmd):
             for timed_annotation in annotations:
                 old_annotations.add(timed_annotation.annotation)
 
-        # $$$ It would be more general if values could also be mapped
-        # to (like unifying multiple annotations to a single
-        # annotation, with b -> b0, s -> b, e -> b). Putting this
-        # mapping in the keys file could mess things up, as it should
-        # only be applied once. Maybe giving an optional mapping file
-        # argument would work? This could even replace the automatic
-        # mapping calculation.
+        # $$$ POSSIBLE FEATURE: It would be more general if values
+        # could also be mapped to (like unifying multiple annotations
+        # to a single annotation, with b -> b0, s -> b, e ->
+        # b). Putting this mapping in the keys file could mess things
+        # up, as it should only be applied once. A better solution is
+        # to have an optional mapping file argument. This would
+        # replace the automatic mapping calculation.
 
         # Calculation of the mapping "conversions" from old to new
         # enumerated constants:
