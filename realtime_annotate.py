@@ -1186,6 +1186,11 @@ class AnnotateShell(cmd.Cmd):
 
         time_ -- time in S, M:S or H:M:S format.
         """
+
+        # $$$ POSSIBLE FEATURE: Let the user set the time to "<" or
+        # ">", meaning the first or last annotation (if an event is
+        # already selected).
+
         try:
             # No need to have the program crash and exit for a small error:
             time_parts = list(map(float, time_.split(":", 2)))
