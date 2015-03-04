@@ -6,13 +6,13 @@ Overview
 ========
 
 .. Benefits and description of the program for users, in one sentence:
-   
+
 ``realtime_annotate.py`` is a light-weight program that **lets users
 focus** on listening to a piece of music, watching a video, etc., and
 **make pre-defined annotations** very efficiently,
 
 .. How are the benefits obtained?
-   
+
 Users can focus on the annotation task thanks to having them enter
 annotation with a **single keyboard key**, and to letting the program
 **automatically handle time-related tasks** (time stamping, and
@@ -23,7 +23,7 @@ automatic scrolling of existing annotations):
 .. image:: doc/annotate.png
 
 .. Some details connected to the introductory paragraph:
-   
+
 The **annotations** handled by this program are entered in real time
 with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
@@ -80,7 +80,7 @@ be automatically controlled with the `provided MIDI controller
 writing a few Python functions.
 
 .. Concrete implementation details and features:
-   
+
 The program runs in text mode, in a terminal:
 
 .. image:: doc/shell.png
@@ -188,7 +188,7 @@ help at the bottom of the ``annotate`` screen):
 
 - Typing the **key** of one of the user-defined annotations adds it with
   the current annotation timer as a time stamp.
-  
+
 - Any typed **digit** adds a **value** to (or changes the value of)
   the *last* annotation (for example, the glitch at 00:00:12.6 in the
   screenshot above has value 0).
@@ -200,7 +200,7 @@ help at the bottom of the ``annotate`` screen):
 - **Navigating in time** is done with the arrow keys (left and right
   for navigating annotations, and up and down for moving the timer by
   ± 1 second).
-  
+
 - **Stopping** the annotation process is done with the space key. If a
   player controller is used (``--player`` option), the player
   is stopped.
@@ -262,4 +262,3 @@ Contact
 This program was written by `Eric O. LEBIGOT (EOL)
 <mailto:eric.lebigot@normalesup.org>`_. Patches, donations, bug
 reports and feature requests are welcome.
-

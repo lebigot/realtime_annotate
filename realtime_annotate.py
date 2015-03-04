@@ -928,7 +928,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if key == " ":
 
             # Stopping the player is best done as soon as possible, so
-            # as to keep the synchronization between self.time and the
+            # as to keep the synchronization between self.curr_event_time and the
             # player time as well as possible, in case
             # player_module.set_time() is a no-op but
             # player_module.stop() works:
@@ -1100,18 +1100,18 @@ class AnnotateShell(cmd.Cmd):
         """
         Time of the annotation timer.
         """
-        return self._time
+        return self._curr_event_time
 
     @time.setter
-    def time(self, time_):
+    def time(self, curr_event_time):
         """
-        Set both the annotation timer and the player time to the given
-        time.
+        Set both the annotation timer for the current event, and the
+        player play head to the given time.
 
-        time_ -- Time object.
+        curr_event_time -- Time object.
         """
-        self._time = time_
-        player_module.set_time(*time_.to_HMS())
+        self._curr_event_time = curr_event_time
+        player_module.set_time(*curr_event_time.to_HMS())
 
     def emptyline(self):
         pass  # No repetition of the last command
@@ -1197,10 +1197,10 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.time = Time(**dict(zip(["seconds", "minutes", "hours"],
-                                        time_parts[::-1])))
+            self.curr_event_time = Time(
+                **dict(zip(["seconds", "minutes", "hours"], time_parts[::-1])))
 
-            print("Annotation timer set to {}.".format(self.time))
+            print("Annotation timer set to {}.".format(self.curr_event_time))
 
     def do_load_keys(self, file_path):
         """
@@ -1418,15 +1418,15 @@ class AnnotateShell(cmd.Cmd):
         try:
 
             # The real-time loop displays information in a curses window:
-            self.time = curses.wrapper(
-                real_time_loop, self.curr_event_ref, self.time,
+            self.curr_event_time = curses.wrapper(
+                real_time_loop, self.curr_event_ref, self.curr_event_time,
                 self.all_annotations[self.curr_event_ref],
                 self.annot_enum)
 
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
         else:
-            print("Current timestamp: {}.".format(self.time))
+            print("Current timestamp: {}.".format(self.curr_event_time))
 
     def do_list_events(self, arg=None):
         """
@@ -1476,10 +1476,18 @@ class AnnotateShell(cmd.Cmd):
 
         # The time of the previous annotation before the cursor is
         # "just" before when the user last stopped:
-        self.time = (prev_annotation.time if prev_annotation is not None
-                     else Time())
+        #
+        # $$$$ It would be nice to save the timer's time instead of
+        # the cursor. However, an AnnotationList does not have the
+        # concept of current time. This means that the current time
+        # for each event should be saved and stored separately. This
+        # could be done, instead of storing the AnnotationList cursor
+        # into the annotation file.
+        self.curr_event_time = (
+            prev_annotation.time if prev_annotation is not None else Time())
+
         print("Back to previous annotation. Annotation timer set to {}."
-              .format(self.time))
+              .format(self.curr_event_time))
 
     def complete_select_event(self, text, line, begidx, endidx):
         """
