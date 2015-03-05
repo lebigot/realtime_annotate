@@ -432,7 +432,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
-    stdscr.addstr("<Del>: delete previous annotation\n")
+    stdscr.addstr("<Del> / -: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>: navigate the annotations\n")
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
@@ -912,7 +912,27 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
 
-                elif key != " ":  # Space is a valid key
+                elif key == "-":  # Delete value (if any)
+                    prev_annotation = annotations.prev_annotation()
+                    if prev_annotation is None:
+                        curses.beep()
+                    else:
+                        try:
+                            del prev_annotation.value
+                        except AttributeError:
+                            curses.beep()  # No value
+                        else:
+                            # The display of the last annotation must
+                            # be updated:
+                            addstr_width(6, 0, str(prev_annotation))
+                            stdscr.clrtoeol()
+                            stdscr.refresh()
+
+                elif key == " ":
+                    # Quitting is handled later, but space is still a
+                    # valid key (no beep):
+                    pass
+                else:
                     curses.beep()  # Unknown key
 
             else:  # A user annotation key was given:
