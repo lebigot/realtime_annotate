@@ -875,15 +875,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             except ValueError:
 
                 if key.isdigit():
-                    # $$$$ It would be consistent to have a way of
-                    # removing the digit associated with an
-                    # annotation (the "-" key?")
-                    if annotations.cursor:
-                        annotations.prev_annotation().set_value(int(key))
+                    prev_annotation = annotations.prev_annotation()
+                    if prev_annotation is not None:
+                        prev_annotation.set_value(int(key))
                         # The screen must be updated so as to reflect
                         # the new value:
-                        addstr_width(
-                            6, 0, str(annotations.prev_annotation()))
+                        addstr_width(6, 0, str(prev_annotation))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation

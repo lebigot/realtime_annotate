@@ -22,11 +22,11 @@ try:
     # More generally, any module that can send MIDI messages would
     # work (rtmidi-python,...).
     import rtmidi  # This is from the python-rtmidi package
-    
+
 except ImportError:
     sys.exit("MIDI support not available."
              " It can be enabled with the python-rtmidi module.")
-    
+
 print("""\
 *******************************************************************************
 MIDI synthetizer support enabled: make sure that your synthetizer listens
@@ -51,7 +51,7 @@ def out_port():
 
     midi_out = rtmidi.MidiOut()
 
-    # This initialization code is from the documentation (it is required):    
+    # This initialization code is from the documentation (it is required):
     if midi_out.get_ports():  # If there are available ports...
         midi_out.open_port(0)
     else:
@@ -70,7 +70,7 @@ def send_MMC_command(command):
     """
     if isinstance(command, int):
         command = bytes([command])
-        
+
     midi_out.send_message(
         bytes([0xF0, 0x7F, 0x7F, 0x06])+command+bytes([0xF7]))
 
@@ -94,7 +94,7 @@ def set_time(hours, minutes, seconds):
 
     assert 0 <= hours <= 255, (
         "This number of hours cannot be handled: {}.".format(hours))
-    
+
     # The seconds must be split into integer seconds and fractional seconds:
     fractional_seconds, seconds = math.modf(seconds)
     seconds = int(seconds)
@@ -107,5 +107,3 @@ def set_time(hours, minutes, seconds):
         # (equal to FRAME_RATE instead of the maximum FRAME_RATE-1),
         # so a different calculation method should be used.
         hours, minutes, seconds, int(FRAME_RATE*fractional_seconds), 0]))
-
-
