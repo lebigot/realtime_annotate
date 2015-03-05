@@ -1513,6 +1513,8 @@ class AnnotateShell(cmd.Cmd):
         """
         Complete event references with the known references.
         """
+        # $$$$$ BUG: this does not work fully: names with a hyphen create problems. Probably
+        # the line contains part of the name.
         return [event_ref for event_ref in sorted(self.all_annotations)
                 if event_ref.startswith(text)]
 
