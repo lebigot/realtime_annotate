@@ -1388,12 +1388,12 @@ class AnnotateShell(cmd.Cmd):
                 ]
 
         else:
-            # Direct expansion:
 
+            # Direct expansion:
 
             # Special characters like "*" at the beginning of the
             # string entered by the user are not included in "text" by
-            # the cmd modul, so they are explicitly included by
+            # the cmd module, so they are explicitly included by
             # calculating "start":
             #
             # Part before the text, without the command:
@@ -1513,10 +1513,21 @@ class AnnotateShell(cmd.Cmd):
         """
         Complete event references with the known references.
         """
-        # $$$$$ BUG: this does not work fully: names with a hyphen create problems. Probably
-        # the line contains part of the name.
-        return [event_ref for event_ref in sorted(self.all_annotations)
-                if event_ref.startswith(text)]
+
+        # Part before the argument, without the command:
+        try:
+            start = line[:begidx].split(None, 1)[1]
+        except IndexError:
+            # Case of a completion from an empty string:
+            start = ""
+
+        argument = start+text
+
+        return [
+            # Only the part after begidx must be returned:
+            event_ref[len(start):]
+            for event_ref in sorted(self.all_annotations)
+            if event_ref.startswith(argument)]
 
     def do_del_event(self, event_ref):
         """
