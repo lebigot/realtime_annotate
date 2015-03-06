@@ -298,6 +298,8 @@ class AnnotationList:
         Delete the annotation just before the cursor and update the
         cursor (which does not move compared to its following
         annotation).
+
+        This annotation must exist.
         """
         self.cursor -= 1
         del self.list_[self.cursor]
@@ -442,7 +444,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del> / -: delete previous annotation / value\n")
-    stdscr.addstr("<Arrows>: navigate the annotations\n")
+    stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
     for annotation in annot_enum:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
@@ -936,6 +938,20 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             addstr_width(6, 0, str(prev_annotation))
                             stdscr.clrtoeol()
                             stdscr.refresh()
+
+                elif key == ">":  # Go to the last annotation:
+                    while annotations.next_annotation() is not None:
+                        # $$ The scrolling could be optimized by
+                        # removing refresh instructions, or even by
+                        # deciding to repaint the whole screen if the
+                        # jump is long.
+                        scroll_forwards()
+                    # $$$$$$$$$ set the time to the time of the last annotation
+
+                elif key == "<":  # Go to the first annotation
+                    while annotations.prev_annotation() is not None:
+                        scroll_backwards()
+                    # $$$$$$$$$ set the time to the time of the last annotation
 
                 elif key == " ":
                     # Quitting is handled later, but space is still a
