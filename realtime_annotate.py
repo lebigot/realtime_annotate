@@ -19,7 +19,7 @@ __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # $$ The optional player driven by this program must be defined by
 # functions in a module stored in a variable named player_module. See
-# the main program for two examples.
+# the main program for two examples. An
 
 import collections
 import enum
@@ -49,7 +49,7 @@ else:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
 # annotation process:
-NAVIG_STEP = datetime.timedelta(seconds=1)
+NAVIG_STEP = datetime.timedelta(seconds=2)
 
 class Time(datetime.timedelta):
     # $ A datetime.timedelta is used instead of a datetime.time
