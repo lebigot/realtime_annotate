@@ -827,6 +827,20 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # (with respect to the annotation times in annotations): the
     # two are always paired.
     next_getkey_counter = start_counter
+
+    def time_sync(new_time):
+        """
+        Update the synchronization between the annotation
+        timer and the scheduler counter, and with the
+        external player time.
+
+        new_time -- new annotation time (Time object).
+        """
+        nonlocal start_time, start_counter
+        start_time = new_time
+        start_counter = next_getkey_counter
+        player_module.set_time(*new_time.to_HMS())
+
     # Priority of getkey() for the scheduler:
     getkey_priority = 1
 
@@ -850,6 +864,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # precisely on one or more annotations is important, as the
         # program must know in what state the screen is so as to
         # update it correctly.
+        #
+        # $$ Maybe it would make sense to put the timer
+        # synchronization management in a Timer object, that would
+        # make the timing model explicit.
 
         nonlocal next_getkey_counter
 
@@ -907,19 +925,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                     # Navigation:
 
-                    def time_sync(new_time):
-                        """
-                        Update the synchronization between the annotation
-                        timer and the scheduler counter, and with the
-                        external player time.
-
-                        new_time -- new annotation time (Time object).
-                        """
-                        nonlocal start_time, start_counter
-                        start_time = new_time
-                        start_counter = next_getkey_counter
-                        player_module.set_time(*new_time.to_HMS())
-
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
 
@@ -939,19 +944,30 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             stdscr.clrtoeol()
                             stdscr.refresh()
 
-                elif key == ">":  # Go to the last annotation:
-                    while annotations.next_annotation() is not None:
+                elif key in {"<", ">"}:  # Go to the first/last annotation:
+
+                    if key == ">":
+                        next_annotation = annotations.next_annotation
+                        scroll = scroll_forwards
+                        last_annotation = annotations.prev_annotation
+                    else:  # "<"
+                        next_annotation = annotations.prev_annotation
+                        scroll = scroll_backwards
+                        last_annotation = annotations.next_annotation
+
+                    while next_annotation() is not None:
                         # $$ The scrolling could be optimized by
                         # removing refresh instructions, or even by
                         # deciding to repaint the whole screen if the
                         # jump is long.
-                        scroll_forwards()
-                    # $$$$$$$$$ set the time to the time of the last annotation
+                        scroll()
 
-                elif key == "<":  # Go to the first annotation
-                    while annotations.prev_annotation() is not None:
-                        scroll_backwards()
-                    # $$$$$$$$$ set the time to the time of the last annotation
+                    # Timer update:
+                    current_annotation = last_annotation()
+                    if current_annotation is not None:
+                        time_sync(current_annotation.time)
+                    else:
+                        curses.beep()  # No annotations
 
                 elif key == " ":
                     # Quitting is handled later, but space is still a
@@ -973,10 +989,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         if key == " ":
 
             # Stopping the player is best done as soon as possible, so
-            # as to keep the synchronization between self.curr_event_time and the
-            # player time as well as possible, in case
-            # player_module.set_time() is a no-op but
-            # player_module.stop() works:
+            # as to keep the synchronization between
+            # self.curr_event_time and the player time as well as
+            # possible, in case player_module.set_time() is a no-op
+            # but player_module.stop() works:
             player_module.stop()
 
             # No new scheduling of a possible user key reading.
@@ -1141,14 +1157,14 @@ class AnnotateShell(cmd.Cmd):
         atexit.register(save_if_needed)
 
     @property
-    def time(self):
+    def curr_event_time(self):
         """
         Time of the annotation timer.
         """
         return self._curr_event_time
 
-    @time.setter
-    def time(self, curr_event_time):
+    @curr_event_time.setter
+    def curr_event_time(self, curr_event_time):
         """
         Set both the annotation timer for the current event, and the
         player play head to the given time.
