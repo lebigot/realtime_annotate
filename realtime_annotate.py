@@ -1373,55 +1373,9 @@ class AnnotateShell(cmd.Cmd):
         Complete the text with paths from the current directory.
         """
 
-        # When the line ends with "/", "text" appears to be empty.
-        if line.endswith("/"):
-            # Directory completion
-            directory = pathlib.Path(line.split(None, 1)[1])
-            ## print("DIRECTORY", directory)
-            ## print([
-            ##     # The completions must only include file names
-            ##     # *without the prefix in "line" (otherwise the
-            ##     # beginning of the path is repeated in the command
-            ##     # line):
-            ##     str(path.relative_to(directory))
-            ##     for path in directory.glob("*")
-            ##     ])
-
-            return [
-                # The completions must only include file names
-                # *without the prefix in "line" (otherwise the
-                # beginning of the path is repeated in the command
-                # line):
-                str(path.relative_to(directory))
-                for path in directory.glob("*")
-                ]
-
-        else:
-
-            # Direct expansion:
-
-            # Special characters like "*" at the beginning of the
-            # string entered by the user are not included in "text" by
-            # the cmd module, so they are explicitly included by
-            # calculating "start":
-            #
-            # Part before the text, without the command:
-            try:
-                start = line[:begidx].split(None, 1)[1]
-            except IndexError:
-                # Case of a completion from an empty string:
-                start = ""
-
-            # The escape() takes care of characters that are
-            # interpreted by glob(), like *:
-            glob_expr = "{}*".format(glob.escape(start+text))
-            ## print("GLOB expr", glob_expr)
-
-            return [
-                # Only the part after begidx must be returned:
-                glob_result[len(start):]
-                for glob_result in glob.glob(glob_expr)
-                ]
+        # The escape() takes care of characters that are
+        # interpreted by glob(), like *:
+        return glob.glob("{}*".format(glob.escape(text)))
 
     def do_annotate(self, arg):
         """
