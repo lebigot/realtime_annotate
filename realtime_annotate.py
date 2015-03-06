@@ -36,6 +36,15 @@ import sys
 import glob
 import json
 
+try:
+    import readline
+except ImportError:  # Standard modules do not have to be all installed
+    pass
+else:
+    # There is no need to complete on "-", for instance (the shell is
+    # not a programming shell):
+    readline.set_completer_delims(" ")
+
 # Time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
@@ -1514,20 +1523,10 @@ class AnnotateShell(cmd.Cmd):
         Complete event references with the known references.
         """
 
-        # Part before the argument, without the command:
-        try:
-            start = line[:begidx].split(None, 1)[1]
-        except IndexError:
-            # Case of a completion from an empty string:
-            start = ""
-
-        argument = start+text
-
         return [
-            # Only the part after begidx must be returned:
-            event_ref[len(start):]
+            event_ref
             for event_ref in sorted(self.all_annotations)
-            if event_ref.startswith(argument)]
+            if event_ref.startswith(text)]
 
     def do_del_event(self, event_ref):
         """
