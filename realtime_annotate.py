@@ -37,7 +37,7 @@ import glob
 import json
 
 try:
-    import readline
+    import readline  # Optional
 except ImportError:  # Standard modules do not have to be all installed
     pass
 else:
