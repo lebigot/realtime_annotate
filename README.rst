@@ -199,7 +199,7 @@ help at the bottom of the ``annotate`` screen):
 
 - **Navigating in time** is done with the arrow keys (left and right
   for navigating annotations, and up and down for moving the timer by
-  ± 2 seconds), and the "<" (first annotation) and ">" (last
+  ± 2 seconds), and with the "<" (first annotation) and ">" (last
   annotation) keys.
 
 - **Stopping** the annotation process is done with the space key. If a
