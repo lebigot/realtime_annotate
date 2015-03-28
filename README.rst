@@ -7,7 +7,12 @@ Overview
 
 .. Benefits and description of the program for users, in one sentence:
 
-``realtime_annotate.py`` is a light-weight program that lets users focus on listening to a piece of music, watching a video, etc., and make pre-defined annotations very efficiently. Timestamps are automatically recorded. The program can also automatically synchronize an external player (music or video player, etc.) while taking annotations (pause, rewind, etc.).
+``realtime_annotate.py`` is a light-weight program that lets users focus 
+on listening to a piece of music, watching a video, etc., and **make 
+pre-defined annotations very efficiently**. **Timestamps** are automatically 
+recorded. The program can also automatically **synchronize an external 
+player** (music or video player, etc.) while taking annotations (pause, 
+rewind, etc.).
 
 .. How are the benefits obtained?
 
