@@ -1112,7 +1112,7 @@ class AnnotateShell(cmd.Cmd):
         # Reading of the existing annotations:
         if annotations_path.exists():
 
-            with annotations_path.open("r") as annotations_file:
+            with annotations_path.open() as annotations_file:
                 file_contents = json.load(annotations_file)
 
             # Extraction of the file contents:
