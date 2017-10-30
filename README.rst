@@ -116,11 +116,12 @@ Two example configuration files are provided:
 Usage
 =====
 
-The program is simply run with ``python3.4 realtime_annotate.py
-<annotation_file>``, where ``python3.4`` should be replaced by the
-name of the local Python 3.4+ interpreter, and where
-``<annotation_file>`` is the path to the JSON file used for saving and
-reading annotations.
+The program is simply run with ``python3 realtime_annotate.py
+<key_assignments_file> <annotation_file>` (where ``python3`` should be
+replaced (if needed) by the name of the local Python 3.4+
+interpreter).  ``<key_assignments_file>`` is the path to a
+user-provided file that defines key bindings.  ``<annotation_file>``
+is the path to the JSON file used for saving and reading annotations.
 
 Users can then control the annotation process by using a command
 shell. The main command is ``annotate``: it starts the real-time
@@ -256,6 +257,18 @@ function, and specifying it through the ``--player`` option
 controller <midi_player.py>`_ is provided; it can be used as an
 example.  See ``realtime_annotate.py -h`` for details on how to write
 a player controller module.
+
+Notable updates
+===============
+
+Version 1.4
+-----------
+
+Previous annotation meanings are not overridden anymore when the
+annotation keys are bound to new meanings.
+
+As a consequence, the format of the annotations file has changed
+(annotation files from previous versions can still be read).
 
 License
 =======
