@@ -1148,7 +1148,7 @@ class AnnotateShell(cmd.Cmd):
             self.do_save()
 
         # Automatic (optional) saving of the annotations, both for
-        # regular quitting and for exceptions:
+        # regular exit and for exceptions:
         def save_if_needed():
             """
             Save the updated annotations if wanted.
