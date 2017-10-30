@@ -473,7 +473,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     start_counter = time.monotonic()
 
     # Starting the player is better done close to setting
-    # start_counter, so that there is not large discrepancy between
+    # start_counter, so that there is no large discrepancy between
     # the time in the player and this time measured by this
     # function:
     player_module.start()
