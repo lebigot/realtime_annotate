@@ -63,9 +63,9 @@ scrolling display of annotations around the current timer, and the
 user can better focus on the quality of his real-time annotations.
 
 It is also possible to **manually jump** to the next or previous
-annotations while annotating. The optional external player
-automatically moves its play head. This makes revising, adding or
-deleting annotations at a certain point in time convenient.
+annotations while annotating. The optional external player (music
+program, etc.) automatically moves its play head. This makes revising,
+adding or deleting annotations at a certain point in time convenient.
 
 Annotations for *multiple events* are stored in a single **JSON file**
 with a simple format.  This format has the advantage of being
