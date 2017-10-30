@@ -220,6 +220,14 @@ Annotation file format
 The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
 structure should be mostly self-explanatory.
 
+Annotations are found in the `"annotations"` JSON entry, separately
+for each event. Each event simply contains its list of annotations
+(`"annotation_list"`), along with the position in the annotation list
+where the user left off (`"cursor"`).
+
+Each annotation is a pair containing a time stamp and the associated
+annotation contents.
+
 Annotation **time stamps** are stored as ``[hours, minutes,
 seconds]``.  ``hours`` and ``minutes`` are integers, and ``seconds``
 is a float. ``minutes`` and ``seconds`` are in the [0; 60) interval.
@@ -228,14 +236,12 @@ for annotations made before time 0; the formula for converting a time
 stamp to a number remains valid: -1:59:0 means -1 hour + 59 minutes =
 -1 minute.
 
-**Annotations** are stored as an array. This array contains the
-*annotation key* (e.g. "i" for "interesting moment"). If the
-annotation has an *attached numerical value* (number in 0–9), then the
-array contains a second element with this value.
-
-The JSON file also contains an object with the annotation keys and
-their meaning. This part of the file can be conveniently updated by
-``realtime_annotate.py`` through its ``load_keys`` command.
+Each **annotation contents** is stored as an array. This array first
+contains the *annotation key* (e.g. "i" for "interesting moment"),
+followed by the index of the associated meaning (from the list of
+possible meanings for this key, found in the `"key_assignments"` JSON
+entry).  If the annotation has an *attached numerical value* (number
+in 0–9), then the array contains a third element with this value.
 
 .. _below:
 
