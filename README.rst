@@ -167,8 +167,8 @@ different annotation **starting time** can be set with the
 ``set_time`` command. If a music player, etc. is controlled by the
 program, its play head is set automatically to the same time.
 
-The real-time annotation of the selected can then be started with the
-``annotate`` command.
+The real-time annotation of the selected event can then be started
+with the ``annotate`` command.
 
 .. _annotation process:
 
