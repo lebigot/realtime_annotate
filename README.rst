@@ -179,12 +179,14 @@ The ``annotate`` command launches the real-time annotation process
 (see the screenshot_ in the overview).
 
 The **annotation timer** starts running when the user enters the
-command. The starting annotation timer is typically set (beforehand)
-so that it coincides with the event's time when the ``annotate``
-command is entered (i.e. when the Enter key is pressed): this way, the
-annotation timer is the same as the event's timer (play head location
-of a music player, etc.), which is convenient. If a music controller
-is used (see below_), this time synchronization can be automatic.
+command, and the player (if any) automatically starts playing
+(e.g. the piece of music to be annotated). The starting annotation
+timer is typically set (beforehand) so that it coincides with the
+event's time when the ``annotate`` command is entered (i.e. when the
+Enter key is pressed): this way, the annotation timer is the same as
+the event's timer (play head location of a music player, etc.), which
+is convenient. If a music controller is used (see below_), this time
+synchronization can be automatic.
 
 Existing **annotations automatically scroll** on the
 screen.
