@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 """
 Real-time annotation tool.
@@ -35,6 +35,9 @@ import bisect
 import sys
 import glob
 import json
+
+if sys.version_info < (3, 4):
+    sys.exit("This program requires Python 3.4+, sorry.")
 
 try:
     import readline  # Optional
