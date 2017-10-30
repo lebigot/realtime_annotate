@@ -1566,7 +1566,7 @@ if __name__ == "__main__":
 
         "--player", metavar="python_module", action="store",
 
-        help=("""
+        help="""
         Name of Python module that controls some real-time player (music
         player, etc.).
 
@@ -1578,7 +1578,7 @@ if __name__ == "__main__":
         when it is stopped.  set_time() is called when the user sets
         the time of the annotation timer.  Annotations times can thus
         be synchronized with the elapsed time in a piece of music,
-        etc."""))
+        etc.""")
 
     parser.add_argument(
         "annotation_file",
