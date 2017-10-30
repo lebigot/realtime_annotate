@@ -224,9 +224,9 @@ Annotation **time stamps** are stored as ``[hours, minutes,
 seconds]``.  ``hours`` and ``minutes`` are integers, and ``seconds``
 is a float. ``minutes`` and ``seconds`` are in the [0; 60) interval.
 There is no limit on the number of hours. Negative hours are possible,
-for annotations made before time 0; the formula for calculating the
-number of seconds of a time stamp remains valid: -1:59:0 means
--1 hour + 59 minutes = -1 minute.
+for annotations made before time 0; the formula for converting a time
+stamp to a number remains valid: -1:59:0 means -1 hour + 59 minutes =
+-1 minute.
 
 **Annotations** are stored as an array. This array contains the
 *annotation key* (e.g. "i" for "interesting moment"). If the
