@@ -40,9 +40,9 @@ starting the `annotation process`_.
 Annotations have a **time stamp**, which is *automatically added* by
 the program. In a practical application, a piece of music, etc. plays
 alongside the program. The annotation timer of the program can be set
-to the time of the event being annotated (command ``set_time``). For
-example, the play head of a music player can thus be synchronized with
-the user's annotation time stamps.
+to the time of the event (show, film, etc.) being annotated (command
+``set_time``). For example, the play head of a music player can thus
+be synchronized with the user's annotation time stamps.
 
 When going through an existing annotated event, existing **annotations
 automatically scroll on screen**. An upcoming annotation is
