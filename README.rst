@@ -7,19 +7,19 @@ Overview
 
 .. Benefits and description of the program for users, in one sentence:
 
-``realtime_annotate.py`` is a light-weight program that lets users focus 
-on listening to a piece of music, watching a video, etc., and **make 
-pre-defined annotations very efficiently**. **Timestamps** are automatically 
-recorded. The program can also automatically **synchronize an external 
-player** (music or video player, etc.) while taking annotations (pause, 
+``realtime_annotate.py`` is a light-weight program that lets users focus
+on listening to a piece of music, watching a video, etc., and **make
+pre-defined annotations very efficiently**. **Timestamps** are automatically
+recorded. The program can also automatically **synchronize an external
+player** (music or video player, etc.) while taking annotations (pause,
 rewind, etc.).
 
 .. How are the benefits obtained?
 
-Users can focus on the annotation task thanks to having them enter
-annotation with a **single keyboard key**, and to letting the program
-**automatically handle time-related tasks** (time stamping, and
-automatic scrolling of existing annotations):
+Users can focus on the annotation task thanks to the use of a **single
+keyboard key** for adding an annotation. The program **automatically
+handles time-related tasks** (time stamping, and automatic display of
+existing annotations around the current time stamp):
 
 .. _screenshot:
 
