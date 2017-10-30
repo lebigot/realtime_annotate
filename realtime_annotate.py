@@ -11,7 +11,7 @@ synchronized with the player (the player time head is automatically
 set to the annotation timestamp; the player is started and stopped at
 the same times as the annotation process).
 
-(c) 2015 by Eric O. LEBIGOT (EOL)
+(c) 2015–2017 by Eric O. LEBIGOT (EOL)
 """
 
 __version__ = "1.3"
