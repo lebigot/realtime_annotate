@@ -27,6 +27,9 @@ existing annotations around the current time stamp):
 
 .. Some details connected to the introductory paragraph:
 
+More details
+------------
+
 The **annotations** handled by this program are entered in real time
 with a *single key* (with a meaning, e.g., "i" for "interesting
 moment"), and an *optional digit* (that can be used for instance for
