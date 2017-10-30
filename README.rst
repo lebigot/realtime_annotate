@@ -145,8 +145,8 @@ New annotation file
 -------------------
 
 When a new annotation file is created, a **list of annotation keys**
-must first be attached to it: this defines the *meaning of the keys*
-used for entering annotations (``load_keys`` command).
+must first be attached to it (``load_keys`` command): this defines the
+*meaning of the keys* used for entering annotations.
 
 The possible annotations and annotation keys are configured by the
 user in a simple text file. For more information on the format of this
