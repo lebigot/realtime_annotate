@@ -48,7 +48,7 @@ When going through an existing annotated event, existing **annotations
 automatically scroll on screen**. An upcoming annotation is
 *highlighted for one second* before is scrolls down to the list of
 previous annotations: the user does not have to check the timer in
-order to see whether he has already entered some annotation). The user
+order to see whether he has already entered some annotation. The user
 is thus freed from managing time and time stamps. There should be no
 more inner monologues like this one:
 
