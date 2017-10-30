@@ -1568,16 +1568,17 @@ if __name__ == "__main__":
 
         help=("""
         Name of Python module that controls some real-time player (music
-        player, etc.).  The module must be in the Python module
-        path (working directory, directory of this program, etc.)
-        The module must provide a start() and a stop() function
-        (that take no argument), and a function set_time(hours,
-        minutes, seconds).  start() is called when the annotation
-        process starts, stop() when it is stopped.  set_time() is
-        called when the user sets the time of the annotation
-        timer.  Annotations times can thus be synchronized with
-        the elapsed time in a piece of music, etc.
-        """))
+        player, etc.).
+
+        The module must be in the Python module path (working
+        directory, directory of this program, etc.)  The module must
+        provide a start() and a stop() function (that take no
+        argument), and a function set_time(hours, minutes, seconds).
+        start() is called when the annotation process starts, stop()
+        when it is stopped.  set_time() is called when the user sets
+        the time of the annotation timer.  Annotations times can thus
+        be synchronized with the elapsed time in a piece of music,
+        etc."""))
 
     parser.add_argument(
         "annotation_file",
