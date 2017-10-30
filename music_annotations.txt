@@ -1,8 +1,8 @@
 # Annotations for music pieces:
 
-# The value 1 is not used, so that annotations with no value are
-# equivalent to annotations with value 1. This is intended to
-# represent some middle/standard/default value.
+# Convention for these annotations: the meanings are chosen so that
+# annotations with no explicit associated value have by convention a
+# medium/standard/default value.
 
 s    start of a piece (silence before the start of a piece)
 e    end of a piece (silence after the end of a piece)
