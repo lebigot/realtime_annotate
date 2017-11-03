@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# !!!!!!!! The images in the doc should be updated to reflect the new
+# calling syntax, etc.
+
 """
 Real-time annotation tool.
 
@@ -14,7 +17,7 @@ the same times as the annotation process).
 (c) 2015–2017 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "1.3"
+__version__ = "1.4"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # $$ The optional player driven by this program must be defined by
@@ -1031,8 +1034,10 @@ def key_assignments_from_file(file_path):
 
     The file syntax is detailed in AnnotateShell.do_load_keys().
 
-    Prints information and error messages. Returns None in case of
-    problem (so that the user can remain in the AnnotateShell).
+    This function is meant to be used from
+    AnnotateShell.do_load_keys(). Prints information and error
+    messages (to the standard output). Returns None in case of problem
+    (so that the user can remain in the AnnotateShell).
 
     file_path -- file path, as a string.
     """
@@ -1042,8 +1047,8 @@ def key_assignments_from_file(file_path):
         print("Error: please provide a file path.")
         return
 
-    # It is convenient to keep the annotations in the same order
-    # as in the file:
+    # It is useful to keep the annotations in the same order as in the
+    # file: the user can more easily recognize their list.
     key_assignments = collections.OrderedDict()
 
     try:
@@ -1090,6 +1095,53 @@ def key_assignments_from_file(file_path):
 
     return key_assignments
 
+def update_pre_v2_annotations(file_contents):
+    """
+    Update the contents read from an pre-1.4 annotation file
+    (dictionary with keys annotations and key_assignments) after
+    conversion to the current form of the contents.
+    """
+
+    file_contents["format_version"] = [2]
+
+    # key_assignments is of the form: [ [description_string, key],
+    # […],… ]. It is updated so that each key is mapped to the
+    # (1-element) list of possible meanings:
+
+    file_contents["key_history"] = {
+        key: [meaning]
+        for (meaning, key) in file_contents.pop("key_assignments")}
+
+    # Each key in annotations should now be assigned
+    # meaning #0:
+
+    for event_data in file_contents["annotations"].values():
+        # event_data = [time_stamp, annotation_contents_array]
+        event_data[1].insert(1, 0)  # Meaning #0 of the key
+
+def process_key_assignments(key_assignments_path, key_history):
+    """
+    Merges key assignments with the history of key assignments, which
+    is updated.
+
+    Return, for each assigned key, the index of its meaning in the
+    history (as a dictionary).
+
+    A new meaning for a key is added to the history for this key.
+
+    key_assignments_path -- pathlib.Path to the file of key
+    assignments. See the -h command-line option for the format.
+
+    key_history -- dictionary mapping each key (a single character) to
+    the list of its possible meanings.
+    """
+
+
+    # !!!!!!!! read new key assignments (factor out code)
+
+    # !!!!!!!!! merge in key_history while storing each meaning index
+
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -1097,8 +1149,11 @@ class AnnotateShell(cmd.Cmd):
     intro = "Type ? (or help) for help. Use <Tab> for automatic completion."
     prompt = ">>> "
 
-    def __init__(self, annotations_path):
+    def __init__(self, key_assignments_path, annotations_path):
         """
+        key_assignments_path -- pathlib.Path to the file with the key
+        meanings.
+
         annotations_path -- pathlib.Path to the file with the annotations.
         """
 
@@ -1115,10 +1170,22 @@ class AnnotateShell(cmd.Cmd):
             with annotations_path.open() as annotations_file:
                 file_contents = json.load(annotations_file)
 
+            # If we have a file in the pre-v2 format…
+            if "format_version" not in file_contents:
+                update_pre_v2_format(file_contents)
+
+            key_assignments = process_key_assignments(
+                key_assignments_path,
+                file_contents["key_history"])
+
             # Extraction of the file contents:
             #
             # The key assignments (represented as an enum.Enum)
             # might not be defined yet:
+
+            # !!!!!!!! I am not sure whether the Enum still makes
+            # sense: it was maybe meant to make sure that
+            # meanings were unique??
 
             self.annot_enum = (
                 enum.Enum("AnnotationKind", file_contents["key_assignments"])
@@ -1262,7 +1329,13 @@ class AnnotateShell(cmd.Cmd):
 
             print("Annotation timer set to {}.".format(self.curr_event_time))
 
+
     def do_load_keys(self, file_path):
+        # !!!!!!!! load_keys is not mandatory anymore before
+        # annotating a new, empty event file.
+
+        # !!!!!!!! Update this doc. The FORMAT might be shared command
+        # with line argument?
         """
         Load key assignments from the given file. They are saved with
         the annotations. This can be used for modifying or updating
@@ -1272,13 +1345,15 @@ class AnnotateShell(cmd.Cmd):
 
         # Musical annotations
 
-        s    start (between pieces, before the beginning)
-        e    end (0 = could be an end if needed)
+        s:    start (between pieces, before the beginning)
+        e:    end (0 = could be an end if needed)
         ...
 
         The first letter is a character (case sensitive). Typing this
         character will insert the annotation described afterwards (free
         text).
+
+        Leading and trailing spaces in the annotation are ignored.
 
         The key can be followed by any number of spaces, which are
         followed by a text describing the meaning of the annotation
@@ -1581,6 +1656,15 @@ if __name__ == "__main__":
         etc.""")
 
     parser.add_argument(
+
+        "key_assignments_file",
+
+        help="""Path to the key assignment file. Each non-empty, non comment
+        ("# …")  line has the format "<key>: <meaning>", where <key> is
+        a single character. Leading and trailing spaces in the meaning
+        are ignored. The colon is optional, but this is deprecated.""")
+
+    parser.add_argument(
         "annotation_file",
         help=("Path to the annotation file (it will be created if it does not"
               " yet exist)"))
@@ -1595,4 +1679,7 @@ if __name__ == "__main__":
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args: None)
 
-    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
+    AnnotateShell(
+        pathlib.Path(arg.key_assignments_file),
+        pathlib.Path(args.annotation_file)
+    ).cmdloop()
