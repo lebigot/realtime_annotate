@@ -7,7 +7,12 @@
 # !!!! Why does this code use Enum? Is it really necessary with the
 # upcoming handling of a history of annotation definitions?
 
+# !!!!!! Add function for list of all historical assignments?
 
+# !!!!!! Should I keep the last key assignments in the file? YES. ADD
+# THIS. This is convenient for just moving the file around without an
+# additional key assignment file. And ALSO for not having to remember
+# which key definition file we last used (if we have many).
 
 """
 Real-time annotation tool.
@@ -1080,11 +1085,11 @@ def key_assignments_from_file(file_path):
 
 def update_pre_v2_format(file_contents):
     """
-    Update the contents read from an pre-1.4 annotation file
-    (dictionary with keys annotations and key_assignments) after
-    conversion to the current form of the contents.
+    Update the contents read from an pre-v2 annotation file by
+    converting it to the current form of the contents.
     """
 
+    # !!!!!!!! Should be printed in the annotation file, now
     file_contents["format_version"] = [2]
 
     # key_assignments is of the form: [ [description_string, key],
@@ -1103,17 +1108,18 @@ def update_pre_v2_format(file_contents):
             # annotation = [time_stamp, annotation_contents_array]
             annotation[1].insert(1, 0)  # Meaning #0 of the key
 
-def process_key_assignments(key_assignments_path, key_history):
+def process_key_assignments(key_assignments, key_history):
     """
     Merge key assignments with the history of key assignments, which
     is updated.
 
     The key assignments in key_assignments_path are returned, as a
-    mapping to their index in the merged history (for that key).
+    mapping to their index in the merged history (for that key). A
+    collections.OrderedDict is used, with the keys in the same order
+    than in key_assignments.
 
-    key_assignments_path -- pathlib.Path to the file of key
-    assignments to be added (if needed) to the history. See the -h
-    command-line option for the format.
+    key_assignments -- key assignments as returned by
+    key_assignments_from_file().
 
     key_history -- dictionary mapping each key (a single character) to
     the list of its possible meanings (before taking into account the
@@ -1121,27 +1127,34 @@ def process_key_assignments(key_assignments_path, key_history):
     updated by this function.
     """
 
-    # !!!!!!!!!!
-    key_assignments = key_assignments_from_file(key_assignments_path)
+    assignment_index = collections.OrderedDict()
 
+    for (key, text) in key_assignments.items():
 
-    # !!!!!!!! read new key assignments (factor out code)
+        history = key_history.setdefault(key, [text])  # Possible new key
 
-    # !!!!!!!!! merge in key_history while storing each meaning index
+        try:
+            history_index = history.index(text)
+        except ValueError:  # New text
+            history_index = len(history)
+            history.append(text)
 
+        assignment_index[key] = history_index
+
+    return assignment_index
 
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
     """
+    # IMPORTANT: do_*() and complete_*() methods are called
+    # automatically through cmd.Cmd.
+
     intro = "Type ? (or help) for help. Use <Tab> for automatic completion."
     prompt = ">>> "
 
-    def __init__(self, key_assignments_path, annotations_path):
+    def __init__(self, annotations_path):
         """
-        key_assignments_path -- pathlib.Path to the file with the key
-        meanings.
-
         annotations_path -- pathlib.Path to the file with the annotations.
         """
 
@@ -1151,6 +1164,9 @@ class AnnotateShell(cmd.Cmd):
 
         # Current event to be annotated:
         self.curr_event_ref = None
+
+        # !!!!!! Handle the new structure of key assignments (as
+        # output by process_key_assignments).
 
         # Reading of the existing annotations:
         if annotations_path.exists():
@@ -1319,8 +1335,6 @@ class AnnotateShell(cmd.Cmd):
 
 
     def do_load_keys(self, file_path):
-        # !!!!!!!! load_keys is not mandatory anymore before
-        # annotating a new, empty event file.
         """
         Load key assignments from the given file so that they can be used
         (they replace previous key assignments). They are saved along
@@ -1358,10 +1372,12 @@ class AnnotateShell(cmd.Cmd):
 
         print("Key assignments loaded from file {}.".format(file_path))
 
-        # !!!!!!! handle the key/value swap in key_assignments_from_file():
-
         # !!!!!!! Figure out whether I still need to use Enums (I
         # guess not).
+
+        # !!!!!!! handle the key/value swap in
+        # key_assignments_from_file(): switch to a new format for
+        # storing key assignments.
 
         try:
             new_annot_enum = enum.unique(
@@ -1639,15 +1655,6 @@ if __name__ == "__main__":
         etc.""")
 
     parser.add_argument(
-
-        "key_assignments_file",
-
-        help="""Path to the key assignment file. Each non-empty, non comment
-        ("# …")  line has the format "<key> <meaning>", where <key> is
-        a single character. Leading and trailing spaces in the meaning
-        are ignored.""")
-
-    parser.add_argument(
         "annotation_file",
         help=("Path to the annotation file (it will be created if it does not"
               " yet exist)"))
@@ -1662,7 +1669,4 @@ if __name__ == "__main__":
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args: None)
 
-    AnnotateShell(
-        pathlib.Path(args.key_assignments_file),
-        pathlib.Path(args.annotation_file)
-    ).cmdloop()
+    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
