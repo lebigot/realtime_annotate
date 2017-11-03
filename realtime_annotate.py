@@ -1055,13 +1055,7 @@ def key_assignments_from_file(file_path):
     # file: the user can more easily recognize their list.
     key_assignments = collections.OrderedDict()
 
-    try:
-        keys_file = open(file_path)
-    except IOError as err:
-        print("Error: cannot open '{}': {}".format(file_path, err))
-        return
-
-    with keys_file:
+    with open(file_path) as keys_file:
         for (line_num, line) in enumerate(keys_file, 1):
 
             line = line.rstrip()
@@ -1073,9 +1067,8 @@ def key_assignments_from_file(file_path):
             # Some characters are reserved:
             match = re.match("([^\s0-9<>\x7f])\s*(.*)", line)
             if not match:
-                print("Error: syntax error on line {}:\n{}".format(
+                raise Exception("Syntax error on line {}:\n{}".format(
                     line_num, line))
-                return
 
             (key, text) = match.groups()
 
@@ -1083,11 +1076,9 @@ def key_assignments_from_file(file_path):
             # cumbersome to enter, so this case is not checked.
             key_assignments[key] = text
 
-    print("Key assignments loaded from file {}.".format(file_path))
-
     return key_assignments
 
-def update_pre_v2_annotations(file_contents):
+def update_pre_v2_format(file_contents):
     """
     Update the contents read from an pre-1.4 annotation file
     (dictionary with keys annotations and key_assignments) after
@@ -1108,8 +1099,9 @@ def update_pre_v2_annotations(file_contents):
     # meaning #0:
 
     for event_data in file_contents["annotations"].values():
-        # event_data = [time_stamp, annotation_contents_array]
-        event_data[1].insert(1, 0)  # Meaning #0 of the key
+        for annotation in event_data["annotation_list"]:
+            # annotation = [time_stamp, annotation_contents_array]
+            annotation[1].insert(1, 0)  # Meaning #0 of the key
 
 def process_key_assignments(key_assignments_path, key_history):
     """
@@ -1355,10 +1347,16 @@ class AnnotateShell(cmd.Cmd):
 
         # Common error: no file name given:
         if not file_path:
-            print("lease provide a file path.")
+            print("Please provide a file path.")
             return
 
-        key_assignments = key_assignments_from_file(file_path)
+        try:
+            key_assignments = key_assignments_from_file(file_path)
+        except Exception as exc:
+            print("Error: {}".format(exc))
+            return
+
+        print("Key assignments loaded from file {}.".format(file_path))
 
         # !!!!!!! handle the key/value swap in key_assignments_from_file():
 
@@ -1665,6 +1663,6 @@ if __name__ == "__main__":
             setattr(player_module, func_name, lambda *args: None)
 
     AnnotateShell(
-        pathlib.Path(arg.key_assignments_file),
+        pathlib.Path(args.key_assignments_file),
         pathlib.Path(args.annotation_file)
     ).cmdloop()
