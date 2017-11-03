@@ -1067,7 +1067,7 @@ def key_assignments_from_file(file_path):
                 continue
 
             try:
-                key, text = line.split(None, 1)
+                (key, text) = line.split(None, 1)
             except ValueError:
                 print("Error: syntax error on line {}:\n{}".format(
                     line_num, line))
