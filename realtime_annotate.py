@@ -1031,9 +1031,11 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
 def key_assignments_from_file(file_path):
     """
-    Return the key assignments found in the given file.
+    Return the key assignments found in the given file, as an
+    collections.OrderedDict mapping each key to its annotation.
 
-    The file syntax is detailed in AnnotateShell.do_load_keys().
+    The file syntax and semantics are detailed in
+    AnnotateShell.do_load_keys().
 
     This function is meant to be primarily used from
     AnnotateShell.do_load_keys(). Prints information and error
@@ -1067,7 +1069,7 @@ def key_assignments_from_file(file_path):
             if not line or line.startswith("#"):
                 continue
 
-            match = re.match("(\w):?\s*(.*)", line)
+            match = re.match("(.)\s*(.*)", line)
             if not match:
                 print("Error: syntax error on line {}:\n{}".format(
                     line_num, line))
@@ -1075,17 +1077,20 @@ def key_assignments_from_file(file_path):
 
             (key, text) = match.groups()
 
-            # Sanity checks:
+            # Some keys are not allowed:
             if key.isdigit():
                 print("Error on line {}: digits are reserved keys.\n{}".format(
                     line_num, line))
                 return
 
-            # The other reserved keys are space and delete,
-            # but space cannot be entered in the file, and
-            # delete is cumbersome to enter, so this case is
-            # not checked.
-            key_assignments[text] = key
+            if key.isspace():
+                print("Error on line {}: space is a reserved key.\n{}".format(
+                    line_num, line))
+                return
+
+            # The other reserved key is delete, but delete is
+            # cumbersome to enter, so this case is not checked.
+            key_assignments[key] = text  # !!!!!!! handle the swap
 
     print("Key assignments loaded from file {}.".format(file_path))
 
@@ -1532,7 +1537,7 @@ class AnnotateShell(cmd.Cmd):
         """
         print("Annotation keys:")
         for annotation in self.annot_enum:
-            print("{}: {}".format(annotation.value, annotation.name))
+            print("{} {}".format(annotation.value, annotation.name))
 
     def do_select_event(self, event_ref):
         """
@@ -1656,9 +1661,9 @@ if __name__ == "__main__":
         "key_assignments_file",
 
         help="""Path to the key assignment file. Each non-empty, non comment
-        ("# …")  line has the format "<key>: <meaning>", where <key> is
+        ("# …")  line has the format "<key> <meaning>", where <key> is
         a single character. Leading and trailing spaces in the meaning
-        are ignored. The colon is optional, but this is deprecated.""")
+        are ignored.""")
 
     parser.add_argument(
         "annotation_file",
