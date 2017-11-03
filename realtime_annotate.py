@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 # !!!!!!!! The images in the doc should be updated to reflect the new
-# calling syntax, etc.
+# calling syntax, etc. THE TEXT refers to a "glitch with value 0", but
+# I don't see it.
 
 # !!!! Why does this code use Enum? Is it really necessary with the
 # upcoming handling of a history of annotation definitions?
+
+
 
 """
 Real-time annotation tool.
@@ -1072,24 +1075,14 @@ def key_assignments_from_file(file_path):
             if not line or line.startswith("#"):
                 continue
 
-            match = re.match("(.)\s*(.*)", line)
+            # Some characters are reserved:
+            match = re.match("([^\s0-9<>\x7f])\s*(.*)", line)
             if not match:
                 print("Error: syntax error on line {}:\n{}".format(
                     line_num, line))
                 return
 
             (key, text) = match.groups()
-
-            # Some keys are not allowed:
-            if key.isdigit():
-                print("Error on line {}: digits are reserved keys.\n{}".format(
-                    line_num, line))
-                return
-
-            if key.isspace():
-                print("Error on line {}: space is a reserved key.\n{}".format(
-                    line_num, line))
-                return
 
             # The other reserved key is delete, but delete is
             # cumbersome to enter, so this case is not checked.
@@ -1337,50 +1330,28 @@ class AnnotateShell(cmd.Cmd):
     def do_load_keys(self, file_path):
         # !!!!!!!! load_keys is not mandatory anymore before
         # annotating a new, empty event file.
-
-        # !!!!!!!! Update this doc. The FORMAT might be shared command
-        # with line argument?
         """
-        Load key assignments from the given file. They are saved with
-        the annotations. This can be used for modifying or updating
-        the annotations associated with a file.
+        Load key assignments from the given file so that they can be used
+        (they replace previous key assignments). They are saved along
+        with the annotations.
 
         The file format is as follows:
 
         # Musical annotations
 
-        s:    start (between pieces, before the beginning)
-        e:    end (0 = could be an end if needed)
+        s    start (between pieces, before the beginning)
+        e    end (0 = could be an end if needed)
         ...
 
         The first letter is a character (case sensitive). Typing this
         character will insert the annotation described afterwards (free
         text).
 
-        Leading and trailing spaces in the annotation are ignored.
-
-        The key can be followed by any number of spaces, which are
-        followed by a text describing the meaning of the annotation
-        (and optionally of any numeric modifier).
+        The key is followed by the text describing the meaning of the
+        annotation (and optionally of any numeric modifier). Leading
+        and trailing spaces in the annotation are ignored.
 
         Empty lines and lines starting by # are ignored.
-
-        WARNING
-
-        Annotations are represented by their character only. Any
-        change in the key assignments of an annotation file must be
-        done with this in mind.
-
-        KEY ASSIGNMENT CHANGES
-
-        The description text can be updated (usually in a way
-        consistent with the meaning of event annotations that use its
-        key).
-
-        New keys can be added.
-
-        If a key which is used in events disappears, the user is
-        prompted for the replacement key.
         """
 
         # !!!!!!! handle the key/value swap in key_assignments_from_file():
