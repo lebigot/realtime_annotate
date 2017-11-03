@@ -31,7 +31,7 @@ the same times as the annotation process).
 __version__ = "1.4"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
-# $$ The optional player driven by this program must be defined by
+# !! The optional player driven by this program must be defined by
 # functions in a module stored in a variable named player_module. See
 # the main program for two examples.
 
@@ -70,7 +70,7 @@ REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 NAVIG_STEP = datetime.timedelta(seconds=2)
 
 class Time(datetime.timedelta):
-    # $ A datetime.timedelta is used instead of a datetime.time
+    # ! A datetime.timedelta is used instead of a datetime.time
     # because the internal scheduler of this program must be added to
     # the current annotation timestamp so as to update it. This cannot
     # be done with datetime.time objects (which cannot be added to a
@@ -116,10 +116,10 @@ class Time(datetime.timedelta):
         """
         other -- object that can be added to a datetime.timedelta.
         """
-        # $ A datetime.timedelta apparently does not return an element
+        # ! A datetime.timedelta apparently does not return an element
         # of the type of self, so this is done manually here:
         new_time = other+self  # The order is important!
-        # $ The class of the object cannot be changed, because it is a
+        # ! The class of the object cannot be changed, because it is a
         # built-in type:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
 
@@ -157,7 +157,7 @@ class TimestampedAnnotation:
         self.annotation = annotation
 
     def set_value(self, value):
-        # $$ This method exists mostly as a way of showing through
+        # !! This method exists mostly as a way of showing through
         # code that the value attribute can be set (it is optional,
         # and not set in __init__()).
         """
@@ -421,7 +421,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     ## Terminal size:
     (term_lines, term_cols) = stdscr.getmaxyx()
 
-    # $$$ POSSIBLE FEATURE: Window resizing could be handled, with
+    # !!! POSSIBLE FEATURE: Window resizing could be handled, with
     # signal.signal(signal.SIGWINCH, resize_handler). This would
     # involve drawing the screen again.
 
@@ -474,7 +474,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # Maximum number of previous annotations in window:
     prev_annot_height = help_start_line-6
     if prev_annot_height < 2:
-        # $$ If the following is a problem, the help could be
+        # !! If the following is a problem, the help could be
         # optionally removed OR displayed with a special key, possibly
         # even as a window that can appear or disappear.
         raise TerminalNotHighEnough
@@ -526,7 +526,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     cancelable_events = []
 
     def display_annotations():
-        # $$ This function is only here so that the code be more organized.
+        # !! This function is only here so that the code be more organized.
         """
         Display the list of previous annotations, and the next annotation.
 
@@ -878,29 +878,29 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         time stamp *at or* before the next_getkey_counter time.
         """
 
-        # $$ The guarantee in case of a next_getkey_counter that falls
+        # !! The guarantee in case of a next_getkey_counter that falls
         # precisely on one or more annotations is important, as the
         # program must know in what state the screen is so as to
         # update it correctly.
         #
-        # $$ Maybe it would make sense to put the timer
+        # !! Maybe it would make sense to put the timer
         # synchronization management in a Timer object, that would
         # make the timing model explicit.
 
         nonlocal next_getkey_counter
 
-        # $$$ POSSIBLE FEATURE: Let the user decide what KEY_LEFT and
+        # !!! POSSIBLE FEATURE: Let the user decide what KEY_LEFT and
         # KEY_RIGHT do: jump to the previous/next annotation, *of a
         # certain type or not*. This would be useful, for example, for
         # going from "bookmark" to bookmark (user bookmark, start of a
         # music piece, etc.).
 
-        # $$$ POSSIBLE FEATURE: Stop the timers *while allowing the
+        # !!! POSSIBLE FEATURE: Stop the timers *while allowing the
         # user to move through annotations*. This can be useful for
         # editing them (currently, the piece keeps playing and the
         # annotations scrolling, which is not completely comfortable).
 
-        # $$$ Test with annotations that are at the exact same
+        # !!! Test with annotations that are at the exact same
         # time. This probably works, because the scheduler handles
         # events in priority order: two scrollings will be performed
         # before checking if the user types the next key, so
@@ -974,7 +974,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         last_annotation = annotations.next_annotation
 
                     while next_annotation() is not None:
-                        # $$ The scrolling could be optimized by
+                        # !! The scrolling could be optimized by
                         # removing refresh instructions, or even by
                         # deciding to repaint the whole screen if the
                         # jump is long.
@@ -1278,7 +1278,7 @@ class AnnotateShell(cmd.Cmd):
                 else [(annot.name, annot.value) for annot in self.annot_enum]
             )
 
-            # $$ Another architecture would consist in only keep in
+            # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
             # annotations for those events that the user touched. This
             # would save memory and processing time, at the cost of
@@ -1422,7 +1422,7 @@ class AnnotateShell(cmd.Cmd):
             for timed_annotation in annotations:
                 old_annotations.add(timed_annotation.annotation)
 
-        # $$$ POSSIBLE FEATURE: It would be more general if values
+        # !!! POSSIBLE FEATURE: It would be more general if values
         # could also be mapped to (like unifying multiple annotations
         # to a single annotation, with b -> b0, s -> b, e ->
         # b). Putting this mapping in the keys file could mess things
@@ -1565,7 +1565,7 @@ class AnnotateShell(cmd.Cmd):
         # The time of the previous annotation before the cursor is
         # "just" before when the user last stopped:
         #
-        # $$$$ It would be nice to save the timer's time instead of
+        # !!!! It would be nice to save the timer's time instead of
         # the cursor. However, an AnnotationList does not have the
         # concept of current time. This means that the current time
         # for each event should be saved and stored separately. This
