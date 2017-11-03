@@ -38,6 +38,7 @@ import bisect
 import sys
 import glob
 import json
+import re
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
@@ -1066,23 +1067,18 @@ def key_assignments_from_file(file_path):
             if not line or line.startswith("#"):
                 continue
 
-            try:
-                (key, text) = line.split(None, 1)
-            except ValueError:
+            match = re.match("(\w):?\s*(.*)", line)
+            if not match:
                 print("Error: syntax error on line {}:\n{}".format(
                     line_num, line))
                 return
 
+            (key, text) = match.groups()
+
             # Sanity checks:
-
-            if len(key) != 1:
-                print("Error: keys must be single characters. Error"
-                      " in line {} with key '{}'."
-                      .format(line_num, key))
-                return
-
             if key.isdigit():
-                print("Error: digits are reserved keys.")
+                print("Error on line {}: digits are reserved keys.\n{}".format(
+                    line_num, line))
                 return
 
             # The other reserved keys are space and delete,
