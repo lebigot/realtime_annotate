@@ -1034,7 +1034,7 @@ def key_assignments_from_file(file_path):
 
     The file syntax is detailed in AnnotateShell.do_load_keys().
 
-    This function is meant to be used from
+    This function is meant to be primarily used from
     AnnotateShell.do_load_keys(). Prints information and error
     messages (to the standard output). Returns None in case of problem
     (so that the user can remain in the AnnotateShell).
@@ -1069,7 +1069,7 @@ def key_assignments_from_file(file_path):
             try:
                 key, text = line.split(None, 1)
             except ValueError:
-                print("Error: syntax error in line {}:\n{}".format(
+                print("Error: syntax error on line {}:\n{}".format(
                     line_num, line))
                 return
 
