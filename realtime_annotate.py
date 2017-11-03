@@ -3,6 +3,9 @@
 # !!!!!!!! The images in the doc should be updated to reflect the new
 # calling syntax, etc.
 
+# !!!! Why does this code use Enum? Is it really necessary with the
+# upcoming handling of a history of annotation definitions?
+
 """
 Real-time annotation tool.
 
@@ -1090,7 +1093,7 @@ def key_assignments_from_file(file_path):
 
             # The other reserved key is delete, but delete is
             # cumbersome to enter, so this case is not checked.
-            key_assignments[key] = text  # !!!!!!! handle the swap
+            key_assignments[key] = text
 
     print("Key assignments loaded from file {}.".format(file_path))
 
@@ -1380,6 +1383,7 @@ class AnnotateShell(cmd.Cmd):
         prompted for the replacement key.
         """
 
+        # !!!!!!! handle the key/value swap in key_assignments_from_file():
         key_assignments = key_assignments_from_file(file_path)
         try:
             new_annot_enum = enum.unique(
