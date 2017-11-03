@@ -14,6 +14,10 @@
 # additional key assignment file. And ALSO for not having to remember
 # which key definition file we last used (if we have many).
 
+# Some comments are prefixed by a number of "!" marks: they indicate
+# some notable comments (more exclamation marks indicate more
+# important comments).
+
 """
 Real-time annotation tool.
 
