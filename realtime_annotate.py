@@ -1051,11 +1051,6 @@ def key_assignments_from_file(file_path):
     file_path -- file path, as a string.
     """
 
-    # Common error: no file name given:
-    if not file_path:
-        print("Error: please provide a file path.")
-        return
-
     # It is useful to keep the annotations in the same order as in the
     # file: the user can more easily recognize their list.
     key_assignments = collections.OrderedDict()
@@ -1118,20 +1113,24 @@ def update_pre_v2_annotations(file_contents):
 
 def process_key_assignments(key_assignments_path, key_history):
     """
-    Merges key assignments with the history of key assignments, which
+    Merge key assignments with the history of key assignments, which
     is updated.
 
-    Return, for each assigned key, the index of its meaning in the
-    history (as a dictionary).
-
-    A new meaning for a key is added to the history for this key.
+    The key assignments in key_assignments_path are returned, as a
+    mapping to their index in the merged history (for that key).
 
     key_assignments_path -- pathlib.Path to the file of key
-    assignments. See the -h command-line option for the format.
+    assignments to be added (if needed) to the history. See the -h
+    command-line option for the format.
 
     key_history -- dictionary mapping each key (a single character) to
-    the list of its possible meanings.
+    the list of its possible meanings (before taking into account the
+    new key assignments in key_assignments_path). key_history is
+    updated by this function.
     """
+
+    # !!!!!!!!!!
+    key_assignments = key_assignments_from_file(key_assignments_path)
 
 
     # !!!!!!!! read new key assignments (factor out code)
@@ -1354,8 +1353,18 @@ class AnnotateShell(cmd.Cmd):
         Empty lines and lines starting by # are ignored.
         """
 
-        # !!!!!!! handle the key/value swap in key_assignments_from_file():
+        # Common error: no file name given:
+        if not file_path:
+            print("lease provide a file path.")
+            return
+
         key_assignments = key_assignments_from_file(file_path)
+
+        # !!!!!!! handle the key/value swap in key_assignments_from_file():
+
+        # !!!!!!! Figure out whether I still need to use Enums (I
+        # guess not).
+
         try:
             new_annot_enum = enum.unique(
                 enum.Enum("AnnotationKind", key_assignments))
