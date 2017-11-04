@@ -382,7 +382,7 @@ def cancel_sched_events(scheduler, events):
     events[:] = []  # cancelable_events = [] would be local
 
 def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
-                   annot_enum):
+                   key_assignments):
     """
     Run the main real-time annotation loop and return the annotation
     time at the time of exit.
@@ -398,7 +398,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     annotations -- AnnotationList to be updated.
 
-    annot_enum -- enum.Enum enumeration with all the possible
+    key_assignments -- enum.Enum enumeration with all the possible
     annotations. The names are the full names of the annotations,
     while the values are the corresponding characters.
     """
@@ -462,13 +462,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.hline(4, 0, curses.ACS_HLINE, term_cols)
 
     # Help at the bottom of the screen:
-    help_start_line = term_lines - (len(annot_enum)+6)
+    help_start_line = term_lines - (len(key_assignments)+6)
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del> / -: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
-    for annotation in annot_enum:
+    for annotation in key_assignments:
         stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
 
@@ -923,7 +923,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         else:
 
             try:
-                annotation_kind = annot_enum(key)
+                annotation_kind = key_assignments(key)
             except ValueError:
 
                 if key.isdigit():
@@ -1123,41 +1123,6 @@ def update_pre_v2_data(file_contents):
         (meaning_key[1], 0)  # Meaning #0 is the current meaning
         for meaning_key in old_key_assignments]
 
-def merge_key_assignments(key_assignments, key_history):
-    """
-    Merge key assignments with the history of key assignments, which
-    is updated.
-
-    The key assignments in key_assignments_path are returned, as a
-    mapping to their index in the merged history (for that key). A
-    collections.OrderedDict is used, with the keys in the same order
-    than in key_assignments.
-
-    key_assignments -- key assignments as returned by
-    key_assignments_from_file().
-
-    key_history -- dictionary mapping each key (a single character) to
-    the list of its possible meanings (before taking into account the
-    new key assignments in key_assignments_path). key_history is
-    updated by this function.
-    """
-
-    assignment_index = collections.OrderedDict()
-
-    for (key, text) in key_assignments.items():
-
-        history = key_history.setdefault(key, [text])  # Possible new key
-
-        try:
-            history_index = history.index(text)
-        except ValueError:  # New text
-            history_index = len(history)
-            history.append(text)
-
-        assignment_index[key] = history_index
-
-    return assignment_index
-
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -1189,22 +1154,20 @@ class AnnotateShell(cmd.Cmd):
             if "format_version" not in file_contents:
                 update_pre_v2_data(file_contents)
 
-            # Internal representation of the file contents:
+            # Internal representation of the necessary parts of the
+            # file contents:
 
-            self.annot_enum = enum.Enum(
-                "AnnotationKind",
-                ((file_contents["meaning_history"][key][index],
-                  # ! Annotation values are more convenient as lists,
-                  # because JSON reads lists but not tuples.
-                  [key, index])
-                 for (key, index) in file_contents["key_assignments"]))
+            self.meaning_history = file_contents["meaning_history"]
+
+            self.key_assignments = self.compute_key_assignments(
+                file_contents["key_assignments"])
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
                 {
                     event_ref:
                     AnnotationList.from_builtins_fmt(
-                        self.annot_enum, annotations)
+                        self.key_assignments, annotations)
 
                     for (event_ref, annotations)
                     in file_contents["annotations"].items()
@@ -1213,7 +1176,8 @@ class AnnotateShell(cmd.Cmd):
             self.do_list_events()
 
         else:  # A new file must to be created
-            self.annot_enum = []
+            # !!!!!!!!! Initialize all attributes like above
+            self.key_assignments = []
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
 
@@ -1228,6 +1192,61 @@ class AnnotateShell(cmd.Cmd):
                      " assignments (y/n)? [y] ") != "n":
                 self.do_save()
         atexit.register(save_if_needed)
+
+    def compute_key_assignments(self, key_assignemnts):
+        """
+        Return the given key_assignments in a form which is more useful
+        for the AnnotateShell class.
+
+        The input key assignments must be contained in the history
+        of key meanings (self.meaning_history).
+
+        key_assignments -- iterable with (key, meaning_index)
+        pairs, where meaning_index is the index of the meaning in
+        the meaning history.
+        """
+
+        return enum.Enum(
+            "AnnotationKind",
+            ((self.meaning_history[key][index],
+              # ! Annotation values are more convenient as lists,
+              # because JSON reads lists but not tuples.
+              [key, index])
+             for (key, index) in key_assignemnts))
+
+    def update_key_assignments(self, key_assignments):
+        """
+        Merge key assignments with the history of key assignments, which
+        is updated.
+
+        # !!!!!! The name should really be key_assignemnts
+
+        Key current assignments are also stored in self.key_assignments.
+
+        key_assignments -- key assignments as returned by
+        key_assignments_from_file().
+
+        key_history -- dictionary mapping each key (a single character) to
+        the list of its possible meanings (before taking into account the
+        new key assignments in key_assignments_path). key_history is
+        updated by this function.
+        """
+
+        assignment_indexes = collections.OrderedDict()
+
+        for (key, text) in key_assignments.items():
+
+            history = key_history.setdefault(key, [text])  # Possible new key
+
+            try:
+                history_index = history.index(text)
+            except ValueError:  # New text
+                history_index = len(history)
+                history.append(text)
+
+            assignment_indexes[key] = history_index
+
+        return assignment_indexes
 
     @property
     def curr_event_time(self):
@@ -1271,10 +1290,10 @@ class AnnotateShell(cmd.Cmd):
         with self.annotations_path.open("w") as annotations_file:
 
             # Serializable version of the possible annotations:
-            annot_enum_for_file = (
-                None if self.annot_enum is None
+            key_assignments_for_file = (
+                None if self.key_assignments is None
                 # The order of the enumerations is preserved:
-                else [(annot.name, annot.value) for annot in self.annot_enum]
+                else [(annot.name, annot.value) for annot in self.key_assignments]
             )
 
             # !! Another architecture would consist in only keep in
@@ -1293,7 +1312,7 @@ class AnnotateShell(cmd.Cmd):
             }
 
             json.dump({"annotations": all_annotations_for_file,
-                       "key_assignments": annot_enum_for_file},
+                       "key_assignments": key_assignments_for_file},
                       annotations_file, indent=2)
 
         print("Annotations (and key assignments) saved to {}."
@@ -1372,106 +1391,11 @@ class AnnotateShell(cmd.Cmd):
 
         print("Key assignments loaded from file {}.".format(file_path))
 
-        # !!!!!!! handle the key/value swap in
-        # key_assignments_from_file(): switch to a new format for
-        # storing key assignments.
+        # The key definitions are merged in the history of
+        # definitions:
+        self.update_key_assignments(key_assignments)
 
-        # key_assignments_enum_data = [ !!!!!!!!!!!!
-
-
-        try:
-            new_annot_enum = enum.unique(
-                enum.Enum("AnnotationKind", key_assignments))
-        except ValueError:  # Non-unique keyboard keys
-            print("Error: all keyboard keys should be different.")
-            return
-
-        # The old key assignments are saved, for a rollback in case of
-        # problem:
-        old_annot_num = self.annot_enum
-
-        self.annot_enum = new_annot_enum
         self.do_list_keys()
-
-        # Existing annotations (self.all_annotations) use the old
-        # annotation kinds (old_annot_enum). These annotations contain
-        # text that may have been updated in the new key assignment
-        # file, so they should be updated. They might also contain
-        # annotation keys that have disappeared from the key
-        # assignments (through renaming, etc.): ignoring this would
-        # prevent the annotation file from being re-opened, as there
-        # would be no way to interpret them with the new
-        # annotations.
-        #
-        # A solution to both of these issues consists in first
-        # defining the conversions between the old and new
-        # annotations, automatically through a common key if possible,
-        # or with the input of the user if a key has disappeared (who
-        # either indicates the new annotation that replaces the old
-        # one, or if this is not possible, cancels the new key
-        # assignments).
-
-        # The enumeration constant conversions are first determined:
-        # this makes it easier to let the user cancel the new key
-        # assignments, in case they are incorrect (for example in the
-        # case where one of the old annotations does not correspond to
-        # any new one), as this is detected early.
-
-        old_annotations = set()  # Set with all *used* annotations
-        for annotations in self.all_annotations.values():
-            for timed_annotation in annotations:
-                old_annotations.add(timed_annotation.annotation)
-
-        # !!! POSSIBLE FEATURE: It would be more general if values
-        # could also be mapped to (like unifying multiple annotations
-        # to a single annotation, with b -> b0, s -> b, e ->
-        # b). Putting this mapping in the keys file could mess things
-        # up, as it should only be applied once. A better solution is
-        # to have an optional mapping file argument. This would
-        # replace the automatic mapping calculation.
-
-        # Calculation of the mapping "conversions" from old to new
-        # enumerated constants:
-        conversions = {}
-
-        for old_annotation in old_annotations:
-
-            # First key tried for finding the new annotation
-            # corresponding to old_annotation:
-            key = old_annotation.value
-
-            while True:
-
-                try:
-                    # Do we have a new annotation with the same key?
-                    new_annotation = new_annot_enum(key)
-                except ValueError:
-
-                    print("Problem: key {} not found in new key assignments."
-                          .format(key))
-
-                    key = input(
-                        "New key that {} should be replaced with"
-                        " (or Enter, for reverting to the previous"
-                        " key assignments): ".format(key))
-
-                    if not key:
-                        self.annot_enum = old_annot_num
-                        print("New key assignments canceled.")
-                        self.do_list_keys()
-                        return
-
-                else:
-                    break  # Equivalent new_annotation determined
-
-            conversions[old_annotation] = new_annotation
-
-        # Now that all the necessary annotation constant conversions
-        # are defined, they can be applied:
-        for (event_ref, annotations) in self.all_annotations.items():
-            for timed_annotation in annotations:
-                timed_annotation.annotation = conversions[
-                    timed_annotation.annotation]
 
     def complete_load_keys(self, text, line, begidx, endidx):
         """
@@ -1493,7 +1417,7 @@ class AnnotateShell(cmd.Cmd):
         the file, with the command load_keys.
         """
 
-        if self.annot_enum is None:
+        if self.key_assignments is None:
             print("Error: please load key assignments first (load_keys"
                   " command).")
             return
@@ -1509,7 +1433,7 @@ class AnnotateShell(cmd.Cmd):
             self.curr_event_time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.curr_event_time,
                 self.all_annotations[self.curr_event_ref],
-                self.annot_enum)
+                self.key_assignments)
 
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
@@ -1534,7 +1458,7 @@ class AnnotateShell(cmd.Cmd):
         saved in the annotation file).
         """
         print("Annotation keys:")
-        for annotation in self.annot_enum:
+        for annotation in self.key_assignments:
             # Indexes in the key assignment history are not listed:
             print("{} {}".format(annotation.value[0], annotation.name))
 
