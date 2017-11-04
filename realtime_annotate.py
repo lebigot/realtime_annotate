@@ -1054,9 +1054,7 @@ def key_assignments_from_file(file_path):
     AnnotateShell.do_load_keys().
 
     This function is meant to be primarily used from
-    AnnotateShell.do_load_keys(). Prints information and error
-    messages (to the standard output). Returns None in case of problem
-    (so that the user can remain in the AnnotateShell).
+    AnnotateShell.do_load_keys().
 
     file_path -- file path, as a string.
     """
@@ -1095,18 +1093,15 @@ def update_pre_v2_data(file_contents):
     converting it to the current form of the contents.
     """
 
-    # !!!!!!!! Should be saved in the annotation file, now
     file_contents["format_version"] = [2]
 
     # key_assignments is of the form: [ [description_string, key],
     # […],… ]. It is updated so that each key is mapped to the
     # (1-element) list of possible meanings:
 
-    # Creation of history of key assignments (might be None,
-    # initially, if no key assignments have been set):
+    # Creation of history of key assignments:
     old_key_assignments = file_contents.pop("key_assignments") or []
 
-    # !!!!!!!! Should be saved in the annotation file, now
     file_contents["meaning_history"] = {
         key: [meaning]
         for (meaning, key) in old_key_assignments}
@@ -1159,8 +1154,7 @@ class AnnotateShell(cmd.Cmd):
 
             self.meaning_history = file_contents["meaning_history"]
 
-            self.key_assignments = self.compute_key_assignments(
-                file_contents["key_assignments"])
+            self.set_key_assignments(file_contents["key_assignments"])
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
@@ -1176,8 +1170,9 @@ class AnnotateShell(cmd.Cmd):
             self.do_list_events()
 
         else:  # A new file must to be created
-            # !!!!!!!!! Initialize all attributes like above
-            self.key_assignments = []
+            self.meaning_history = {}  # No key meanings
+            # No keys defined:  #!!!!!!! tests should test the len!
+            self.key_assignments = enum.Enum("AnnotationKind", [])
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
 
@@ -1193,20 +1188,17 @@ class AnnotateShell(cmd.Cmd):
                 self.do_save()
         atexit.register(save_if_needed)
 
-    def compute_key_assignments(self, key_assignemnts):
+    def set_key_assignments(self, key_assignemnts):
         """
-        Return the given key_assignments in a form which is more useful
-        for the AnnotateShell class.
-
-        The input key assignments must be contained in the history
-        of key meanings (self.meaning_history).
+        Save in self.key_assignemnts the given key_assignments, in a form
+        which is more useful for the AnnotateShell class.
 
         key_assignments -- iterable with (key, meaning_index)
         pairs, where meaning_index is the index of the meaning in
-        the meaning history.
+        the meaning history (self.meaning_history).
         """
 
-        return enum.Enum(
+        self.key_assignments = enum.Enum(
             "AnnotationKind",
             ((self.meaning_history[key][index],
               # ! Annotation values are more convenient as lists,
@@ -1214,12 +1206,10 @@ class AnnotateShell(cmd.Cmd):
               [key, index])
              for (key, index) in key_assignemnts))
 
-    def update_key_assignments(self, key_assignments):
+    def update_key_history(self, key_assignments):
         """
         Merge key assignments with the history of key assignments, which
         is updated.
-
-        # !!!!!! The name should really be key_assignemnts
 
         Key current assignments are also stored in self.key_assignments.
 
@@ -1232,7 +1222,7 @@ class AnnotateShell(cmd.Cmd):
         updated by this function.
         """
 
-        assignment_indexes = collections.OrderedDict()
+        assignment_indexes = []
 
         for (key, text) in key_assignments.items():
 
@@ -1244,7 +1234,7 @@ class AnnotateShell(cmd.Cmd):
                 history_index = len(history)
                 history.append(text)
 
-            assignment_indexes[key] = history_index
+            assignment_indexes.append((key, history_index))
 
         return assignment_indexes
 
@@ -1277,6 +1267,8 @@ class AnnotateShell(cmd.Cmd):
         If no previous version was available, a new file is created.
         """
 
+
+        # !!!!!!!!!!! Save the new structure: format_version, meaning_history
         if self.annotations_path.exists():
             # The old annotations are backed up:
             backup_path = str(self.annotations_path)+".bak"
@@ -1290,11 +1282,9 @@ class AnnotateShell(cmd.Cmd):
         with self.annotations_path.open("w") as annotations_file:
 
             # Serializable version of the possible annotations:
-            key_assignments_for_file = (
-                None if self.key_assignments is None
-                # The order of the enumerations is preserved:
-                else [(annot.name, annot.value) for annot in self.key_assignments]
-            )
+            key_assignments_for_file = [
+                # The order of the key assignments is preserved:
+                (annot.name, annot.value) for annot in self.key_assignments]
 
             # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
@@ -1393,7 +1383,8 @@ class AnnotateShell(cmd.Cmd):
 
         # The key definitions are merged in the history of
         # definitions:
-        self.update_key_assignments(key_assignments)
+        self.set_key_assignments(
+            self.update_key_history(key_assignments))
 
         self.do_list_keys()
 
