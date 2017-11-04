@@ -153,10 +153,10 @@ class TimestampedAnnotation:
         """
         self.time = timestamp
 
-        # The advantage of storing the annotation as an Enum instead
+        # !! The advantage of storing the annotation as an Enum instead
         # of just a character (enumerated constant) is that it can
         # have a nice string representation (Enum name), and that it
-        # preserve the associated character (which can then be saved to a
+        # preserves the associated character (which can then be saved to a
         # file, etc.):
         self.annotation = annotation
 
@@ -195,19 +195,20 @@ class TimestampedAnnotation:
         if hasattr(self, "value"):
             annotation.append(self.value)
 
-        return [self.time.to_HMS(), annotation]
+        return [self.time.to_HMS(), annotation]  # !! Could this be a tuple?
 
     @classmethod
     def from_builtins_fmt(cls, annotation_kinds, timed_annotation):
         """
         Reverse of to_builtins_fmt().
 
-        annotation_kinds -- enum.Enum for interpreting the
-        annotation. The timed_annotation refers to some value in
-        the enumeration.
+        annotation_kinds -- enum.Enum for interpreting the annotation
+        (the name is the meaning, the value is the key + index in
+        history). The timed_annotation refers to some value in the
+        enumeration.
 
-        timed_annotation -- version of the annotation as returned by
-        to_builtins_fmt().
+        timed_annotation -- version of the annotation, as returned for
+        instance by to_builtins_fmt().
         """
         annot = timed_annotation[1]
 
@@ -216,7 +217,7 @@ class TimestampedAnnotation:
                             timed_annotation[0]))),
             annotation_kinds(annot[0]))
 
-        if len(annot) > 1:
+        if len(annot) > 1:  # Optional value associated with annotation
             result.set_value(annot[1])
 
         return result
@@ -1087,32 +1088,43 @@ def key_assignments_from_file(file_path):
 
     return key_assignments
 
-def update_pre_v2_format(file_contents):
+def update_pre_v2_data(file_contents):
     """
     Update the contents read from an pre-v2 annotation file by
     converting it to the current form of the contents.
     """
 
-    # !!!!!!!! Should be printed in the annotation file, now
+    # !!!!!!!! Should be saved in the annotation file, now
     file_contents["format_version"] = [2]
 
     # key_assignments is of the form: [ [description_string, key],
     # […],… ]. It is updated so that each key is mapped to the
     # (1-element) list of possible meanings:
 
-    file_contents["key_history"] = {
+    # Creation of history of key assignments (might be None,
+    # initially, if no key assignments have been set):
+    old_key_assignments = file_contents.pop("key_assignments") or []
+
+    # !!!!!!!! Should be saved in the annotation file, now
+    file_contents["meaning_history"] = {
         key: [meaning]
-        for (meaning, key) in file_contents.pop("key_assignments")}
+        for (meaning, key) in old_key_assignments}
 
     # Each key in annotations should now be assigned
     # meaning #0:
-
     for event_data in file_contents["annotations"].values():
         for annotation in event_data["annotation_list"]:
             # annotation = [time_stamp, annotation_contents_array]
-            annotation[1].insert(1, 0)  # Meaning #0 of the key
+            # !!!!!!!!!!!!
+            # annotation[1].insert(1, 0)  # Meaning #0 of the key
+            annotation[1][0] = [annotation[1][0], 0]
 
-def process_key_assignments(key_assignments, key_history):
+    # New key assignments: each key is associated to its meaning index:
+    file_contents["key_assignments"] = [
+        (meaning_key[1], 0)  # Meaning #0 is the current meaning
+        for meaning_key in old_key_assignments]
+
+def merge_key_assignments(key_assignments, key_history):
     """
     Merge key assignments with the history of key assignments, which
     is updated.
@@ -1169,44 +1181,32 @@ class AnnotateShell(cmd.Cmd):
         # Current event to be annotated:
         self.curr_event_ref = None
 
-        # !!!!!! Handle the new structure of key assignments (as
-        # output by process_key_assignments).
-
-        # Reading of the existing annotations:
-        if annotations_path.exists():
+        if annotations_path.exists():  # Existing annotations
 
             with annotations_path.open() as annotations_file:
                 file_contents = json.load(annotations_file)
 
             # If we have a file in the pre-v2 format…
             if "format_version" not in file_contents:
-                update_pre_v2_format(file_contents)
-
-            key_assignments = process_key_assignments(
-                key_assignments_path,
-                file_contents["key_history"])
+                update_pre_v2_data(file_contents)
 
             # Extraction of the file contents:
-            #
+
             # The key assignments (represented as an enum.Enum)
             # might not be defined yet:
 
-            # !!!!!!!! I am not sure whether the Enum still makes
-            # sense: it was maybe meant to make sure that
-            # meanings were unique??
+            self.annot_enum = enum.Enum(
+                "AnnotationKind",
+                ((file_contents["meaning_history"][key][index],
+                  # ! Annotation values are more convenient as lists,
+                  # because JSON reads lists but not tuples.
+                  [key, index])
+                 for (key, index) in file_contents["key_assignments"]))
 
-            self.annot_enum = (
-                enum.Enum("AnnotationKind", file_contents["key_assignments"])
-                if file_contents["key_assignments"] is not None
-                else None)
-
+            # Internal representation of all event annotations:
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
                 {
-                    # self.annot_enum is guaranteed by this program to
-                    # not be None if there is any annotation: the user is
-                    # forced to load key assignments before any
-                    # annotation can be made:
                     event_ref:
                     AnnotationList.from_builtins_fmt(
                         self.annot_enum, annotations)
@@ -1218,7 +1218,7 @@ class AnnotateShell(cmd.Cmd):
             self.do_list_events()
 
         else:  # A new file must to be created
-            self.annot_enum = None
+            self.annot_enum = []
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
 
@@ -1363,7 +1363,8 @@ class AnnotateShell(cmd.Cmd):
         Empty lines and lines starting by # are ignored.
         """
 
-        # Common error: no file name given:
+        # Common error (for the command-line usage): no file name
+        # given:
         if not file_path:
             print("Please provide a file path.")
             return
@@ -1376,12 +1377,12 @@ class AnnotateShell(cmd.Cmd):
 
         print("Key assignments loaded from file {}.".format(file_path))
 
-        # !!!!!!! Figure out whether I still need to use Enums (I
-        # guess not).
-
         # !!!!!!! handle the key/value swap in
         # key_assignments_from_file(): switch to a new format for
         # storing key assignments.
+
+        # key_assignments_enum_data = [ !!!!!!!!!!!!
+
 
         try:
             new_annot_enum = enum.unique(
