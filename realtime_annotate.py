@@ -1082,8 +1082,9 @@ def key_assignments_from_file(file_path):
 
             (key, text) = match.groups()
 
-            # The other reserved key is delete, but delete is
-            # cumbersome to enter, so this case is not checked.
+            # Sanity check, for the benefit of the user:
+            if key in key_assignments:
+                raise Exception("Key defined more than once: {}.".format(key))
             key_assignments[key] = text
 
     return key_assignments
