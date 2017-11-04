@@ -142,17 +142,14 @@ available through ``?`` or ``help``.
 Workflow
 ========
 
-New annotation file
--------------------
+Annotation keys definition
+--------------------------
 
-When a new annotation file is created, a **list of annotation keys**
-must first be attached to it (``load_keys`` command): this defines the
-*meaning of the keys* used for entering annotations.
-
-The possible annotations and annotation keys are configured by the
-user in a simple text file. For more information on the format of this
-file, see the built-in help: ``help load_keys``. An simple `example
-<music_annotations.txt>`_ for annotating music recordings is provided.
+Some keyboard keys must be bound to a meaning, before annotating
+events. This is done in a simple text file. For the format, see the
+`example <music_annotations.txt>`_ and the help
+(``realtime_annotate.py -h`` and the built-in ``help
+load_keys``).
 
 Typical workflow
 ----------------
@@ -221,10 +218,10 @@ Annotation file format
 The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
 structure should be mostly self-explanatory.
 
-Annotations are found in the `"annotations"` JSON entry, separately
+Annotations are found in the ``"annotations"`` JSON entry, separately
 for each event. Each event simply contains its list of annotations
-(`"annotation_list"`), along with the position in the annotation list
-where the user left off (`"cursor"`).
+(``"annotation_list"``), along with the position in the annotation list
+where the user left off (``"cursor"``).
 
 Each annotation is a pair containing a time stamp and the associated
 annotation contents.
@@ -238,9 +235,9 @@ stamp to a number remains valid: -1:59:0 means -1 hour + 59 minutes =
 -1 minute.
 
 Each **annotation contents** is stored as an array. This array first
-contains the *annotation key* (e.g. "i" for "interesting moment"),
-followed by the index of the associated meaning (from the list of
-possible meanings for this key, found in the `"key_assignments"` JSON
+contains the *annotation key* and its index in the history of key
+assignments (e.g. ``["i", 2]``, which points to "interesting moment"
+in the history, which is stored in the ``"key_assignments"`` JSON
 entry).  If the annotation has an *attached numerical value* (number
 in 0–9), then the array contains a third element with this value.
 
