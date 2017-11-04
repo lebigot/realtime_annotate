@@ -1091,9 +1091,10 @@ def update_pre_v2_data(file_contents):
     """
     Update the contents read from an pre-v2 annotation file by
     converting it to the current form of the contents.
-    """
 
-    file_contents["format_version"] = [2]
+    The "format_version" entry is not set, though (as the version is
+    known to be the latest version).
+    """
 
     # key_assignments is of the form: [ [description_string, key],
     # […],… ]. It is updated so that each key is mapped to the
@@ -1267,8 +1268,6 @@ class AnnotateShell(cmd.Cmd):
         If no previous version was available, a new file is created.
         """
 
-
-        # !!!!!!!!!!! Save the new structure: format_version, meaning_history
         if self.annotations_path.exists():
             # The old annotations are backed up:
             backup_path = str(self.annotations_path)+".bak"
@@ -1283,8 +1282,10 @@ class AnnotateShell(cmd.Cmd):
 
             # Serializable version of the possible annotations:
             key_assignments_for_file = [
-                # The order of the key assignments is preserved:
-                (annot.name, annot.value) for annot in self.key_assignments]
+                # The order of the key assignments is preserved. Only
+                # the key assignment reference is important (the text
+                # is already in the history).
+                annot.value for annot in self.key_assignments]
 
             # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
@@ -1301,9 +1302,13 @@ class AnnotateShell(cmd.Cmd):
                 in self.all_annotations.items()
             }
 
-            json.dump({"annotations": all_annotations_for_file,
-                       "key_assignments": key_assignments_for_file},
-                      annotations_file, indent=2)
+            json.dump({
+                "version": [2],
+                "meaning_history": self.meaning_history,
+                "annotations": all_annotations_for_file,
+                "key_assignments": key_assignments_for_file
+                },
+                annotations_file, indent=2)
 
         print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
