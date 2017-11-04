@@ -1227,7 +1227,8 @@ class AnnotateShell(cmd.Cmd):
 
         for (key, text) in key_assignments.items():
 
-            history = key_history.setdefault(key, [text])  # Possible new key
+            # Possible new key:
+            history = self.meaning_history.setdefault(key, [text])
 
             try:
                 history_index = history.index(text)
