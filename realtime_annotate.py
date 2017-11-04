@@ -1171,7 +1171,7 @@ class AnnotateShell(cmd.Cmd):
 
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
-            # No keys defined:  #!!!!!!! tests should test the len!
+            # No keys defined:
             self.key_assignments = enum.Enum("AnnotationKind", [])
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
