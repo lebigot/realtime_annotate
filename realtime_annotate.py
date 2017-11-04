@@ -469,7 +469,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.addstr("<Del> / -: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
     for annotation in key_assignments:
-        stdscr.addstr("{}: {}\n".format(annotation.value, annotation.name))
+        stdscr.addstr("{} {}\n".format(annotation.value, annotation.name))
     stdscr.addstr("0-9: sets the value of the previous annotation")
 
     ## Previous annotations:
