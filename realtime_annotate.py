@@ -1115,9 +1115,7 @@ def update_pre_v2_data(file_contents):
     for event_data in file_contents["annotations"].values():
         for annotation in event_data["annotation_list"]:
             # annotation = [time_stamp, annotation_contents_array]
-            # !!!!!!!!!!!!
-            # annotation[1].insert(1, 0)  # Meaning #0 of the key
-            annotation[1][0] = [annotation[1][0], 0]
+            annotation[1][0] = [annotation[1][0], 0]  # Meaning #0 of the key
 
     # New key assignments: each key is associated to its meaning index:
     file_contents["key_assignments"] = [
@@ -1190,10 +1188,7 @@ class AnnotateShell(cmd.Cmd):
             if "format_version" not in file_contents:
                 update_pre_v2_data(file_contents)
 
-            # Extraction of the file contents:
-
-            # The key assignments (represented as an enum.Enum)
-            # might not be defined yet:
+            # Internal representation of the file contents:
 
             self.annot_enum = enum.Enum(
                 "AnnotationKind",
@@ -1203,7 +1198,6 @@ class AnnotateShell(cmd.Cmd):
                   [key, index])
                  for (key, index) in file_contents["key_assignments"]))
 
-            # Internal representation of all event annotations:
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
                 {
@@ -1540,7 +1534,8 @@ class AnnotateShell(cmd.Cmd):
         """
         print("Annotation keys:")
         for annotation in self.annot_enum:
-            print("{} {}".format(annotation.value, annotation.name))
+            # Indexes in the key assignment history are not listed:
+            print("{} {}".format(annotation.value[0], annotation.name))
 
     def do_select_event(self, event_ref):
         """
