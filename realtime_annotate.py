@@ -1189,9 +1189,9 @@ class AnnotateShell(cmd.Cmd):
                 self.do_save()
         atexit.register(save_if_needed)
 
-    def set_key_assignments(self, key_assignemnts):
+    def set_key_assignments(self, key_assignments):
         """
-        Save in self.key_assignemnts the given key_assignments, in a form
+        Save in self.key_assignments the given key_assignments, in a form
         which is more useful for the AnnotateShell class.
 
         key_assignments -- iterable with (key, meaning_index)
@@ -1205,7 +1205,7 @@ class AnnotateShell(cmd.Cmd):
               # ! Annotation values are more convenient as lists,
               # because JSON reads lists but not tuples.
               [key, index])
-             for (key, index) in key_assignemnts))
+             for (key, index) in key_assignments))
 
     def update_key_history(self, key_assignments):
         """
@@ -1303,7 +1303,7 @@ class AnnotateShell(cmd.Cmd):
             }
 
             json.dump({
-                "version": [2],
+                "format_version": [2],
                 "meaning_history": self.meaning_history,
                 "annotations": all_annotations_for_file,
                 "key_assignments": key_assignments_for_file
