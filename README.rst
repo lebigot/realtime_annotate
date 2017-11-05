@@ -262,8 +262,8 @@ a player controller module.
 Notable updates
 ===============
 
-Version 1.4
------------
+Version 1.4 (2017-11-05)
+------------------------
 
 Keyboard keys can now freely be assigned to new annotations (through
 the ``load_keys`` command).  Previous annotation meanings are thus not
