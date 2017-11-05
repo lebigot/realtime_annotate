@@ -201,7 +201,8 @@ help at the bottom of the ``annotate`` screen):
 
 - Existing annotations can also be **deleted**: the last annotation
   (from the list of previous annotations) is deleted with the delete
-  key.
+  key, and any value associated with the last annotation can be
+  deleted with the "-" key.
 
 - **Navigating in time** is done with the arrow keys (left and right
   for navigating annotations, and up and down for moving the timer by

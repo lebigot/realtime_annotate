@@ -43,6 +43,7 @@ import sys
 import glob
 import json
 import re
+import tempfile
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
@@ -1252,48 +1253,55 @@ class AnnotateShell(cmd.Cmd):
         If no previous version was available, a new file is created.
         """
 
-        # !!!!! It would be more convenient to use a different backup
-        # strategy: create new file separately, then move old file to
-        # backup, then separate file to main file.
+        # The new annotations file is first stored as a temporary
+        # file: this has the advantage of leaving the current
+        # annotation file untouched, which helps should any problem
+        # arise. This is better than starting by backing up the
+        # current annotation file and then overwriting it, as this
+        # could yield a corrupt annotation file.
+
+        annotations_file = tempfile.NamedTemporaryFile('w', delete=False)
+
+        # The internal, more convenient data structure (with
+        # TimestampedAnnotation objects, etc.), is converted into
+        # a simple structure for the JSON output.
+
+        # !! Another architecture would consist in only keep in
+        # memory and converting (upon writing and reading) the
+        # annotations for those events that the user touched. This
+        # would save memory and processing time, at the cost of
+        # slightly more complicated code (because the in-memory
+        # data would basically be an updated cache that has
+        # priority over the file data: handling this priority is
+        # not as straightforward as the current "read/write all
+        # events" method.
+        all_annotations_for_file = {
+            event_ref: annotation_list.to_builtins_fmt()
+            for (event_ref, annotation_list)
+            in self.all_annotations.items()
+        }
+
+        json.dump({
+            "format_version": [2],
+            "meaning_history": self.meaning_history,
+            "annotations": all_annotations_for_file,
+            "key_assignments": list(self.key_assignments.items())
+            },
+            annotations_file, indent=2)
+
+        annotations_file.close()
 
         if self.annotations_path.exists():
             # The old annotations are backed up:
-            backup_path = str(self.annotations_path)+".bak"
-            shutil.copyfile(str(self.annotations_path), backup_path)
-            print("Previous annotations copied to {}.".format(backup_path))
+            backup_path = self.annotations_path.with_suffix(".json.bak")
+            self.annotations_path.rename(backup_path)
+            print("Previous annotations moved to {}.".format(backup_path))
         else:
             # A new file must be created:
-            print("Creating a new annotation file...")
+            print("New annotation file created.")
 
-        # Dump of the new annotations database:
-        with self.annotations_path.open("w") as annotations_file:
-
-            # The internal, more convenient data structure (with
-            # TimestampedAnnotation objects, etc.), is converted into
-            # a simple structure for the JSON output.
-
-            # !! Another architecture would consist in only keep in
-            # memory and converting (upon writing and reading) the
-            # annotations for those events that the user touched. This
-            # would save memory and processing time, at the cost of
-            # slightly more complicated code (because the in-memory
-            # data would basically be an updated cache that has
-            # priority over the file data: handling this priority is
-            # not as straightforward as the current "read/write all
-            # events" method.
-            all_annotations_for_file = {
-                event_ref: annotation_list.to_builtins_fmt()
-                for (event_ref, annotation_list)
-                in self.all_annotations.items()
-            }
-
-            json.dump({
-                "format_version": [2],
-                "meaning_history": self.meaning_history,
-                "annotations": all_annotations_for_file,
-                "key_assignments": list(self.key_assignments.items())
-                },
-                annotations_file, indent=2)
+        # The new annotations file is moved in place:
+        shutil.move(annotations_file.name, self.annotations_path)
 
         print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
