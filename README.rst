@@ -241,7 +241,7 @@ contains the *annotation key* and its index in the history of key
 assignments (e.g. ``["i", 2]``, which points to "interesting moment"
 in the history, which is stored in the ``"key_assignments"`` JSON
 entry).  If the annotation has an *attached numerical value* (number
-in 0–9), then the array contains a third element with this value.
+in 0–9), then the array contains a second element with this value.
 
 .. _below:
 
