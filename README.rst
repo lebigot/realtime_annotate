@@ -263,8 +263,9 @@ Notable updates
 Version 1.4
 -----------
 
-Previous annotation meanings are not overridden anymore when the
-annotation keys are bound to new meanings.
+Keyboard keys can now freely be assigned to new annotations (through
+the ``load_keys`` command).  Previous annotation meanings are thus not
+overridden anymore when the annotation keys are bound to new meanings.
 
 As a consequence, the format of the annotations file has changed
 (annotation files from previous versions can still be read).
