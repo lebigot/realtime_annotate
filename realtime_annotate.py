@@ -9,11 +9,6 @@
 
 # !!!!!! Add function for list of all historical assignments?
 
-# !!!!!! Should I keep the last key assignments in the file? YES. ADD
-# THIS. This is convenient for just moving the file around without an
-# additional key assignment file. And ALSO for not having to remember
-# which key definition file we last used (if we have many).
-
 # Some comments are prefixed by a number of "!" marks: they indicate
 # some notable comments (more exclamation marks indicate more
 # important comments).
