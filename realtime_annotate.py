@@ -1174,7 +1174,7 @@ class AnnotateShell(cmd.Cmd):
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
             # No keys defined:
-            self.key_assignments = []
+            self.key_assignments = collections.OrderedDict()
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
 
