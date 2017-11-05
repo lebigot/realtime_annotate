@@ -196,8 +196,9 @@ help at the bottom of the ``annotate`` screen):
   the current annotation timer as a time stamp.
 
 - Any typed **digit** adds a **value** to (or changes the value of)
-  the *last* annotation (for example, the glitch at 00:00:12.6 in the
-  screenshot above has value 0).
+  the *last* annotation (for example, the inspired part at 00:00:47.2
+  in the screenshot above has value 2, meaning that this moment is
+  "nicely inspired").
 
 - Existing annotations can also be **deleted**: the last annotation
   (from the list of previous annotations) is deleted with the delete
