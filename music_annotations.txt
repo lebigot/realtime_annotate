@@ -5,9 +5,9 @@
 # medium/standard/default value.
 
 #s    start of a piece (silence before the start of a piece)
-N new key!
+N new meaning!
 e    end of a piece (silence after the end of a piece)
 u    uninspired (0 = a little, 2 = very much)
 g    glitch [technical, or very few uninspired notes] (0 = small, 2 = major)
-i    inspired (0 = somewhat, 2 = nicely)
+#i    inspired (0 = somewhat, 2 = nicely)
 b    break in the piece, that could be the start or end of a piece
