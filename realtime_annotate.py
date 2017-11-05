@@ -1093,9 +1093,9 @@ def update_pre_v2_data(file_contents):
             annotation[1][0] = [annotation[1][0], 0]  # Meaning #0 of the key
 
     # New key assignments: each key is associated to its meaning index:
-    file_contents["key_assignments"] = [
+    file_contents["key_assignments"] = collections.OrderedDict([
         (meaning_key[1], 0)  # Meaning #0 is the current meaning
-        for meaning_key in old_key_assignments]
+        for meaning_key in old_key_assignments])
 
 class AnnotateShell(cmd.Cmd):
     """
