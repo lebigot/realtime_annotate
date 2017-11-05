@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# !!!!!!!! The images in the doc should be updated to reflect the new
-# calling syntax, etc. THE TEXT refers to a "glitch with value 0", but
-# I don't see it.
-
 # Some comments are prefixed by a number of "!" marks: they indicate
 # some notable comments (more exclamation marks indicate more
 # important comments).
