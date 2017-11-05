@@ -24,6 +24,7 @@ existing annotations around the current time stamp):
 .. _screenshot:
 
 .. image:: doc/annotate.png
+   :scale: 75 %
 
 .. Some details connected to the introductory paragraph:
 
@@ -90,6 +91,7 @@ writing a few Python functions.
 The program runs in text mode, in a terminal:
 
 .. image:: doc/shell.png
+   :scale: 75 %
 
 The command shell of ``realtime_annotate.py`` provides the **automatic
 completion** of commands and arguments, through the tabulation key.
