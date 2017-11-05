@@ -359,7 +359,7 @@ def cancel_sched_events(scheduler, events):
     events.clear()
 
 def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
-                   key_assignments):
+                   meaning_history, key_assignments):
     """
     Run the main real-time annotation loop and return the annotation
     time at the time of exit.
@@ -375,10 +375,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     annotations -- AnnotationList to be updated.
 
+    meaning_history -- history that contains the text of all the
+    possible annotations in curr_event_ref, as a mapping from a user
+    key to the list of its possible text meanings.
+
     key_assignments -- mapping that defines each user key: it maps
-    keys to their corresponding (index_in_history, text) key details,
-    which is a collections.namedtuple with fields index_in_history and
-    text.
+    current keys to their corresponding index_in_history.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -446,8 +448,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del> / -: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
-    for (key, data) in key_assignments.items():
-        stdscr.addstr("{} {}\n".format(key, data[1]))
+    for (key, index) in key_assignments.items():
+        stdscr.addstr("{} {}\n".format(key, meaning_history[key][index]))
     stdscr.addstr("0-9: sets the value of the previous annotation")
 
     ## Previous annotations:
@@ -503,6 +505,27 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     # Annotations require times from the annotation timer, so this
     # comes after setting the timers above.
 
+    # Utility for convenient displaying the text associated to (the
+    # internal form of) annotation:
+    def annot_str(ts_annotation):
+        """
+        Return a string version of given time-stamped annotation, based on
+        the history in meaning_history.
+
+        ts_annotation -- TimestampedAnnotation.
+        """
+        (timestamp, annotation) = (ts_annotation.time,
+                                   ts_annotation.annotation)
+
+        (key, index) = annotation
+        meaning = meaning_history[key][index]
+
+        value_str = (" [{}]".format(ts_annotation.value)
+                     if hasattr(ts_annotation, "value")
+                     else "")
+
+        return "{} {}{}".format(timestamp, meaning, value_str)
+
     # In order to cancel upcoming updates of the next annotation
     # (highlight and transfer to the list of previous events), the
     # corresponding events are stored in this list:
@@ -533,11 +556,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             for (line_idx, annotation) in enumerate(
                     annotations[annotations.cursor-1 : slice_end :-1], 6):
 
-                # !!!!!!! display annotation correcly. What is the best system.
-                key_assignments[annotation[0]].text
-
-
-                addstr_width(line_idx, 0, str(annotation))
+                addstr_width(line_idx, 0, annot_str(annotation))
                 # stdscr.clrtoeol()  # For existing annotations
 
         # else:
@@ -568,7 +587,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         # Display
         next_annotation_text = (
-            str(next_annotation)
+            annot_str(next_annotation)
             if next_annotation is not None else "<None>")
 
         addstr_width(2, x_display, next_annotation_text)
@@ -630,7 +649,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         #
         # This requires the previous annotations to be already displayed:
         stdscr.scroll(-1)
-        addstr_width(6, 0, str(annotations.next_annotation()))
+        addstr_width(6, 0, annot_str(annotations.next_annotation()))
 
         # The cursor in the annotations list must be updated to
         # reflect the screen update:
@@ -675,7 +694,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         index_new_prev_annot = annotations.cursor-prev_annot_height
         if index_new_prev_annot >= 0:
             addstr_width(5+prev_annot_height, 0,
-                         str(annotations[index_new_prev_annot]))
+                         annot_str(annotations[index_new_prev_annot]))
 
         # Instant feedback:
         stdscr.refresh()
@@ -916,7 +935,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         prev_annotation.set_value(int(key))
                         # The screen must be updated so as to reflect
                         # the new value:
-                        addstr_width(6, 0, str(prev_annotation))
+                        addstr_width(6, 0, annot_str(prev_annotation))
                         stdscr.clrtoeol()
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
@@ -990,7 +1009,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     annotation_time, user_annotation))
                 # Display update:
                 stdscr.scroll(-1)
-                addstr_width(6, 0, str(annotations.prev_annotation()))
+                addstr_width(6, 0, annot_str(annotations.prev_annotation()))
                 stdscr.refresh()  # Instant feedback
 
         # Looping through the scheduling of the next key check:
@@ -1367,10 +1386,6 @@ class AnnotateShell(cmd.Cmd):
         # interpreted by glob(), like *:
         return glob.glob("{}*".format(glob.escape(text)))
 
-    # Details about a user annotation key:
-    KeyDetails = collections.namedtuple(
-        "KeyDetails", ["index_in_history", "text"])
-
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
@@ -1393,14 +1408,12 @@ class AnnotateShell(cmd.Cmd):
             return
 
         try:
-
             # The real-time loop displays information in a curses window:
             self.curr_event_time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.curr_event_time,
                 self.all_annotations[self.curr_event_ref],
-                collections.OrderedDict([
-                    (key, KeyDetails(index, self.meaning_history[key][index]))
-                    for (key, index) in self.key_assignments.items()]))
+                self.meaning_history,
+                self.key_assignments)
 
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
