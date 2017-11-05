@@ -4,8 +4,6 @@
 # calling syntax, etc. THE TEXT refers to a "glitch with value 0", but
 # I don't see it.
 
-# !!!!!! Add function for list of all historical assignments?
-
 # Some comments are prefixed by a number of "!" marks: they indicate
 # some notable comments (more exclamation marks indicate more
 # important comments).
@@ -954,7 +952,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
 
-                # !!!!!!! Is this "-" documented: (1) on screen and (2) in the .rst?  and (3) as a forbidden character?
                 elif key == "-":  # Delete value (if any)
                     prev_annotation = annotations.prev_annotation()
                     if prev_annotation is None:
@@ -1076,8 +1073,11 @@ def key_assignments_from_file(file_path):
             if not line or line.startswith("#"):
                 continue
 
-            # Some characters are reserved:
-            match = re.match("([^\s0-9<>\x7f])\s*(.*)", line)
+            # Some characters are reserved and therefore cannot be
+            # chosen by the user. The text meaning cannot be empty:
+            # otherwise, some annotations would look empty, when
+            # displayed during the "annotate" command process.
+            match = re.match("([^\s0-9<>\x7f\-])\s*(.+)", line)
             if not match:
                 raise Exception("Syntax error on line {}:\n{}".format(
                     line_num, line))
