@@ -172,6 +172,7 @@ class TimestampedAnnotation:
         [annotation, value], if a value is defined for the
         TimestampedAnnotation.
         """
+
         annotation = [self.annotation]
         if hasattr(self, "value"):
             annotation.append(self.value)
@@ -334,11 +335,16 @@ class AnnotationList:
         return cls(
             cursor=annotations["cursor"],
             list_=[
+                # !!!!!!!! Do we really need meaning_history???
                 TimestampedAnnotation.from_builtins_fmt(meaning_history,
                                                         annotation)
                 for annotation in annotations["annotation_list"]
             ]
         )
+
+    def __repr__(self):
+        return "<{} {}>".format(self.__class__.__qualname__,
+                                self.to_builtins_fmt())
 
 def cancel_sched_events(scheduler, events):
     """
@@ -1131,7 +1137,8 @@ class AnnotateShell(cmd.Cmd):
 
             self.meaning_history = file_contents["meaning_history"]
 
-            self.key_assignments = file_contents["key_assignments"]
+            self.key_assignments = collections.OrderedDict(
+                file_contents["key_assignments"])
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
@@ -1253,6 +1260,7 @@ class AnnotateShell(cmd.Cmd):
             # priority over the file data: handling this priority is
             # not as straightforward as the current "read/write all
             # events" method.
+            print("ALL_ANNOTATIONS", self.all_annotations) #!!!!!!!
             all_annotations_for_file = {
                 event_ref: annotation_list.to_builtins_fmt()
                 for (event_ref, annotation_list)
@@ -1263,7 +1271,7 @@ class AnnotateShell(cmd.Cmd):
                 "format_version": [2],
                 "meaning_history": self.meaning_history,
                 "annotations": all_annotations_for_file,
-                "key_assignments": self.key_assignments
+                "key_assignments": list(self.key_assignments.items())
                 },
                 annotations_file, indent=2)
 
