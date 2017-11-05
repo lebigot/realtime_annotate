@@ -356,7 +356,7 @@ def cancel_sched_events(scheduler, events):
             scheduler.cancel(event)
         except ValueError:
             pass
-    events[:] = []  # cancelable_events = [] would be local
+    events.clear()
 
 def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                    key_assignments):
@@ -376,7 +376,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     annotations -- AnnotationList to be updated.
 
     key_assignments -- mapping that defines each user key: it maps
-    keys to their corresponding [index_in_meaning_history, meaning_text].
+    keys to their corresponding (index_in_history, text) key details,
+    which is a collections.namedtuple with fields index_in_history and
+    text.
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -530,6 +532,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             for (line_idx, annotation) in enumerate(
                     annotations[annotations.cursor-1 : slice_end :-1], 6):
+
+                # !!!!!!! display annotation correcly. What is the best system.
+                key_assignments[annotation[0]].text
+
 
                 addstr_width(line_idx, 0, str(annotation))
                 # stdscr.clrtoeol()  # For existing annotations
@@ -899,8 +905,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         else:
 
             try:
-                annotation_kind = key_assignments(key)
-            except ValueError:
+                # Annotation, in the internal format [key,
+                # index_in_meaning_history]:
+                user_annotation = [key, key_assignments[key][0]]
+            except KeyError:
 
                 if key.isdigit():
                     prev_annotation = annotations.prev_annotation()
@@ -927,6 +935,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     navigate(key, counter_to_time(next_getkey_counter),
                              time_sync, annotations)
 
+                # !!!!!!! Is this "-" documented: (1) on screen and (2) in the .rst?  and (3) as a forbidden character?
                 elif key == "-":  # Delete value (if any)
                     prev_annotation = annotations.prev_annotation()
                     if prev_annotation is None:
@@ -978,7 +987,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             else:  # A user annotation key was given:
 
                 annotations.insert(TimestampedAnnotation(
-                    annotation_time, annotation_kind))
+                    annotation_time, user_annotation))
                 # Display update:
                 stdscr.scroll(-1)
                 addstr_width(6, 0, str(annotations.prev_annotation()))
@@ -1358,6 +1367,10 @@ class AnnotateShell(cmd.Cmd):
         # interpreted by glob(), like *:
         return glob.glob("{}*".format(glob.escape(text)))
 
+    # Details about a user annotation key:
+    KeyDetails = collections.namedtuple(
+        "KeyDetails", ["index_in_history", "text"])
+
     def do_annotate(self, arg):
         """
         Immediately start recording annotations for the current
@@ -1386,7 +1399,7 @@ class AnnotateShell(cmd.Cmd):
                 real_time_loop, self.curr_event_ref, self.curr_event_time,
                 self.all_annotations[self.curr_event_ref],
                 collections.OrderedDict([
-                    (key, [index, self.meaning_history[key][index]])
+                    (key, KeyDetails(index, self.meaning_history[key][index]))
                     for (key, index) in self.key_assignments.items()]))
 
         except TerminalNotHighEnough:
