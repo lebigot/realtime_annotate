@@ -4,9 +4,6 @@
 # calling syntax, etc. THE TEXT refers to a "glitch with value 0", but
 # I don't see it.
 
-# !!!! Why does this code use Enum? Is it really necessary with the
-# upcoming handling of a history of annotation definitions?
-
 # !!!!!! Add function for list of all historical assignments?
 
 # Some comments are prefixed by a number of "!" marks: they indicate
@@ -35,7 +32,6 @@ __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 # the main program for two examples.
 
 import collections
-import enum
 import pathlib
 import cmd
 import datetime
@@ -129,7 +125,7 @@ class TimestampedAnnotation:
 
     Main attributes:
     - time (datetime.timedelta)
-    - annotation (enumerated constant)
+    - annotation ([key, index_in_history] pair)
 
     A value can be added to the annotation. It is stored in the
     optional 'value' attribute. This is typically used for indicating
@@ -143,15 +139,10 @@ class TimestampedAnnotation:
         """
         timestamp -- timestamp for the annotation, as a datetime.timedelta.
 
-        annotation -- annotation to be stored, as an enumerated
-        constant.
+        annotation -- annotation to be stored, as a [key,
+        index_in_history] pair.
         """
         self.time = timestamp
-
-        # !! The advantage of storing the annotation as an Enum
-        # instead of just a character+index is that they contains a
-        # nice string representation (Enum name) while being
-        # efficiently stored:
         self.annotation = annotation
 
     def set_value(self, value):
@@ -165,9 +156,7 @@ class TimestampedAnnotation:
 
     def __str__(self):
 
-        # The fact that Enums can have a nice-looking name is
-        # convenient:
-        result = "{} {}".format(self.time, self.annotation.name)
+        result = "{} {}".format(self.time, self.annotation)
 
         if hasattr(self, "value"):
             result += " [value {}]".format(self.value)
@@ -179,13 +168,11 @@ class TimestampedAnnotation:
         Return a version of the annotation with only Python builtin types
         (with no module dependency).
 
-        Returns (time, annot), where annot is [annotation.value] or
-        [annotation.value, value], if a value is defined for the
-        TimestampedAnnotation. This makes sense because the
-        annotation.name's are saved independently in the key meaning
-        history.
+        Returns (time, annot), where annot is [annotation] or
+        [annotation, value], if a value is defined for the
+        TimestampedAnnotation.
         """
-        annotation = [self.annotation.value]
+        annotation = [self.annotation]
         if hasattr(self, "value"):
             annotation.append(self.value)
 
@@ -388,9 +375,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     annotations -- AnnotationList to be updated.
 
-    key_assignments -- enum.Enum enumeration with all the possible
-    annotations. The names are the full names of the annotations,
-    while the values are the corresponding characters.
+    # !!!!!! Update calls to new semantics:
+
+    key_assignments -- mapping that defines each user key: it maps
+    keys to their corresponding [index_in_meaning_history, meaning_text].
     """
 
     # Events (get user key, transfer the next annotation to the list
@@ -458,8 +446,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del> / -: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
-    for annotation in key_assignments:
-        stdscr.addstr("{} {}\n".format(annotation.value, annotation.name))
+    for (key, data) in key_assignments.items():
+        stdscr.addstr("{} {}\n".format(key, data[1]))
     stdscr.addstr("0-9: sets the value of the previous annotation")
 
     ## Previous annotations:
@@ -1143,9 +1131,9 @@ class AnnotateShell(cmd.Cmd):
             # Internal representation of the necessary parts of the
             # file contents:
 
-            self.set_meaning_history(file_contents["meaning_history"])
+            self.meaning_history = file_contents["meaning_history"]
 
-            self.set_key_assignments(file_contents["key_assignments"])
+            self.key_assignments = file_contents["key_assignments"]
 
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
@@ -1163,7 +1151,7 @@ class AnnotateShell(cmd.Cmd):
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
             # No keys defined:
-            self.key_assignments = enum.Enum("AnnotationKind", [])
+            self.key_assignments = []
             self.all_annotations = collections.defaultdict(AnnotationList)
             self.do_save()
 
@@ -1179,89 +1167,33 @@ class AnnotateShell(cmd.Cmd):
                 self.do_save()
         atexit.register(save_if_needed)
 
-    def set_meaning_history(self, meaning_history):
-        """
-        Save in self.meaning_history the given meaning_history, in a form
-        which is more useful for the AnnotateShell class: with the
-        meaning text replaced by an Enum that also encapsulates its
-        (key, index_in_history).
-
-        meaning_history -- mapping that maps keys to their list of
-        possible (string) meanings.
-        """
-
-        new_history = {}
-
-        for (key, meanings) in meaning_history.items():
-
-            # Enumeration with all the possible meanings for the
-            # key. This allows meanings to efficiently contain both
-            # the meaning text and the associated key + index in
-            # history.
-            enum_for_key = enum.Enum(
-                "{}_meanings".format(key),
-                ((meaning,
-                  # ! Annotation values are more convenient as lists,
-                  # because JSON reads lists but not tuples:
-                  [key, index])
-                 for (index, meaning) in enumerate(meanings)))
-
-            # A list is indexable, which makes it more convenient than
-            # storing the Enum enum_for_key directly, here:
-            new_history[key] = list(enum_for_key)
-
-        self.meaning_history = new_history
-
-    def set_key_assignments(self, key_assignments):
-        """
-        Save in self.key_assignments the given key_assignments, in a form
-        which is more useful for the AnnotateShell class (essentially,
-        as Enums that contain both the text of the assignment and its
-        key+index in history).
-
-        key_assignments -- iterable with (key, meaning_index)
-        pairs, where meaning_index is the index of the meaning in
-        the meaning history (self.meaning_history).
-        """
-
-        self.key_assignments = [self.meaning_history[key][index]
-                                for (key, index) in key_assignments]
-
     def update_key_history(self, key_assignments):
         """
         Merge key assignments with the history of key assignments, which
         is updated.
 
-        Key current assignments are also stored in self.key_assignments.
+        Return a mapping from each key in key_assignments to its index
+        in the meaning history (self.meaning_history), with items in
+        the same order as in key_assignments.
 
         key_assignments -- key assignments as returned by
         key_assignments_from_file().
-
-        key_history -- dictionary mapping each key (a single character) to
-        the list of its possible meanings (before taking into account the
-        new key assignments in key_assignments_path). key_history is
-        updated by this function.
         """
 
-        assignment_indexes = []
+        assignment_indexes = collections.OrderedDict()
 
         for (key, text) in key_assignments.items():
 
             # Possible new key:
-            history = self.meaning_history.setdefault(
-                key,
-                [enum.Enum("{}_meaning".format(key),
-                          {text: [key, 0]})[text]])
+            history = self.meaning_history.setdefault(key, [text])
 
             try:
-                # !!!!!!!!!!! This is broken if the history contains
-                # Enums instead of strings!!
                 history_index = history.index(text)
             except ValueError:  # New text
                 history_index = len(history)
                 history.append(text)
 
-            assignment_indexes.append((key, history_index))
+            assignment_indexes[key] = history_index
 
         return assignment_indexes
 
@@ -1310,12 +1242,9 @@ class AnnotateShell(cmd.Cmd):
         # Dump of the new annotations database:
         with self.annotations_path.open("w") as annotations_file:
 
-            # Serializable version of the possible annotations:
-            key_assignments_for_file = [
-                # The order of the key assignments is preserved. Only
-                # the key assignment reference is important (the text
-                # is already in the history).
-                annot.value for annot in self.key_assignments]
+            # The internal, more convenient data structure (with
+            # TimestampedAnnotation objects, etc.), is converted into
+            # a simple structure for the JSON output.
 
             # !! Another architecture would consist in only keep in
             # memory and converting (upon writing and reading) the
@@ -1332,24 +1261,11 @@ class AnnotateShell(cmd.Cmd):
                 in self.all_annotations.items()
             }
 
-            # !!!!!!!!!! How useful is it to carry everywhere
-            # annotations as Enums (that contain both the text and the
-            # key+index in history)? This creates some data
-            # duplication, and some transformations that are
-            # bothersome (especially when refactoring).
-
-            # The string representations are extracted from the Enums
-            # that represent annotations:
-            meaning_history_for_file = {
-                key: [annotation.name for annotation in annotations]
-                for (key, annotations) in self.meaning_history.items()
-                }
-
             json.dump({
                 "format_version": [2],
-                "meaning_history": meaning_history_for_file,
+                "meaning_history": self.meaning_history,
                 "annotations": all_annotations_for_file,
-                "key_assignments": key_assignments_for_file
+                "key_assignments": self.key_assignments
                 },
                 annotations_file, indent=2)
 
@@ -1497,9 +1413,8 @@ class AnnotateShell(cmd.Cmd):
         saved in the annotation file).
         """
         print("Annotation keys:")
-        for annotation in self.key_assignments:
-            # Indexes in the key assignment history are not listed:
-            print("{} {}".format(annotation.value[0], annotation.name))
+        for (key, index) in self.key_assignments.items():
+            print("{} {}".format(key, self.meaning_history[key][index]))
 
     def do_select_event(self, event_ref):
         """
