@@ -1255,10 +1255,12 @@ class AnnotateShell(cmd.Cmd):
             # Possible new key:
             history = self.meaning_history.setdefault(
                 key,
-                enum.Enum("{}_meaning".format(key),
-                          {text: [key, 0]}))
+                [enum.Enum("{}_meaning".format(key),
+                          {text: [key, 0]})[text]])
 
             try:
+                # !!!!!!!!!!! This is broken if the history contains
+                # Enums instead of strings!!
                 history_index = history.index(text)
             except ValueError:  # New text
                 history_index = len(history)

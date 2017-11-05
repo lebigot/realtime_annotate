@@ -4,7 +4,7 @@
 # annotations with no explicit associated value have by convention a
 # medium/standard/default value.
 
-s    start of a piece (silence before the start of a piece)
+#s    start of a piece (silence before the start of a piece)
 N new key!
 e    end of a piece (silence after the end of a piece)
 u    uninspired (0 = a little, 2 = very much)
