@@ -180,11 +180,9 @@ class TimestampedAnnotation:
         return [self.time.to_HMS(), annotation]
 
     @classmethod
-    def from_builtins_fmt(cls, meaning_history, timed_annotation):
+    def from_builtins_fmt(cls, timed_annotation):
         """
         Reverse of to_builtins_fmt().
-
-        meaning_history -- an AnnotateShell.meaning_history.
 
         timed_annotation -- version of the annotation, as returned for
         instance by to_builtins_fmt().
@@ -195,7 +193,7 @@ class TimestampedAnnotation:
         result = cls(
             Time(**dict(zip(("hours", "minutes", "seconds"),
                             timed_annotation[0]))),
-            meaning_history[annot[0][0]][annot[0][1]])
+            annot[0])
 
         if len(annot) > 1:  # Optional value associated with annotation
             result.set_value(annot[1])
@@ -323,11 +321,9 @@ class AnnotationList:
         }
 
     @classmethod
-    def from_builtins_fmt(cls, meaning_history, annotations):
+    def from_builtins_fmt(cls, annotations):
         """
         Reverse of to_builtins_fmt().
-
-        meaning_history -- an AnnotateShell.meaning_history.
 
         annotations -- annotation list in the form returned by
         to_builtins_fmt().
@@ -335,9 +331,7 @@ class AnnotationList:
         return cls(
             cursor=annotations["cursor"],
             list_=[
-                # !!!!!!!! Do we really need meaning_history???
-                TimestampedAnnotation.from_builtins_fmt(meaning_history,
-                                                        annotation)
+                TimestampedAnnotation.from_builtins_fmt(annotation)
                 for annotation in annotations["annotation_list"]
             ]
         )
@@ -1144,8 +1138,7 @@ class AnnotateShell(cmd.Cmd):
                 AnnotationList,
                 {
                     event_ref:
-                    AnnotationList.from_builtins_fmt(
-                        self.meaning_history, annotations)
+                    AnnotationList.from_builtins_fmt(annotations)
 
                     for (event_ref, annotations)
                     in file_contents["annotations"].items()
@@ -1260,7 +1253,6 @@ class AnnotateShell(cmd.Cmd):
             # priority over the file data: handling this priority is
             # not as straightforward as the current "read/write all
             # events" method.
-            print("ALL_ANNOTATIONS", self.all_annotations) #!!!!!!!
             all_annotations_for_file = {
                 event_ref: annotation_list.to_builtins_fmt()
                 for (event_ref, annotation_list)
