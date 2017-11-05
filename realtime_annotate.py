@@ -1023,8 +1023,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
 def key_assignments_from_file(file_path):
     """
-    Return the key assignments found in the given file, as an
-    collections.OrderedDict mapping each key to its annotation.
+    Return the key assignments found in the given file, as a
+    collections.OrderedDict mapping each key to its text meaning.
 
     The file syntax and semantics are detailed in
     AnnotateShell.do_load_keys().
@@ -1345,8 +1345,7 @@ class AnnotateShell(cmd.Cmd):
 
         # The key definitions are merged in the history of
         # definitions:
-        self.set_key_assignments(
-            self.update_key_history(key_assignments))
+        self.key_assignments = self.update_key_history(key_assignments)
 
         self.do_list_keys()
 
