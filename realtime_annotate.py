@@ -926,7 +926,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             try:
                 # Annotation, in the internal format [key,
                 # index_in_meaning_history]:
-                user_annotation = [key, key_assignments[key][0]]
+                user_annotation = [key, key_assignments[key]]
             except KeyError:
 
                 if key.isdigit():
@@ -967,7 +967,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         else:
                             # The display of the last annotation must
                             # be updated:
-                            addstr_width(6, 0, str(prev_annotation))
+                            addstr_width(6, 0, annot_str(prev_annotation))
                             stdscr.clrtoeol()
                             stdscr.refresh()
 
