@@ -375,8 +375,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     annotations -- AnnotationList to be updated.
 
-    # !!!!!! Update calls to new semantics:
-
     key_assignments -- mapping that defines each user key: it maps
     keys to their corresponding [index_in_meaning_history, meaning_text].
     """
@@ -1388,7 +1386,9 @@ class AnnotateShell(cmd.Cmd):
             self.curr_event_time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.curr_event_time,
                 self.all_annotations[self.curr_event_ref],
-                self.key_assignments)
+                collections.OrderedDict([
+                    (key, [index, self.meaning_history[key][index]])
+                    for (key, index) in self.key_assignments.items()]))
 
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
