@@ -1441,6 +1441,18 @@ class AnnotateShell(cmd.Cmd):
         for (key, index) in self.key_assignments.items():
             print("{} {}".format(key, self.meaning_history[key][index]))
 
+    def do_list_key_history(self, arg=None):
+        """
+        List the history of all key assignments found in the annotation
+        file (in alphabetical order, irrespective of the case).
+        """
+        print("Annotation key history:")
+        for key in sorted(self.meaning_history, key=str.lower):
+            meanings_iter = iter(self.meaning_history[key])
+            print("{} {}".format(key, next(meanings_iter)))
+            for addtl_meaning in meanings_iter:
+                print("  {}".format(addtl_meaning))
+
     def do_select_event(self, event_ref):
         """
         Set the given event reference as the current event.
