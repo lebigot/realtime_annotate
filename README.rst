@@ -119,10 +119,9 @@ Usage
 =====
 
 The program is simply run with ``python3 realtime_annotate.py
-<annotation_file>`` (where ``python3`` should be replaced (if needed)
-by the name of the local Python 3.4+ interpreter).
-``<annotation_file>`` is the path to the JSON file used for saving and
-reading annotations.
+<annotation_file>`` (where ``python3`` should be replaced—if needed—by
+the name of the local Python 3.4+ interpreter).  ``<annotation_file>``
+is the path to the JSON file used for saving and reading annotations.
 
 Users can then control the annotation process by using a command
 shell. The main command is ``annotate``: it starts the real-time
