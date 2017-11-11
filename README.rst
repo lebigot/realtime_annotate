@@ -128,8 +128,8 @@ Users can then control the annotation process by using a command
 shell. The main command is ``annotate``: it starts the real-time
 `annotation process`_ proper.
 
-Help
-====
+Shell commands and help
+=======================
 
 .. The help section comes relatively early because it helps users to
    quickly test the program by themselves:
