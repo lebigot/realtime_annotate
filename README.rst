@@ -137,7 +137,7 @@ Help can be obtained with the ``-h`` or ``--help`` option of
 ``realtime_annotate.py``.
 
 Help on the commands of the ``realtime_annotate.py`` command shell is
-available through ``?`` or ``help``.
+available through ``?`` or ``help`` (after launching the program).
 
 Workflow
 ========
