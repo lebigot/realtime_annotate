@@ -280,9 +280,8 @@ Patches
 =======
 
 Patches for supporting earlier Python versions or for Windows are
-welcome. Support for earlier versions of Python would require a
-replacement of the ``enum`` standard module. Windows support would
-require replacing the curses module with an alternative.
+welcome. Windows support would require replacing the curses module
+with an alternative.
 
 Contact
 =======
