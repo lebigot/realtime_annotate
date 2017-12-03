@@ -197,7 +197,7 @@ help at the bottom of the ``annotate`` screen):
 
 - Any typed **digit** adds a **value** to (or changes the value of)
   the *last* annotation (for example, the inspired part at 00:00:47.2
-  in the screenshot above has value 2, meaning that this moment is
+  in the first screenshot has value 2, meaning that this moment is
   "nicely inspired").
 
 - Existing annotations can also be **deleted**: the last annotation
