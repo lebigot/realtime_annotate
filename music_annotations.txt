@@ -1,12 +1,13 @@
 # Annotations for music pieces:
 
-# Convention for these annotations: the meanings are chosen so that
-# annotations with no explicit associated value have by convention a
-# medium/standard/default value.
+# The value 1 is not used, so that annotations with no value are
+# equivalent to annotations with value 1. This is intended to
+# represent some middle/standard/default value.
 
 s    start of a piece (silence before the start of a piece)
 e    end of a piece (silence after the end of a piece)
 u    uninspired (0 = a little, 2 = very much)
-g    glitch [technical / few uninspired notes] (0 = small, 2 = major)
+g    glitch [technical/few uninspired notes] (0 = small, 2 = major)
 i    inspired (0 = somewhat, 2 = nicely)
 b    break in the piece, that could be the start or end of a piece
+p    practice part (between start and end)
