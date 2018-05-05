@@ -139,6 +139,11 @@ Help can be obtained with the ``-h`` or ``--help`` option of
 Help on the commands of the ``realtime_annotate.py`` command shell is
 available through ``?`` or ``help`` (after launching the program).
 
+With most Python installations, previous commands entered in the shell can be
+accessed through the usual up and down arrows, and they can be
+searched for with Ctrl-R (reverse history search) followed by the searched
+text.
+
 Workflow
 ========
 
