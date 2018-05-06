@@ -1437,7 +1437,8 @@ class AnnotateShell(cmd.Cmd):
         """
 
         if self.all_annotations:
-            print("Annotated events (sorted alphabetically):")
+            print("Annotated events (sorted alphabetically,"
+                  " followed by the number of annotations):")
             for event_ref in sorted(self.all_annotations):
                 print("- {} [{}]".format(
                     event_ref, len(self.all_annotations[event_ref].list_)))
