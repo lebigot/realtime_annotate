@@ -15,10 +15,10 @@ synchronized with the player (the player time head is automatically
 set to the annotation timestamp; the player is started and stopped at
 the same times as the annotation process).
 
-(c) 2015–2017 by Eric O. LEBIGOT (EOL)
+(c) 2015–2018 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "1.4"
+__version__ = "1.4.1"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # !! The optional player driven by this program must be defined by
@@ -441,7 +441,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     stdscr.hline(help_start_line, 0, curses.ACS_HLINE, term_cols)
     addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
-    stdscr.addstr("<Del> / -: delete previous annotation / value\n")
+    stdscr.addstr("<Del>/-: delete previous annotation / value\n")
     stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
     for (key, index) in key_assignments.items():
         stdscr.addstr("{} {}\n".format(key, meaning_history[key][index]))
