@@ -1441,7 +1441,7 @@ class AnnotateShell(cmd.Cmd):
                   " followed by the number of annotations):")
             for event_ref in sorted(self.all_annotations):
                 print("- {} [{}]".format(
-                    event_ref, len(self.all_annotations[event_ref].list_)))
+                    event_ref, len(self.all_annotations[event_ref])))
         else:
             print("No annotated event found.")
 
