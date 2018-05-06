@@ -442,7 +442,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
     addstr_width(help_start_line+1, 0, "Commands:\n", curses.A_BOLD)
     stdscr.addstr("<Space>: return to shell\n")
     stdscr.addstr("<Del>/-: delete previous annotation / value\n")
-    stdscr.addstr("<Arrows>, <, >: navigate the annotations\n")
+    stdscr.addstr("<4 arrows>, <, >: navigate (annotations and time)\n")
     for (key, index) in key_assignments.items():
         stdscr.addstr("{} {}\n".format(key, meaning_history[key][index]))
     stdscr.addstr("0-9: sets the value of the previous annotation")
