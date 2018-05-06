@@ -1159,6 +1159,8 @@ class AnnotateShell(cmd.Cmd):
             self.key_assignments = collections.OrderedDict(
                 file_contents["key_assignments"])
 
+            # Mapping from each event to its annotations, which are stored
+            # as an AnnotationList.
             self.all_annotations = collections.defaultdict(
                 AnnotationList,
                 {
@@ -1437,7 +1439,8 @@ class AnnotateShell(cmd.Cmd):
         if self.all_annotations:
             print("Annotated events (sorted alphabetically):")
             for event_ref in sorted(self.all_annotations):
-                print("- {}".format(event_ref))
+                print("- {} ({})".format(
+                    event_ref, len(self.all_annotations[event_ref].list_))
         else:
             print("No annotated event found.")
 
