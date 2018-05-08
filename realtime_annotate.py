@@ -1596,6 +1596,6 @@ if __name__ == "__main__":
     else:  # Default player (which does nothing):
         player_module = sys.modules[__name__]  # This module
         for func_name in player_functions:
-            setattr(player_module, func_name, lambda *args: None)
+            setattr(player_module, func_name, lambda *args, **kwargs: None)
 
     AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
