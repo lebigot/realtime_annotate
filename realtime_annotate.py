@@ -81,9 +81,10 @@ try:
     def lock_file(file_path):
         locked_file = open(file_path, "r+")
         try:
-            fcntl.lockf(locked_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(locked_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except (BlockingIOError, PermissionError):
             raise FileLocked
+        print("LOCKING", locked_file)
         return locked_file
     lock_file.__doc__ = lock_file_doc
 except ImportError:
