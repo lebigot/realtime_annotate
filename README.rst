@@ -80,11 +80,12 @@ analysis, etc.).
 The program optionally **automatically synchronizes** the annotation
 timer with an **external player** (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
-`annotation process`_, and can set the player's play head when the
-annotation timer is set to a different time.  *MIDI instruments* can
-be automatically controlled with the `provided MIDI controller
-<midi_player.py>`_. Users can control *other kinds of players* by
-writing a few Python functions.
+`annotation process`_, and can set the player's play head when moving through
+annotations or when the annotation timer is set to a different time (either to
+an absolute time or when moving back and forward in time during the annotation
+process).  *MIDI instruments* can be automatically controlled with the
+`provided MIDI controller <midi_player.py>`_. Users can control *other kinds
+of players* by writing a few Python functions.
 
 .. Concrete implementation details and features:
 
@@ -106,13 +107,13 @@ Downloading `realtime_annotate.py <realtime_annotate.py>`_ is
 sufficient for installing this program. It only uses standard modules
 (of Python 3.4+)—they are generally installed along with Python.
 
-Two example configuration files are provided:
+Two example files are provided:
 
 - a key assignment configuration: `music_annotations.txt
   <music_annotations.txt>`_,
 
-- an optional player controller, for synchronizing MIDI players with
-  the annotation timer: `midi_player.py <midi_player.py>`_.
+- an optional external player that synchronizes MIDI players
+  with the annotation timer: `midi_player.py <midi_player.py>`_.
 
 
 Usage
@@ -188,8 +189,8 @@ timer is typically set (beforehand) so that it coincides with the
 event's time when the ``annotate`` command is entered (i.e. when the
 Enter key is pressed): this way, the annotation timer is the same as
 the event's timer (play head location of a music player, etc.), which
-is convenient. If a music controller is used (see below_), this time
-synchronization can be automatic.
+is convenient. If a music controller is used (see below_) this
+time synchronization can be automatic.
 
 Existing **annotations automatically scroll** on the
 screen.
