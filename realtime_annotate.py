@@ -88,6 +88,10 @@ try:
     lock_file.__doc__ = lock_file_doc
 except ImportError:
     try:
+        # !!!! This part of the code is for Windows and is therefore currently
+        # irrelevant, because the curses library is required, which doesn't
+        # work on Windows. However, it is left here as a reference in case
+        # of a future Windows version.
         import msvcrt
         def lock_file(file_path):
             # !!! WARNING: this function is yet untested

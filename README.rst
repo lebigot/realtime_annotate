@@ -100,7 +100,7 @@ Platforms and installation
 ==========================
 
 The program runs directly with Python 3.4+. It currently runs on Unix
-(including OS X).
+(including macOS).
 
 Downloading `realtime_annotate.py <realtime_annotate.py>`_ is
 sufficient for installing this program. It only uses standard modules
