@@ -82,10 +82,10 @@ timer with an **external player** (music player, etc.).  Thus, it can
 automatically start and stop the player when starting and stopping the
 `annotation process`_, and can set the player's play head when moving through
 annotations or when the annotation timer is set to a different time (either to
-an absolute time or when moving back and forward in time during the annotation
-process).  *MIDI instruments* can be automatically controlled with the
-`provided MIDI controller <midi_player.py>`_. Users can control *other kinds
-of players* by writing a few Python functions.
+an absolute time or when navigating back or forward in time during the
+annotation process).  *MIDI instruments* can be automatically controlled with
+the `provided MIDI controller <midi_player.py>`_. Users can control *other
+kinds of players* by writing a few Python functions.
 
 .. Concrete implementation details and features:
 
