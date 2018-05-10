@@ -18,8 +18,8 @@ rewind, etc.).
 
 Users can focus on the annotation task thanks to the use of a **single
 keyboard key** for adding an annotation. The program **automatically
-handles time-related tasks** (time stamping, and automatic display of
-existing annotations around the current time stamp):
+handles time-related tasks** (time stamping, time navigation, and automatic
+display of existing annotations around the current time stamp):
 
 .. _screenshot:
 
