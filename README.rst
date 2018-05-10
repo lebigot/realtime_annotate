@@ -266,6 +266,13 @@ in 0–9), then the array contains a second element with this value.
 Notable updates
 ===============
 
+Version 1.4.1 (2018-05-10)
+--------------------------
+
+The program now aborts if another instance is already running on the same
+annotations file. This prevents annotations from being lost when two instances
+write different annotations to the file.
+
 Version 1.4 (2017-11-05)
 ------------------------
 
