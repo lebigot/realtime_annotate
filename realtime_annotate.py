@@ -53,6 +53,55 @@ else:
     # not a programming shell):
     readline.set_completer_delims(" ")
 
+## Definition of a file locking function lock_file():
+
+class FileLocked(OSError):
+    """
+    Raised when a file is locked.
+    """
+
+# Testing for os.name is less robust than testing for the modules
+# that are needed:
+
+# The file must be kept open for the lock to remain active.  Since we
+# keep the lock for the duration of this program, there is no need to
+# keep track of the file in order to unlock it later (the lock is
+# released when the file closes, which happens automatically when this
+# program exits):
+lock_file_doc = """
+    Cooperatively lock the file at the given path.
+    
+    Returns a value that must be kept in memory so that the lock not be
+    released.
+
+    Raises a FileLocked exception if the lock cannot
+    be obtained."""
+try:
+    import fcntl
+    def lock_file(file_path):
+        locked_file = open(file_path, "r+")
+        try:
+            fcntl.lockf(locked_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except (BlockingIOError, PermissionError):
+            raise FileLocked
+        return locked_file
+    lock_file.__doc__ = lock_file_doc
+except ImportError:
+    try:
+        import msvcrt
+        def lock_file(file_path):
+            # !!! WARNING: this function is yet untested
+            locked_file = open(file_path, "r+")
+            try:
+                msvcrt.locking(locked_file.fileno, msvcrt.LK_NBLCK, 1)
+            except OSError:
+                raise FileLocked
+            return locked_file
+        lock_file.__doc__ = lock_file_doc
+    except ImportError:
+        # No file locking available:
+        lock_file = lambda file_path: None
+
 # Time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
@@ -1132,10 +1181,18 @@ class AnnotateShell(cmd.Cmd):
 
     def __init__(self, annotations_path):
         """
+        Raises a FileLocked exception if the annotations_path file is locked
+        by this program.
+
         annotations_path -- pathlib.Path to the file with the annotations.
         """
 
         super().__init__()
+
+        # A lock is acquired before any change is made to the annotation data,
+        # so that subsequent writes of the data to disk are not replaced
+        # by the annotations from another instance of this program:
+        self._annotation_file_lock = lock_file(annotations_path)
 
         self.annotations_path = annotations_path
 
@@ -1598,4 +1655,10 @@ if __name__ == "__main__":
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args, **kwargs: None)
 
-    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
+    try:
+        AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
+    except FileLocked:
+        sys.exit("Quitting because another instance of this program is"
+                 " running on the same annotation file. This prevents"
+                 " unwanted inconsistent modifications of the annotation"
+                 " file.")
