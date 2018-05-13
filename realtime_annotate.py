@@ -53,6 +53,11 @@ else:
     # not a programming shell):
     readline.set_completer_delims(" ")
 
+FILE_LOCKED_MSG = ("Quitting because another instance of this program is"
+                   " running on the same annotation file. This prevents"
+                   " unwanted inconsistent modifications of the annotation"
+                   " file.")
+
 ## Definition of a file locking function lock_file():
 
 class FileLocked(OSError):
@@ -1371,6 +1376,14 @@ class AnnotateShell(cmd.Cmd):
         print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
 
+        # We cannot further modify its contents (essentially
+        # self.all_annotations) unless this process gets a lock on the
+        # annotations file, because it will typically be written over later:
+        try:
+            self._annotation_file_lock = lock_file(self.annotations_path)
+        except FileLocked:
+            sys.exit(FILE_LOCKED_MSG)
+
     def do_exit(self, arg=None):
         """
         Exit this program and optionally save the annotations.
@@ -1670,7 +1683,4 @@ if __name__ == "__main__":
     try:
         AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
     except FileLocked:
-        sys.exit("Quitting because another instance of this program is"
-                 " running on the same annotation file. This prevents"
-                 " unwanted inconsistent modifications of the annotation"
-                 " file.")
+        sys.exit(FILE_LOCKED_MSG)
