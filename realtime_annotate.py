@@ -1200,7 +1200,8 @@ class AnnotateShell(cmd.Cmd):
 
         self.annotations_path = annotations_path
 
-        # Current event to be annotated:
+        # Current event to be annotated. This is a key of self.all_annotations,
+        # if not None:
         self.curr_event_ref = None
 
         if annotations_path.exists():  # Existing annotations
@@ -1476,7 +1477,7 @@ class AnnotateShell(cmd.Cmd):
 
         if self.curr_event_ref is None:
             print("Error: please select an event to be annotated",
-                  "with select_event.")
+                  " with select_event.")
             return
 
         try:
@@ -1501,6 +1502,7 @@ class AnnotateShell(cmd.Cmd):
             print("Annotated events (sorted alphabetically,"
                   " followed by the number of annotations):")
             for event_ref in sorted(self.all_annotations):
+                #!!!!!!! Mark selected event!
                 print("- {} [{}]".format(
                     event_ref, len(self.all_annotations[event_ref])))
         else:
