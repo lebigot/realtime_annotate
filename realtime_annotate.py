@@ -1379,9 +1379,9 @@ class AnnotateShell(cmd.Cmd):
         # annotations is handled by an atexit handler:
         return True  # Quit
 
-    def do_EOF(self, arg):
-        return self.do_exit(arg)
-    do_EOF.__doc__ = do_exit.__doc__
+    # def do_EOF(self, arg):
+    #     return self.do_exit(arg)
+    # do_EOF.__doc__ = do_exit.__doc__
 
     def do_set_time(self, time_):
         """
