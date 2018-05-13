@@ -1502,8 +1502,8 @@ class AnnotateShell(cmd.Cmd):
             print("Annotated events (sorted alphabetically,"
                   " followed by the number of annotations):")
             for event_ref in sorted(self.all_annotations):
-                #!!!!!!! Mark selected event!
-                print("- {} [{}]".format(
+                print("{} {} [{}]".format(
+                    "*" if event_ref == self.curr_event_ref else "-",
                     event_ref, len(self.all_annotations[event_ref])))
         else:
             print("No annotated event found.")
@@ -1538,11 +1538,17 @@ class AnnotateShell(cmd.Cmd):
         The current list of references can be obtained with
         list_events.
 
-        Annotations are attached to this event.
+        If no reference is given, the currently selected event is listed.
+
+        The next annotations will be attached to this event.
         """
 
-        if not event_ref:  # Can be the empty string
-            print("Error: please provide an event reference.")
+        if not event_ref:  # Can be  the empty string if no reference is given
+            if self.curr_event_ref is None:
+                print("No event currently selected.")
+            else:
+                print("Currently selected event: {}."
+                      .format(self.curr_event_ref))
             return
 
         self.curr_event_ref = event_ref
