@@ -1180,7 +1180,10 @@ class AnnotateShell(cmd.Cmd):
     # IMPORTANT: do_*() and complete_*() methods are called
     # automatically through cmd.Cmd.
 
-    intro = "Type ? (or help) for help. Use <Tab> for automatic completion."
+    intro = ("Use <Tab> for automatic completion"
+            " and up/down arrows for command history.\n"
+            "Type ? (or help) for help.")
+
     prompt = ">>> "
 
     def __init__(self, annotations_path):
