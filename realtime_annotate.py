@@ -1180,8 +1180,8 @@ class AnnotateShell(cmd.Cmd):
     # IMPORTANT: do_*() and complete_*() methods are called
     # automatically through cmd.Cmd.
 
-    intro = ("Use <Tab> for automatic completion"
-            " and up/down arrows for command history.\n"
+    intro = ("Use <Tab> for automatic completion.\n"
+            "Command history: up/down arrows, and Ctrl-R for searching.\n"
             "Type ? (or help) for help.")
 
     prompt = ">>> "
