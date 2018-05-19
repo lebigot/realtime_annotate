@@ -1195,11 +1195,6 @@ class AnnotateShell(cmd.Cmd):
 
         self.annotations_path = annotations_path
 
-        # A lock is acquired before any change is made to the annotation data,
-        # so that subsequent writes of the data to disk are not replaced
-        # by the annotations from another instance of this program:
-        self.lock_annotations_path_or_exit()
-
         # Current event to be annotated. This is a key of self.all_annotations,
         # if not None:
         self.curr_event_ref = None
@@ -1331,6 +1326,8 @@ class AnnotateShell(cmd.Cmd):
         previous version.
 
         If no previous version was available, a new file is created.
+
+        The new annotations file is then locked.
         """
 
         # The new annotations file is first stored as a temporary
