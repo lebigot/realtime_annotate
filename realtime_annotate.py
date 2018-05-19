@@ -1516,23 +1516,32 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("Current timestamp: {}.".format(self.curr_event_time))
 
-    def do_list_events(self, event_regex):
+    def do_list_events(self, event_regex=".*"):
         """
         List annotated events.
 
         Without parameter, lists all events.
 
         With a parameter, only lists events whose name matches the given
-        regular expression.
+        regular expression (which is searched anywhere in the name).
         """
 
         if self.all_annotations:
+
+            try:
+                matching_name = re.compile(event_regex).search
+            except re.error as exc:
+                print("Incorrect event name regular expression:")
+                print(exc)
+                return
+
             print("Annotated events (sorted alphabetically,"
                   " followed by the number of annotations):")
             for event_ref in sorted(self.all_annotations):
-                print("{} {} [{}]".format(
-                    "*" if event_ref == self.curr_event_ref else "-",
-                    event_ref, len(self.all_annotations[event_ref])))
+                if matching_name(event_ref):
+                    print("{} {} [{}]".format(
+                        "*" if event_ref == self.curr_event_ref else "-",
+                        event_ref, len(self.all_annotations[event_ref])))
         else:
             print("No annotated event found.")
 
