@@ -1648,8 +1648,6 @@ class AnnotateShell(cmd.Cmd):
 
         try:
             current_name, new_name = map(
-                # arg seems to be stripped already, but this is not
-                # documented, so this is done manually here:
                 lambda name: name.strip(), arg.split("->"))
         except ValueError:
             print("Syntax error. See help rename_event.")
