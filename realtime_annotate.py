@@ -1667,6 +1667,13 @@ class AnnotateShell(cmd.Cmd):
             print('Error: event "{}" not found.'.format(current_name))
             return
 
+        # If the currently selected event is the event that was renamed, we
+        # consider that the same _event_ should still be selected (and
+        # therefore not the same name):
+        if self.curr_event_ref == current_name:
+            self.curr_event_ref = new_name
+            print('Current event is now "{}".'.format(self.curr_event_ref))
+
     complete_rename_event = complete_select_event
 
 if __name__ == "__main__":
