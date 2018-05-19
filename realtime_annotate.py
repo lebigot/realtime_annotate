@@ -1230,6 +1230,12 @@ class AnnotateShell(cmd.Cmd):
 
             self.do_list_events()
 
+            # A lock is acquired before any change is made to the annotation
+            # data, so that subsequent writes of the data to disk are not
+            # replaced by the annotations from another instance of this
+            # program:
+            self.lock_annotations_path_or_exit()
+
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
 
