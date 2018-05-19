@@ -266,6 +266,12 @@ in 0–9), then the array contains a second element with this value.
 Notable updates
 ===============
 
+Version 1.4.2 (2018-05-19)
+--------------------------
+
+The ``list_events`` command now accepts an optional search pattern that
+lists only matching events.
+
 Version 1.4.1 (2018-05-10)
 --------------------------
 
