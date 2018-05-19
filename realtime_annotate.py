@@ -1516,9 +1516,14 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("Current timestamp: {}.".format(self.curr_event_time))
 
-    def do_list_events(self, arg=None):
+    def do_list_events(self, event_regex):
         """
         List annotated events.
+
+        Without parameter, lists all events.
+
+        With a parameter, only lists events whose name matches the given
+        regular expression.
         """
 
         if self.all_annotations:
@@ -1536,9 +1541,12 @@ class AnnotateShell(cmd.Cmd):
         List the key assignments for annotations (loaded by load_keys and
         saved in the annotation file).
         """
-        print("Annotation keys:")
-        for (key, index) in self.key_assignments.items():
-            print("{} {}".format(key, self.meaning_history[key][index]))
+        if self.key_assignments:
+            print("Annotation keys:")
+            for (key, index) in self.key_assignments.items():
+                print("{} {}".format(key, self.meaning_history[key][index]))
+        else:
+            print("No defined annotation keys.")
 
     def do_list_key_history(self, arg=None):
         """
