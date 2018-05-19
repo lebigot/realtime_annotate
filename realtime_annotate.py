@@ -1517,6 +1517,7 @@ class AnnotateShell(cmd.Cmd):
         except TerminalNotHighEnough:
             print("Error: the terminal is not high enough.")
         else:
+            print("Stopped annotating event {}.".format(self.curr_event_ref))
             print("Current timestamp: {}.".format(self.curr_event_time))
 
     def do_list_events(self, event_regex=".*"):
