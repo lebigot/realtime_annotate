@@ -1233,6 +1233,11 @@ class AnnotateShell(cmd.Cmd):
                     in file_contents["annotations"].items()
                 })
 
+            try:
+                self.bookmarks = file_contents["bookmarks"]
+            except KeyError:  # Bookmarks introduced in the v2.1 format
+                self.bookmarks = []
+
             self.do_list_events()
 
             # A lock is acquired before any change is made to the annotation
@@ -1247,10 +1252,10 @@ class AnnotateShell(cmd.Cmd):
             # No keys are defined yet. This could be a simple
             # dictionary, because self.key_assignments is only
             # replaced (through the load_keys command), never added
-            # to.
-
+            # to:
             self.key_assignments = collections.OrderedDict()
             self.all_annotations = collections.defaultdict(AnnotationList)
+            self.bookmarks = []  # List of [event_ref, timer] pairs
             self.do_save()
 
         # Automatic (optional) saving of the annotations, both for
@@ -1375,10 +1380,11 @@ class AnnotateShell(cmd.Cmd):
         }
 
         json.dump({
-            "format_version": [2],
+            "format_version": [2, 1],
             "meaning_history": self.meaning_history,
             "annotations": all_annotations_for_file,
-            "key_assignments": list(self.key_assignments.items())
+            "key_assignments": list(self.key_assignments.items()),
+            "bookmarks": self.bookmarks
             },
             annotations_file, indent=2)
 
@@ -1683,6 +1689,34 @@ class AnnotateShell(cmd.Cmd):
             print('Current event is now "{}".'.format(self.curr_event_ref))
 
     complete_rename_event = complete_select_event
+
+    def do_set_bookmark(self, arg=None):
+        """
+        Bookmark the currently selected event and timer.
+        """
+
+        if self.curr_event_ref is None:
+            print('Error: please first select an event.')
+            return
+        # As soon as an event is selected, the timer is set, so it is also
+        # defined, at this point.
+        
+        self.bookmarks.append([self.curr_event_ref, self.curr_event_time]) 
+
+        print('Bookmark set at event "{}" and timer {}.'
+              .format(*self.bookmarks[-1]))
+
+    def do_list_bookmarks(self, arg=None):
+        """
+        List the bookmarks.
+        """
+
+        if self.bookmarks:
+            print('Bookmarks:')
+            for (index, bookmark) in enumerate(self.bookmarks, 1):
+                print("{}. {} {}".format(index, bookmark[0], bookmark[1]))
+        else:
+            print('The bookmark list is empty.')
 
 if __name__ == "__main__":
 
