@@ -139,6 +139,16 @@ class Time(datetime.timedelta):
         (minutes, seconds) = divmod(minutes, 60)
         return (int(hours), int(minutes), seconds)
 
+    # Factory function:
+    @classmethod
+    def from_HMS(cls, HMS):
+        """
+        Return an instance from a simple (hour, minute, seconds) sequence.
+
+        HMS -- (hour, minutes, seconds) sequence.
+        """
+        return cls(**dict(zip(("hours", "minutes", "seconds"), HMS)))
+
     def __str__(self):
         """
         ...HH:MM:SS.d format.
@@ -238,10 +248,7 @@ class TimestampedAnnotation:
 
         annot = timed_annotation[1]  # [ [key, index], optional_value ]
 
-        result = cls(
-            Time(**dict(zip(("hours", "minutes", "seconds"),
-                            timed_annotation[0]))),
-            annot[0])
+        result = cls(Time.from_HMS(timed_annotation[0]), annot[0])
 
         if len(annot) > 1:  # Optional value associated with annotation
             result.set_value(annot[1])
@@ -1237,6 +1244,9 @@ class AnnotateShell(cmd.Cmd):
                 self.bookmarks = file_contents["bookmarks"]
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 self.bookmarks = []
+            else:  # Transformation into the internal types
+                self.bookmarks = [[event_ref, Time.from_HMS(timer)]
+                                  for (event_ref, timer) in self.bookmarks]
 
             self.do_list_events()
 
@@ -1384,7 +1394,8 @@ class AnnotateShell(cmd.Cmd):
             "meaning_history": self.meaning_history,
             "annotations": all_annotations_for_file,
             "key_assignments": list(self.key_assignments.items()),
-            "bookmarks": self.bookmarks
+            "bookmarks": [[event_ref, timer.to_HMS()]
+                for (event_ref, timer) in self.bookmarks]
             },
             annotations_file, indent=2)
 
@@ -1438,8 +1449,7 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.curr_event_time = Time(
-                **dict(zip(["seconds", "minutes", "hours"], time_parts[::-1])))
+            self.curr_event_time = Time.from_HMS(time_parts[::-1])
 
             print("Annotation timer set to {}.".format(self.curr_event_time))
 
@@ -1717,6 +1727,13 @@ class AnnotateShell(cmd.Cmd):
                 print("{}. {} {}".format(index, bookmark[0], bookmark[1]))
         else:
             print('The bookmark list is empty.')
+
+    def do_load_bookmark(self, arg):
+        """
+        Load the event and timer value defined by the given bookmark number.
+        """
+
+        # !!!!!!!!!!!
 
 if __name__ == "__main__":
 
