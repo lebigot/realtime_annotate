@@ -1181,15 +1181,17 @@ class AnnotateShell(cmd.Cmd):
     # automatically through cmd.Cmd.
 
     intro = ("Use <Tab> for automatic completion.\n"
-            "Command history: up/down arrows, and Ctrl-R for searching.\n"
-            "Type ? (or help) for help.")
+             "Command history: up/down arrows, and Ctrl-R for searching.\n"
+             "Type ? (or help) for help.")
 
     prompt = ">>> "
 
     def __init__(self, annotations_path):
         """
-        Raises a FileLocked exception if the annotations_path file is locked
-        by this program.
+        Handle the modification of the given annotation file.
+
+        The program exits with an error code if the annotations_path file is
+        already locked.
 
         annotations_path -- pathlib.Path to the file with the annotations.
         """
@@ -1329,14 +1331,19 @@ class AnnotateShell(cmd.Cmd):
     def emptyline(self):
         pass  # No repetition of the last command
 
+    def help_save(self):
+        """User documentation for the "save" command."""
+        print(
+            "Save the current annotations to file after making a copy of any\n"
+            "previous version.\n\n"
+            "If no previous version was available, a new file is created.")
+
     def do_save(self, arg=None):
         """
-        Save the current annotations to file after making a copy of any
-        previous version.
+        Do what help_save() prints.
 
-        If no previous version was available, a new file is created.
-
-        The new annotations file is then locked.
+        The new annotations file is then locked or the program exits
+        with an error code.
         """
 
         # The new annotations file is first stored as a temporary
@@ -1716,7 +1723,4 @@ if __name__ == "__main__":
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args, **kwargs: None)
 
-    try:
-        AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
-    except FileLocked:
-        sys.exit(FILE_LOCKED_MSG)
+    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
