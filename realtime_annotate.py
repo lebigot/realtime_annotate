@@ -1596,7 +1596,7 @@ class AnnotateShell(cmd.Cmd):
             for addtl_meaning in meanings_iter:
                 print("  {}".format(addtl_meaning))
 
-    def do_select_event(self, event_ref):
+    def do_select_event(self, event_ref=""):
         """
         Set the given event reference as the current event.
 
@@ -1616,6 +1616,8 @@ class AnnotateShell(cmd.Cmd):
             else:
                 print("Currently selected event: {}."
                       .format(self.curr_event_ref))
+                print("Annotation timer set to {}."
+                      .format(self.curr_event_time))
             return
 
         self.curr_event_ref = event_ref
@@ -1636,10 +1638,13 @@ class AnnotateShell(cmd.Cmd):
         # for each event should be saved and stored separately. This
         # could be done, instead of storing the AnnotationList cursor
         # into the annotation file.
-        self.curr_event_time = (
-            prev_annotation.time if prev_annotation is not None else Time())
+        if prev_annotation is not None:
+            self.curr_event_time = prev_annotation.time
+            print("Back to the previous annotation.")
+        else:
+            self.curr_event_time = Time()
 
-        print("Back to previous annotation. Annotation timer set to {}."
+        print("Annotation timer set to {}."
               .format(self.curr_event_time))
 
     def complete_select_event(self, text, line, begidx, endidx):
@@ -1732,8 +1737,19 @@ class AnnotateShell(cmd.Cmd):
         """
         Load the event and timer value defined by the given bookmark number.
         """
+        
+        try:
+            bookmark = self.bookmarks[int(arg)-1]
+        except ValueError:
+            print('Error: please give a number.')
+            return
+        except IndexError:
+            print('Error: bookmark number not found.')
+            return
 
-        # !!!!!!!!!!!
+        (self.curr_event_ref, self.curr_event_time) = bookmark
+        do_select_event()
+
 
 if __name__ == "__main__":
 
