@@ -276,6 +276,11 @@ in 0–9), then the array contains a second element with this value.
 Notable updates
 ===============
 
+Version 1.5 (2018-05-21)
+------------------------
+
+A bookmarking system is now available.
+
 Version 1.4.2 (2018-05-19)
 --------------------------
 
