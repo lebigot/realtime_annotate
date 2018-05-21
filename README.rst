@@ -228,6 +228,14 @@ help at the bottom of the ``annotate`` screen):
   player controller is used (``--player`` option), the player
   is stopped.
 
+Stopping and resuming work
+""""""""""""""""""""""""""
+
+If the annotation workflow has to be interrupted for a longer period of time,
+it can be useful to store the current event and time stamp in a "**work in
+progress**" bookmark: ``set_bookmark WIP``. The event and time stamp can then
+later automatically be selected with ``load_bookmark WIP``.
+
 .. _below:
 
 Synchronization with an external player
