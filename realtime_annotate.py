@@ -1748,7 +1748,7 @@ class AnnotateShell(cmd.Cmd):
             return
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
-        do_select_event()
+        self.do_select_event()
 
 
 if __name__ == "__main__":
