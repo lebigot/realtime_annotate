@@ -1243,7 +1243,7 @@ class AnnotateShell(cmd.Cmd):
             try:
                 self.bookmarks = file_contents["bookmarks"]
             except KeyError:  # Bookmarks introduced in the v2.1 format
-                self.bookmarks = []
+                self.bookmarks = {}
             else:  # Transformation into the internal types
                 # !!!!!!!!!!!!!
                 self.bookmarks = [[event_ref, Time.from_HMS(timer)]
@@ -1755,18 +1755,17 @@ class AnnotateShell(cmd.Cmd):
         else:
             print('The bookmark list is empty.')
 
-    def do_load_bookmark(self, arg):
+    def do_load_bookmark(self, bookmark_ref):
         """
-        Load the event and timer value defined by the given bookmark number.
+        Load the event and timer value defined by the given bookmark.
+
+        Syntax: load_bookmark Bookmark reference
         """
         
         try:
-            bookmark = self.bookmarks[int(arg)-1]
-        except ValueError:
-            print('Error: please give a number.')
-            return
-        except IndexError:
-            print('Error: bookmark number not found.')
+            bookmark = self.bookmarks[bookmark_ref]
+        except KeyError:
+            print('Error: please give an existing bookmark reference.')
             return
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
