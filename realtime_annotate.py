@@ -1205,7 +1205,6 @@ class AnnotateShell(cmd.Cmd):
         annotations_path -- pathlib.Path to the file with the annotations.
         """
 
-        
         print()
 
         super().__init__()
@@ -1583,7 +1582,7 @@ class AnnotateShell(cmd.Cmd):
             print("Stopped annotating event {}.".format(self.curr_event_ref))
             print("Current timestamp: {}.".format(self.curr_event_time))
 
-    def do_list_events(self, event_regex=".*"):
+    def do_list_events(self, event_regex=""):
         """
         List annotated events.
 
