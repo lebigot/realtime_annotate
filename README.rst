@@ -9,10 +9,11 @@ Overview
 
 ``realtime_annotate.py`` is a light-weight program that lets users focus
 on listening to a piece of music, watching a video, etc., and **make
-pre-defined annotations very efficiently**. **Timestamps** are automatically
+pre-defined annotations very efficiently**. **Time stamps** are automatically
 recorded. The program can also automatically **synchronize an external
 player** (music or video player, etc.) while taking annotations (pause,
-rewind, etc.).
+rewind, etc.). A system of **bookmarks** is provided, for keeping a list
+of important locations.
 
 .. How are the benefits obtained?
 
@@ -69,7 +70,7 @@ automatically moves its play head. This makes revising, adding or
 deleting annotations at a certain point in time convenient.
 
 Annotations for *multiple events* are stored in a single **JSON file**
-with a simple format.  This format has the advantage of being
+with a `simple format`_.  This format has the advantage of being
 perennial. The collected annotations can also be conveniently
 *manipulated by external programs* (for manual editing, automatic
 analysis, etc.).
@@ -86,6 +87,13 @@ an absolute time or when navigating back or forward in time during the
 annotation process).  *MIDI instruments* can be automatically controlled with
 the `provided MIDI controller <midi_player.py>`_. Users can control *other
 kinds of players* by writing a few Python functions.
+
+**Bookmarks** store a specific event reference and a time stamp for this event.
+Thus, when listening to a certain piece of, say, music, it is possible to
+interrupt the annotation process, set a bookmark, and quit the program: the
+bookmark can then be used later for resuming the annotation of the
+music piece.
+
 
 .. Concrete implementation details and features:
 
@@ -233,6 +241,8 @@ function, and specifying it through the ``--player`` option
 controller <midi_player.py>`_ is provided; it can be used as an
 example.  See ``realtime_annotate.py -h`` for details on how to write
 a player controller module.
+
+.. _simple format:
 
 Annotation file format
 ======================
