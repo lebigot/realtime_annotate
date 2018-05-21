@@ -1245,6 +1245,7 @@ class AnnotateShell(cmd.Cmd):
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 self.bookmarks = []
             else:  # Transformation into the internal types
+                # !!!!!!!!!!!!!
                 self.bookmarks = [[event_ref, Time.from_HMS(timer)]
                                   for (event_ref, timer) in self.bookmarks]
 
@@ -1265,8 +1266,7 @@ class AnnotateShell(cmd.Cmd):
             # to:
             self.key_assignments = collections.OrderedDict()
             self.all_annotations = collections.defaultdict(AnnotationList)
-            self.bookmarks = []  # List of [event_ref, timer] pairs
-            self.do_save()
+            self.bookmarks = {}  # {key: [event_ref, timer],…}
 
         # Automatic (optional) saving of the annotations, both for
         # regular exit and for exceptions:
@@ -1449,7 +1449,7 @@ class AnnotateShell(cmd.Cmd):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.curr_event_time = Time.from_HMS(time_parts[::-1])
+            self.curr_event_time = Time.from_HMS(time_parts)
 
             print("Annotation timer set to {}.".format(self.curr_event_time))
 
@@ -1672,7 +1672,7 @@ class AnnotateShell(cmd.Cmd):
         """
         Rename the given event.
 
-        Syntax: rename_event current_name -> new_name
+        Syntax: rename_event Current name -> New name
         """
 
         try:
@@ -1705,9 +1705,11 @@ class AnnotateShell(cmd.Cmd):
 
     complete_rename_event = complete_select_event
 
-    def do_set_bookmark(self, arg=None):
+    def do_set_bookmark(self, bookmark_ref):
         """
         Bookmark the currently selected event and timer.
+
+        Syntax: set_bookmark Bookmark reference
         """
 
         if self.curr_event_ref is None:
@@ -1716,10 +1718,11 @@ class AnnotateShell(cmd.Cmd):
         # As soon as an event is selected, the timer is set, so it is also
         # defined, at this point.
         
-        self.bookmarks.append([self.curr_event_ref, self.curr_event_time]) 
+        self.bookmarks[bookmark_ref] = [
+            self.curr_event_ref, self.curr_event_time]
 
-        print('Bookmark set at event "{}" and timer {}.'
-              .format(*self.bookmarks[-1]))
+        print('Bookmark "{}"set at event "{}" and timer {}.'
+              .format(bookmark_ref, *self.bookmarks[bookmark_ref]))
 
     def do_list_bookmarks(self, arg=None):
         """
