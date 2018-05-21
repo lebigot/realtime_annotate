@@ -267,7 +267,7 @@ class TerminalNotHighEnough(Exception):
     Raised when the terminal is not high enough for a proper display.
     """
 
-class AnnotationList:
+class AnnotationListWithCursor:
     """
     List of annotations (for a single reference) sorted by timestamp,
     with a live cursor between annotations.
@@ -276,7 +276,7 @@ class AnnotationList:
 
     - list_: list of TimestampedAnnotations, sorted by increasing
       timestamps. List-like operations on this list can be performed
-      directly on the AnnotationList: len(), subscripting, and
+      directly on the AnnotationListWithCursor: len(), subscripting, and
       iteration.
 
     - cursor: index between annotations (0 = before the first
@@ -364,7 +364,7 @@ class AnnotationList:
 
     def to_builtins_fmt(self):
         """
-        Return a version of the AnnotationList that only uses built-in
+        Return a version of the AnnotationListWithCursor that only uses built-in
         Python types, and which is suitable for lossless serialization
         through json.
 
@@ -430,7 +430,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     start_time -- starting annotation time (Time object).
 
-    annotations -- AnnotationList to be updated.
+    annotations -- AnnotationListWithCursor to be updated.
 
     meaning_history -- history that contains the text of all the
     possible annotations in curr_event_ref, as a mapping from a user
@@ -777,7 +777,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         timer and synchronizes the scheduler counter with it, along
         with the external player play head time.
 
-        annotations -- AnnotationList which is navigated through the
+        annotations -- AnnotationListWithCursor which is navigated through the
         key. Its cursor must be where key_time would put it with
         cursor_at_time(), i.e.  .prev_annotation().time <= key_time <
         .next_annotation().time.
@@ -1219,22 +1219,21 @@ class AnnotateShell(cmd.Cmd):
         # created (as empty data with a specific type) from a new annotation
         # file.
         self.key_assignments = collections.OrderedDict()
-        self.all_annotations = collections.defaultdict(AnnotationList)
+        self.all_annotations = collections.defaultdict(AnnotationListWithCursor)
         self.bookmarks = {}
 
         if annotations_path.exists():  # Existing annotations
 
             with annotations_path.open() as annotations_file:
                 
-                def to_internal_annotations_list(json_obj):
+                def to_internal_format(json_obj):
                     """
-                    Convert any annotation_list in given JSON object into 
+                    Conversion of various JSON objects into 
                     the internal format of this program.
                     """
                     if "annotation_list" in json_obj:
-                        json_obj["annotation_list"] = (
-                            AnnotationList.from_builtins_fmt(
-                                json_obj["annotation_list"]))
+                        return AnnotationListWithCursor.from_builtins_fmt(
+                            json_obj)
                     elif "bookmarks" in json_obj:  # Introduced with format 2.1
                         for bookmark in json_obj["bookmarks"].values():
                             # Bookmark time:
@@ -1242,10 +1241,12 @@ class AnnotateShell(cmd.Cmd):
                     return json_obj
 
                 file_contents = json.load(
-                    annotations_file, object_hook=to_internal_annotations_list)
+                    annotations_file, object_hook=to_internal_format)
 
             # If we have a file in the pre-v2 format…
             if "format_version" not in file_contents:
+                # !!!!!!!! The following should be tested, with the new
+                # "JSON reading with a decoding" above:
                 update_pre_v2_data(file_contents)
 
             # Internal representation of the necessary parts of the
@@ -1256,22 +1257,25 @@ class AnnotateShell(cmd.Cmd):
             self.key_assignments.update(file_contents["key_assignments"])
 
             # Mapping from each event to its annotations, which are stored
-            # as an AnnotationList.
-            self.all_annotations = self.all_annotations.update(
-                file_contents["annotations"])
+            # as an AnnotationListWithCursor.
+            self.all_annotations.update(file_contents["annotations"])
 
             try:
                 self.bookmarks.update(file_contents["bookmarks"])
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 pass
 
-            self.do_list_events()
-
             # A lock is acquired before any change is made to the annotation
             # data, so that subsequent writes of the data to disk are not
             # replaced by the annotations from another instance of this
             # program:
             self.lock_annotations_path_or_exit()
+
+            print()
+            self.do_list_events()
+            print()
+            self.do_list_bookmarks()
+            print()
 
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
@@ -1408,7 +1412,7 @@ class AnnotateShell(cmd.Cmd):
             """
             if isinstance(obj, Time):
                 return obj.to_HMS()
-            if isinstance(obj, AnnotationList):
+            if isinstance(obj, AnnotationListWithCursor):
                 return obj.to_builtins_fmt()
             # Non-serializable objects would be serialized as None, without
             # the warning below:
@@ -1660,10 +1664,10 @@ class AnnotateShell(cmd.Cmd):
         # "just" before when the user last stopped:
         #
         # !!!! It would be nice to save the timer's time instead of
-        # the cursor. However, an AnnotationList does not have the
+        # the cursor. However, an AnnotationListWithCursor does not have the
         # concept of current time. This means that the current time
         # for each event should be saved and stored separately. This
-        # could be done, instead of storing the AnnotationList cursor
+        # could be done, instead of storing the AnnotationListWithCursor cursor
         # into the annotation file.
         if prev_annotation is not None:
             self.curr_event_time = prev_annotation.time
@@ -1741,6 +1745,7 @@ class AnnotateShell(cmd.Cmd):
 
         if not bookmark_ref:
             print("Error: please provide a bookmark name.")
+            return
 
         if self.curr_event_ref is None:
             print('Error: please first select an event.')
