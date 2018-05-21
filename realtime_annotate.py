@@ -1494,7 +1494,6 @@ class AnnotateShell(cmd.Cmd):
 
             print("Annotation timer set to {}.".format(self.curr_event_time))
 
-
     def do_load_keys(self, file_path):
         """
         Load key assignments from the given file so that they can be used
@@ -1763,6 +1762,12 @@ class AnnotateShell(cmd.Cmd):
         # As soon as an event is selected, the timer is set, so it is also
         # defined, at this point.
         
+        if bookmark_ref in self.bookmarks:
+            if not input("Do you want to replace the bookmark with the same"
+                         "name (y/[n])? ").startswith("y"):
+                print("Aborting.")
+                return
+
         self.bookmarks[bookmark_ref] = [
             self.curr_event_ref, self.curr_event_time]
 
@@ -1797,6 +1802,16 @@ class AnnotateShell(cmd.Cmd):
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
         self.do_select_event()
+
+    def complete_load_bookmark(self, text, line, begidx, endidx):
+        """
+        Complete bookmark name with the known names.
+        """
+
+        return [
+            bkmk_name
+            for bkmk_name in sorted(self.bookmarks)
+            if bkmk_name.startswith(text)]
 
 
 if __name__ == "__main__":
