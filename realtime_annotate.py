@@ -1715,6 +1715,9 @@ class AnnotateShell(cmd.Cmd):
         Syntax: rename_event Current name -> New name
         """
 
+        # An event renaming must be done in many places: the annotation list,
+        # the current event, and bookmarks. It is useful (but not crucial) that
+        # the code below do not crash and leave only a partial renaming.
         try:
             current_name, new_name = map(
                 lambda name: name.strip(), arg.split("->"))
@@ -1725,23 +1728,30 @@ class AnnotateShell(cmd.Cmd):
         # Existing events must not be clobbered:
         if new_name in self.all_annotations:
             print('Problem: event "{}" exists. You can delete it if needed.'
-                  " Renaming aborted.".format(new_name))
+                  ' Renaming aborted.'.format(new_name))
             return
 
         try:
-            # Renaming:
+            # Renaming annotations:
             self.all_annotations[new_name] = self.all_annotations.pop(
                 current_name)
         except KeyError:
             print('Error: event "{}" not found.'.format(current_name))
             return
 
-        # If the currently selected event is the event that was renamed, we
-        # consider that the same _event_ should still be selected (and
-        # therefore not the same name):
+        # Renaming the current event: if the currently selected event is the
+        # event that was renamed, we consider that the same _event_ should
+        # still be selected (and therefore not the same name):
         if self.curr_event_ref == current_name:
             self.curr_event_ref = new_name
             print('Current event is now "{}".'.format(self.curr_event_ref))
+
+        # Renaming of bookmarks:
+        for (bookmark_name, bookmark) in self.bookmarks.items():
+            if bookmark[0] == current_name:
+                bookmark[0] = new_name
+                print('Updated event name in bookmark "{}".'
+                      .format(bookmark_name))
 
     complete_rename_event = complete_select_event
 
@@ -1763,8 +1773,8 @@ class AnnotateShell(cmd.Cmd):
         # defined, at this point.
         
         if bookmark_name in self.bookmarks:
-            if not input("Do you want to replace the bookmark with the same"
-                         "name (y/[n])? ").startswith("y"):
+            if input("Do you want to replace the bookmark with the same"
+                     " name (y/n)? [n] ") != "y":
                 print("Aborting.")
                 return
 
@@ -1824,7 +1834,7 @@ class AnnotateShell(cmd.Cmd):
         except KeyError:
             print('Error: no bookmark with this name found.')
         else:
-            print('Deleted bookmark "{}" at event "{}" and timer {}.'
+            print('Deleted bookmark "{}" ({} {}).'
                   .format(bookmark_name, deleted_bkmk[0], deleted_bkmk[1]))
 
     complete_del_bookmark = complete_load_bookmark
