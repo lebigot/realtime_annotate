@@ -1205,6 +1205,9 @@ class AnnotateShell(cmd.Cmd):
         annotations_path -- pathlib.Path to the file with the annotations.
         """
 
+        
+        print()
+
         super().__init__()
 
         self.annotations_path = annotations_path
@@ -1218,12 +1221,25 @@ class AnnotateShell(cmd.Cmd):
         # whether the attributes are read from an existing annotations file or
         # created (as empty data with a specific type) from a new annotation
         # file.
+
+        # Mapping of each keyboard key to the index of its meaning in the key
+        # history:
         self.key_assignments = collections.OrderedDict()
+        # Annotations associated to each event reference:
         self.all_annotations = collections.defaultdict(AnnotationListWithCursor)
         self.bookmarks = {}
 
         if annotations_path.exists():  # Existing annotations
 
+            # A lock is acquired before any change is made to the in-memory
+            # annotation data, so that subsequent writes of the data to disk are
+            # not replaced by the annotations from another instance of this
+            # program.
+            #
+            # Locking before parsing the file gives a faster feedback to the
+            # user.
+            self.lock_annotations_path_or_exit()
+            
             with annotations_path.open() as annotations_file:
                 # Using object_hook in order to immediately transform JSON
                 # structures into the internal data format would not be robust:
@@ -1234,11 +1250,6 @@ class AnnotateShell(cmd.Cmd):
             # If we have a file in the pre-v2 format, it is converted
             # to the current version of the JSON data:
             if "format_version" not in file_contents:
-                # !!!!!!!! The following should be tested, with the new
-                # "JSON reading with a decoding" above. QUESTION: how
-                # to handle together the old format and the new
-                # to_internal_format? It looks like both cannot run
-                # together, no?
                 update_pre_v2_data(file_contents)
 
             # Internal representation of the necessary parts of the
@@ -1254,7 +1265,7 @@ class AnnotateShell(cmd.Cmd):
                 event_ref: AnnotationListWithCursor.from_builtins_fmt(
                     annot_with_cursor)
                 for (event_ref, annot_with_cursor)
-                in file_contents["annotations"]})
+                in file_contents["annotations"].items()})
 
             try:
                 self.bookmarks.update(file_contents["bookmarks"])
@@ -1266,21 +1277,18 @@ class AnnotateShell(cmd.Cmd):
                     # location = [event reference, time]:
                     location[1] = Time.from_HMS(location[1])
 
-            print()
             self.do_list_events()
             print()
             self.do_list_bookmarks()
-            print()
 
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
+            # It is useful to lock the annotation file, or two instances
+            # of this program could run on the same new path and later
+            # clobber it:
+            self.do_save()
 
-        
-        # A lock is acquired before any change is made to the in-memory
-        # annotation data, so that subsequent writes of the data to disk are
-        # not replaced by the annotations from another instance of this
-        # program:
-        self.lock_annotations_path_or_exit()
+        print()
 
         # Automatic (optional) saving of the annotations, both for
         # regular exit and for exceptions:
@@ -1770,7 +1778,7 @@ class AnnotateShell(cmd.Cmd):
             print('Bookmarks (sorted alphabetically):')
             for bkmk_key in sorted(self.bookmarks):
                 (event_ref, timer) = self.bookmarks[bkmk_key]
-                print("{}: {} {}".format(bkmk_key, event_ref, timer))
+                print("- {}: {} {}".format(bkmk_key, event_ref, timer))
         else:
             print('The bookmark list is empty.')
 
