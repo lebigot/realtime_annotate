@@ -1219,7 +1219,24 @@ class AnnotateShell(cmd.Cmd):
         if annotations_path.exists():  # Existing annotations
 
             with annotations_path.open() as annotations_file:
-                file_contents = json.load(annotations_file)
+                
+                def to_internal_annotations_list(json_obj):
+                    """
+                    Convert any annotation_list in given JSON object into 
+                    the internal format of this program.
+                    """
+                    if "annotation_list" in json_obj:
+                        json_obj["annotation_list"] = (
+                            AnnotationList.from_builtins_fmt(
+                                json_obj["annotation_list"]))
+                    elif "bookmarks" in json_obj:  # Introduced with format 2.1
+                        for bookmark in json_obj["bookmarks"].values():
+                            # Bookmark time:
+                            bookmark[1] = Time.from_HMS(map(int, bookmark[1]))
+                    return json_obj
+
+                file_contents = json.load(
+                    annotations_file, object_hook=to_internal_annotations_list)
 
             # If we have a file in the pre-v2 format…
             if "format_version" not in file_contents:
@@ -1235,24 +1252,12 @@ class AnnotateShell(cmd.Cmd):
 
             # Mapping from each event to its annotations, which are stored
             # as an AnnotationList.
-            self.all_annotations = collections.defaultdict(
-                AnnotationList,
-                {
-                    event_ref:
-                    AnnotationList.from_builtins_fmt(annotations)
-
-                    for (event_ref, annotations)
-                    in file_contents["annotations"].items()
-                })
+            self.all_annotations = file_contents["annotations"]
 
             try:
                 self.bookmarks = file_contents["bookmarks"]
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 self.bookmarks = EMPTY_BOOKMARKS
-            else:  # Transformation into the internal types
-                # !!!!!!!!!!!!!
-                self.bookmarks = [[event_ref, Time.from_HMS(timer)]
-                                  for (event_ref, timer) in self.bookmarks]
 
             self.do_list_events()
 
@@ -1411,7 +1416,7 @@ class AnnotateShell(cmd.Cmd):
         json.dump({
             "format_version": [2, 1],
             "meaning_history": self.meaning_history,
-            "annotations": self.annotations,
+            "annotations": self.all_annotations,
             # Order preservation:
             "key_assignments": list(self.key_assignments.items()),
             "bookmarks": self.bookmarks
