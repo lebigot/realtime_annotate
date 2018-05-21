@@ -1745,14 +1745,14 @@ class AnnotateShell(cmd.Cmd):
 
     complete_rename_event = complete_select_event
 
-    def do_set_bookmark(self, bookmark_ref):
+    def do_set_bookmark(self, bookmark_name):
         """
         Bookmark the currently selected event and timer.
 
-        Syntax: set_bookmark Bookmark name1
+        Syntax: set_bookmark Bookmark name
         """
 
-        if not bookmark_ref:
+        if not bookmark_name:
             print("Error: please provide a bookmark name.")
             return
 
@@ -1762,17 +1762,17 @@ class AnnotateShell(cmd.Cmd):
         # As soon as an event is selected, the timer is set, so it is also
         # defined, at this point.
         
-        if bookmark_ref in self.bookmarks:
+        if bookmark_name in self.bookmarks:
             if not input("Do you want to replace the bookmark with the same"
                          "name (y/[n])? ").startswith("y"):
                 print("Aborting.")
                 return
 
-        self.bookmarks[bookmark_ref] = [
+        self.bookmarks[bookmark_name] = [
             self.curr_event_ref, self.curr_event_time]
 
         print('Bookmark "{}" set at event "{}" and timer {}.'
-              .format(bookmark_ref, *self.bookmarks[bookmark_ref]))
+              .format(bookmark_name, *self.bookmarks[bookmark_name]))
 
     def do_list_bookmarks(self, arg=None):
         """
@@ -1787,7 +1787,7 @@ class AnnotateShell(cmd.Cmd):
         else:
             print('The bookmark list is empty.')
 
-    def do_load_bookmark(self, bookmark_ref):
+    def do_load_bookmark(self, bookmark_name):
         """
         Load the event and timer value defined by the given bookmark.
 
@@ -1795,7 +1795,7 @@ class AnnotateShell(cmd.Cmd):
         """
         
         try:
-            bookmark = self.bookmarks[bookmark_ref]
+            bookmark = self.bookmarks[bookmark_name]
         except KeyError:
             print('Error: please give an existing bookmark name.')
             return
@@ -1813,6 +1813,21 @@ class AnnotateShell(cmd.Cmd):
             for bkmk_name in sorted(self.bookmarks)
             if bkmk_name.startswith(text)]
 
+    def do_del_bookmark(self, bookmark_name):
+        """
+        Delete the bookmark with the given name.
+
+        Syntax: del_bookmark Bookmark name
+        """
+        try:
+            deleted_bkmk = self.bookmarks.pop(bookmark_name)
+        except KeyError:
+            print('Error: no bookmark with this name found.')
+        else:
+            print('Deleted bookmark "{}" at event "{}" and timer {}.'
+                  .format(bookmark_name, deleted_bkmk[0], deleted_bkmk[1]))
+
+    complete_del_bookmark = complete_load_bookmark
 
 if __name__ == "__main__":
 
