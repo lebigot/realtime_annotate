@@ -1552,7 +1552,7 @@ class AnnotateShell(cmd.Cmd):
         """
         Immediately start recording annotations for the current
         event reference. This event must first be set with
-        select_event.
+        set_event.
 
         The annotation file must also contain annotation key
         definitions. This typically has to be done once after creating
@@ -1566,7 +1566,7 @@ class AnnotateShell(cmd.Cmd):
 
         if self.curr_event_ref is None:
             print("Error: please select an event to be annotated",
-                  " with select_event.")
+                  " with set_event.")
             return
 
         try:
@@ -1636,7 +1636,7 @@ class AnnotateShell(cmd.Cmd):
             for addtl_meaning in meanings_iter:
                 print("  {}".format(addtl_meaning))
 
-    def do_select_event(self, event_ref=""):
+    def do_set_event(self, event_ref=""):
         """
         Set the given event reference as the current event.
 
@@ -1687,7 +1687,7 @@ class AnnotateShell(cmd.Cmd):
         print("Annotation timer set to {}."
               .format(self.curr_event_time))
 
-    def complete_select_event(self, text, line, begidx, endidx):
+    def complete_set_event(self, text, line, begidx, endidx):
         """
         Complete event references with the known references.
         """
@@ -1716,7 +1716,7 @@ class AnnotateShell(cmd.Cmd):
         del self.all_annotations[event_ref]
         print('Event deleted.')
 
-    complete_del_event = complete_select_event
+    complete_del_event = complete_set_event
 
     def do_rename_event(self, arg):
         """
@@ -1763,7 +1763,7 @@ class AnnotateShell(cmd.Cmd):
                 print('Updated event name in bookmark "{}".'
                       .format(bookmark_name))
 
-    complete_rename_event = complete_select_event
+    complete_rename_event = complete_set_event
 
     def do_set_bookmark(self, bookmark_name):
         """
@@ -1821,7 +1821,7 @@ class AnnotateShell(cmd.Cmd):
             return
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
-        self.do_select_event()
+        self.do_set_event()
 
     def complete_load_bookmark(self, text, line, begidx, endidx):
         """

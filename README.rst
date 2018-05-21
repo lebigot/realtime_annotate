@@ -169,7 +169,7 @@ Typical workflow
 ----------------
 
 A typical workflow starts by simply selecting an **event** to be
-annotated (command ``select_event``). A *new event* can be created by
+annotated (command ``set_event``). A *new event* can be created by
 simply giving a new event name (of the user's choice). *Existing
 events* are listed with ``list_events``.
 
