@@ -226,9 +226,11 @@ class TimestampedAnnotation:
         Return a version of the annotation with only Python builtin types
         (with no module dependency).
 
-        Returns (time, annot), where annot is [annotation] or
-        [annotation, value], if a value is defined for the
-        TimestampedAnnotation.
+        This is useful for serializing the annotation (e.g. for JSON).
+
+        Returns (time, annot), where time is an (hours, minutes, seconds)
+        sequence, and where annot is [annotation] or [annotation, value], if a
+        value is defined for the TimestampedAnnotation.
         """
 
         annotation = [self.annotation]
@@ -1395,30 +1397,27 @@ class AnnotateShell(cmd.Cmd):
         # TimestampedAnnotation objects, etc.), is converted into
         # a simple structure for the JSON output.
 
-        # !! Another architecture would consist in only keep in
-        # memory and converting (upon writing and reading) the
-        # annotations for those events that the user touched. This
-        # would save memory and processing time, at the cost of
-        # slightly more complicated code (because the in-memory
-        # data would basically be an updated cache that has
-        # priority over the file data: handling this priority is
-        # not as straightforward as the current "read/write all
-        # events" method.
-        all_annotations_for_file = {
-            event_ref: annotation_list.to_builtins_fmt()
-            for (event_ref, annotation_list)
-            in self.all_annotations.items()
-        }
+        def encode(obj):
+            """
+            Encode obj into a JSON-encodable object.
+
+            obj -- object that can't be serialized by the json module.
+            """
+            if isinstance(obj, Time):
+                return obj.to_HMS()
+            if isinstance(obj, TimestampedAnnotation):
+                return obj.to_builtins_fmt()
 
         json.dump({
             "format_version": [2, 1],
             "meaning_history": self.meaning_history,
-            "annotations": all_annotations_for_file,
+            "annotations": self.annotations,
+            # Order preservation:
             "key_assignments": list(self.key_assignments.items()),
-            "bookmarks": [[event_ref, timer.to_HMS()]
-                for (event_ref, timer) in self.bookmarks]
+            "bookmarks": self.bookmarks
             },
-            annotations_file, indent=2)
+            annotations_file,
+            default=encode, indent=2)
 
         annotations_file.close()
 
@@ -1730,8 +1729,11 @@ class AnnotateShell(cmd.Cmd):
         """
         Bookmark the currently selected event and timer.
 
-        Syntax: set_bookmark Bookmark reference
+        Syntax: set_bookmark Bookmark name1
         """
+
+        if not bookmark_ref:
+            print("Error: please provide a bookmark name.")
 
         if self.curr_event_ref is None:
             print('Error: please first select an event.')
@@ -1751,7 +1753,7 @@ class AnnotateShell(cmd.Cmd):
         """
 
         if self.bookmarks:
-            print('Bookmarks:')
+            print('Bookmarks (sorted alphabetically):')
             for bkmk_key in sorted(self.bookmarks):
                 (event_ref, timer) = self.bookmarks[bkmk_key]
                 print("{}: {} {}".format(bkmk_key, event_ref, timer))
@@ -1762,13 +1764,13 @@ class AnnotateShell(cmd.Cmd):
         """
         Load the event and timer value defined by the given bookmark.
 
-        Syntax: load_bookmark Bookmark reference
+        Syntax: load_bookmark Bookmark name
         """
         
         try:
             bookmark = self.bookmarks[bookmark_ref]
         except KeyError:
-            print('Error: please give an existing bookmark reference.')
+            print('Error: please give an existing bookmark name.')
             return
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
