@@ -1721,7 +1721,7 @@ class AnnotateShell(cmd.Cmd):
         self.bookmarks[bookmark_ref] = [
             self.curr_event_ref, self.curr_event_time]
 
-        print('Bookmark "{}"set at event "{}" and timer {}.'
+        print('Bookmark "{}" set at event "{}" and timer {}.'
               .format(bookmark_ref, *self.bookmarks[bookmark_ref]))
 
     def do_list_bookmarks(self, arg=None):
