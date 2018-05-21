@@ -1225,28 +1225,20 @@ class AnnotateShell(cmd.Cmd):
         if annotations_path.exists():  # Existing annotations
 
             with annotations_path.open() as annotations_file:
-                
-                def to_internal_format(json_obj):
-                    """
-                    Conversion of various JSON objects into 
-                    the internal format of this program.
-                    """
-                    if "annotation_list" in json_obj:
-                        return AnnotationListWithCursor.from_builtins_fmt(
-                            json_obj)
-                    elif "bookmarks" in json_obj:  # Introduced with format 2.1
-                        for bookmark in json_obj["bookmarks"].values():
-                            # Bookmark time:
-                            bookmark[1] = Time.from_HMS(map(int, bookmark[1]))
-                    return json_obj
+                # Using object_hook in order to immediately transform JSON
+                # structures into the internal data format would not be robust:
+                # this could break when the file format gets updated, because
+                # the transformations are generally format-specific.
+                file_contents = json.load(annotations_file)
 
-                file_contents = json.load(
-                    annotations_file, object_hook=to_internal_format)
-
-            # If we have a file in the pre-v2 format…
+            # If we have a file in the pre-v2 format, it is converted
+            # to the current version of the JSON data:
             if "format_version" not in file_contents:
                 # !!!!!!!! The following should be tested, with the new
-                # "JSON reading with a decoding" above:
+                # "JSON reading with a decoding" above. QUESTION: how
+                # to handle together the old format and the new
+                # to_internal_format? It looks like both cannot run
+                # together, no?
                 update_pre_v2_data(file_contents)
 
             # Internal representation of the necessary parts of the
@@ -1257,19 +1249,22 @@ class AnnotateShell(cmd.Cmd):
             self.key_assignments.update(file_contents["key_assignments"])
 
             # Mapping from each event to its annotations, which are stored
-            # as an AnnotationListWithCursor.
-            self.all_annotations.update(file_contents["annotations"])
+            # as an AnnotationListWithCursor:
+            self.all_annotations.update({
+                event_ref: AnnotationListWithCursor.from_builtins_fmt(
+                    annot_with_cursor)
+                for (event_ref, annot_with_cursor)
+                in file_contents["annotations"]})
 
             try:
                 self.bookmarks.update(file_contents["bookmarks"])
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 pass
-
-            # A lock is acquired before any change is made to the annotation
-            # data, so that subsequent writes of the data to disk are not
-            # replaced by the annotations from another instance of this
-            # program:
-            self.lock_annotations_path_or_exit()
+            else:
+                # Conversion of times to the internal format:
+                for location in self.bookmarks.values():
+                    # location = [event reference, time]:
+                    location[1] = Time.from_HMS(location[1])
 
             print()
             self.do_list_events()
@@ -1279,6 +1274,13 @@ class AnnotateShell(cmd.Cmd):
 
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
+
+        
+        # A lock is acquired before any change is made to the in-memory
+        # annotation data, so that subsequent writes of the data to disk are
+        # not replaced by the annotations from another instance of this
+        # program:
+        self.lock_annotations_path_or_exit()
 
         # Automatic (optional) saving of the annotations, both for
         # regular exit and for exceptions:
