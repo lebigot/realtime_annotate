@@ -1701,10 +1701,20 @@ class AnnotateShell(cmd.Cmd):
         """
         Delete the given event.
         """
-        try:
-            del self.all_annotations[event_ref]
-        except KeyError:
+
+        if event_ref not in self.all_annotations:  # DefaultDict handling
             print('Error: unknown event "{}".'.format(event_ref))
+            return
+
+        if self.all_annotations[event_ref] and input(
+            'Event "{}" has annotations: really delete (y/n)? [n] '
+            .format(event_ref)) != "y":
+            
+            print('Aborting.')
+            return
+
+        del self.all_annotations[event_ref]
+        print('Event deleted.')
 
     complete_del_event = complete_select_event
 
