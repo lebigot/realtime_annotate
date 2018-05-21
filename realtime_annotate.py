@@ -1211,6 +1211,9 @@ class AnnotateShell(cmd.Cmd):
         # if not None:
         self.curr_event_ref = None
 
+        # Internal bookmarks representation: {key: [event_ref, timer],…}
+        EMPTY_BOOKMARKS = {}
+
         if annotations_path.exists():  # Existing annotations
 
             with annotations_path.open() as annotations_file:
@@ -1243,7 +1246,7 @@ class AnnotateShell(cmd.Cmd):
             try:
                 self.bookmarks = file_contents["bookmarks"]
             except KeyError:  # Bookmarks introduced in the v2.1 format
-                self.bookmarks = {}
+                self.bookmarks = EMPTY_BOOKMARKS
             else:  # Transformation into the internal types
                 # !!!!!!!!!!!!!
                 self.bookmarks = [[event_ref, Time.from_HMS(timer)]
@@ -1266,7 +1269,7 @@ class AnnotateShell(cmd.Cmd):
             # to:
             self.key_assignments = collections.OrderedDict()
             self.all_annotations = collections.defaultdict(AnnotationList)
-            self.bookmarks = {}  # {key: [event_ref, timer],…}
+            self.bookmarks = EMPTY_BOOKMARKS
 
         # Automatic (optional) saving of the annotations, both for
         # regular exit and for exceptions:
