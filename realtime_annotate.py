@@ -1265,6 +1265,24 @@ class AnnotateShell(cmd.Cmd):
                 self.do_save()
         atexit.register(save_if_needed)
 
+    def cmdloop_no_interrupt(self):
+        """
+        Like cmdloop(), but mimics the usual Unix shell behavior of Ctrl-C.
+
+        When the user presses Ctrl-C, a new prompt appears.
+
+        This prevents users from having to quit the program when typing
+        Ctrl-C, as they can expect the same behavior as in most Unix shells.
+        """
+        print(self.intro)
+        while True:
+            try:
+                super().cmdloop(intro="")  # Executes preloop() and postloop()
+            except KeyboardInterrupt:
+                print("^C")
+            else:  # Normal exit of the command loop
+                break
+
     def lock_annotations_path_or_exit(self):
         """
         Lock the annotations file or exit with an error message.
@@ -1711,7 +1729,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "annotation_file",
         help=("Path to the annotation file (it will be created if it does not"
-              " yet exist)"))
+              " yet exist)"),
+        type=pathlib.Path
+        )
 
     args = parser.parse_args()
 
@@ -1723,4 +1743,4 @@ if __name__ == "__main__":
         for func_name in player_functions:
             setattr(player_module, func_name, lambda *args, **kwargs: None)
 
-    AnnotateShell(pathlib.Path(args.annotation_file)).cmdloop()
+    AnnotateShell(args.annotation_file).cmdloop_no_interrupt()
