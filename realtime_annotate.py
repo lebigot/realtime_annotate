@@ -1731,8 +1731,9 @@ class AnnotateShell(cmd.Cmd):
 
         if self.bookmarks:
             print('Bookmarks:')
-            for (index, bookmark) in enumerate(self.bookmarks, 1):
-                print("{}. {} {}".format(index, bookmark[0], bookmark[1]))
+            for bkmk_key in sorted(self.bookmarks):
+                (event_ref, timer) = self.bookmarks[bkmk_key]
+                print("{}: {} {}".format(bkmk_key, event_ref, timer))
         else:
             print('The bookmark list is empty.')
 
