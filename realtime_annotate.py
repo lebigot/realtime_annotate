@@ -1213,8 +1213,14 @@ class AnnotateShell(cmd.Cmd):
         # if not None:
         self.curr_event_ref = None
 
-        # Internal bookmarks representation: {key: [event_ref, timer],…}
-        EMPTY_BOOKMARKS = {}
+        # Some attributes are defined and then possibly updated: this allows
+        # the type or value of these attributes to be automatically correct
+        # whether the attributes are read from an existing annotations file or
+        # created (as empty data with a specific type) from a new annotation
+        # file.
+        self.key_assignments = collections.OrderedDict()
+        self.all_annotations = collections.defaultdict(AnnotationList)
+        self.bookmarks = {}
 
         if annotations_path.exists():  # Existing annotations
 
@@ -1247,17 +1253,17 @@ class AnnotateShell(cmd.Cmd):
 
             self.meaning_history = file_contents["meaning_history"]
 
-            self.key_assignments = collections.OrderedDict(
-                file_contents["key_assignments"])
+            self.key_assignments.update(file_contents["key_assignments"])
 
             # Mapping from each event to its annotations, which are stored
             # as an AnnotationList.
-            self.all_annotations = file_contents["annotations"]
+            self.all_annotations = self.all_annotations.update(
+                file_contents["annotations"])
 
             try:
-                self.bookmarks = file_contents["bookmarks"]
+                self.bookmarks.update(file_contents["bookmarks"])
             except KeyError:  # Bookmarks introduced in the v2.1 format
-                self.bookmarks = EMPTY_BOOKMARKS
+                pass
 
             self.do_list_events()
 
@@ -1269,14 +1275,6 @@ class AnnotateShell(cmd.Cmd):
 
         else:  # A new file must to be created
             self.meaning_history = {}  # No key meanings
-
-            # No keys are defined yet. This could be a simple
-            # dictionary, because self.key_assignments is only
-            # replaced (through the load_keys command), never added
-            # to:
-            self.key_assignments = collections.OrderedDict()
-            self.all_annotations = collections.defaultdict(AnnotationList)
-            self.bookmarks = EMPTY_BOOKMARKS
 
         # Automatic (optional) saving of the annotations, both for
         # regular exit and for exceptions:
@@ -1410,8 +1408,12 @@ class AnnotateShell(cmd.Cmd):
             """
             if isinstance(obj, Time):
                 return obj.to_HMS()
-            if isinstance(obj, TimestampedAnnotation):
+            if isinstance(obj, AnnotationList):
                 return obj.to_builtins_fmt()
+            # Non-serializable objects would be serialized as None, without
+            # the warning below:
+            sys.exit("Internal error: serialization of {} required."
+                     .format(type(obj)))
 
         json.dump({
             "format_version": [2, 1],
