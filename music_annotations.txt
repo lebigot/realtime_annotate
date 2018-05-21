@@ -6,8 +6,10 @@
 
 s    start of a piece (silence before the start of a piece)
 e    end of a piece (silence after the end of a piece)
-u    uninspired (0 = a little, 2 = very much)
-g    glitch [technical/few uninspired notes] (0 = small, 2 = major)
-i    inspired (0 = somewhat, 2 = nicely)
+u    uninspired (0=tiny, 1=difficult to fix, 2=very much)
+g    glitch [technical] (0=small, 2=major)
+i    inspired (0=somewhat, 2=nicely)
 b    break in the piece, that could be the start or end of a piece
-p    practice part (between start and end)
+p    practice (tags the whole piece between start and end)
+S    slow in many places
+F    fast in many places
