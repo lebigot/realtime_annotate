@@ -1477,10 +1477,10 @@ class AnnotateShell(cmd.Cmd):
         """
         Set the current annotation timer to the given time.
 
-        If a player is used, this time should typically be the play
-        head location.
+        If a player is used, then the timer is also set in the player,
+        which typically sets the play head location.
 
-        time_ -- time in S, M:S or H:M:S format.
+        time_ -- time string in S, M:S or H:M:S format.
         """
 
         try:
@@ -1810,6 +1810,8 @@ class AnnotateShell(cmd.Cmd):
         """
         Load the event and timer value defined by the given bookmark.
 
+        The time is automatically set through the set_time command.
+       
         Syntax: load_bookmark Bookmark name
         """
         
@@ -1820,6 +1822,9 @@ class AnnotateShell(cmd.Cmd):
             return
 
         (self.curr_event_ref, self.curr_event_time) = bookmark
+        # do_set_event(event_ref) would set the timer to the last annotation
+        # in the event, and would print the fact that it did, which we don't
+        # want here because we set the timer to a specific value.
         self.do_set_event()
 
     def complete_load_bookmark(self, text, line, begidx, endidx):
