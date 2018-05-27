@@ -271,8 +271,12 @@ class TerminalNotHighEnough(Exception):
 
 class EventData:
     """
-    List of annotations (for a single reference) sorted by timestamp,
-    with a live cursor between annotations.
+    Data associated to an event.
+
+    The event data is:
+    - list of annotations (for a single reference) sorted by timestamp,
+    - a live insertion cursor between annotations,
+    - text notes associated with the event.
 
     Main attributes:
 
@@ -285,6 +289,8 @@ class EventData:
     annotation, positive). The cursor corresponds to a time between
     the two annotations (their timestamp included, since they can have
     the same timestamp).
+
+    - note: string with the note associated with the event.
     """
     def __init__(self, list_=None, cursor=0):
         """
@@ -294,6 +300,7 @@ class EventData:
         """
         self.list_ = [] if list_ is None else list_
         self.cursor = cursor
+        self.note = ""  # Note associated to the event
 
     def __len__(self):
         return len(self.list_)
@@ -380,19 +387,21 @@ class EventData:
         }
 
     @classmethod
-    def from_builtins_fmt(cls, annotations):
+    def from_builtins_fmt(cls, event_data):
+        # !!! This function should be updated anytime the annotation saving
+        # in Shell.do_save() is updated.
         """
         Reverse of to_builtins_fmt().
 
-        annotations -- annotation list in the form returned by
-        to_builtins_fmt().
+        event_data -- event data in the form returned by to_builtins_fmt().
         """
         return cls(
-            cursor=annotations["cursor"],
+            cursor=event_data["cursor"],
             list_=[
                 TimestampedAnnotation.from_builtins_fmt(annotation)
-                for annotation in annotations["annotation_list"]
-            ]
+                for annotation in event_data["annotation_list"]
+            ],
+            note=event_data["note"]
         )
 
     def __repr__(self):
@@ -1152,10 +1161,10 @@ def key_assignments_from_file(file_path):
 
     return key_assignments
 
-def update_pre_v2_data(file_contents):
+def to_v2_1_data(file_contents):
     """
     Update the contents read from an pre-v2 annotation file by
-    converting it to the current form of the contents.
+    converting it to the v2.1 form of the contents.
 
     The "format_version" entry is not set, though (as the version is
     known to be the latest version).
@@ -1248,10 +1257,22 @@ class AnnotateShell(cmd.Cmd):
                 # the transformations are generally format-specific.
                 file_contents = json.load(annotations_file)
 
+            ## Format update. The update is done at (parsed) JSON level so
+            ## as to not handle format updates in many places in the code
+            ## (e.g., the data associated to an event could handle a missing
+            ## event note from a format before 2.2, etc.). Also, in the longer
+            ## term, older formats could be made obsolete, and only the
+            ## format update here could be removed from the code:
+
             # If we have a file in the pre-v2 format, it is converted
             # to the current version of the JSON data:
             if "format_version" not in file_contents:
-                update_pre_v2_data(file_contents)
+                to_v2_1_data(file_contents)
+
+            if file_contents["format_version"] < [2, 2]:
+                # Format 2.2 introduced event notes:
+                for event_data in file_contents["annotations"]:
+                    event_data["note"] = ""
 
             # Internal representation of the necessary parts of the
             # file contents:
@@ -1395,6 +1416,9 @@ class AnnotateShell(cmd.Cmd):
             "If no previous version was available, a new file is created.")
 
     def do_save(self, _=None):
+        # !!! This function must be updated each time the internal data
+        # changes in a way that can be reflected in the saved data (e.g.
+        # when adding some new data to an event).
         """
         Do what help_save() prints.
 
@@ -1431,7 +1455,10 @@ class AnnotateShell(cmd.Cmd):
                      .format(type(obj)))
 
         json.dump({
-            "format_version": [2, 1],
+            # !!! The version must be bumped each time more data is
+            # added to what is saved, in particular (e.g. addition of a note
+            # to an event):
+            "format_version": [2, 2],
             "meaning_history": self.meaning_history,
             "annotations": self.all_annotations,
             # Order preservation:
@@ -1836,6 +1863,11 @@ class AnnotateShell(cmd.Cmd):
             print('Error: please give an existing bookmark name.')
             return
 
+        # !!!!!!!! It is possible that the new current event does not
+        # exist because it was deleted. How to handle this gracefully?
+        # "annotate" creates the event. But what about the more general
+        # situation? Events are automatically created through a defaultdict.
+
         (self.curr_event_ref, self.curr_event_time) = bookmark
         # do_set_event(event_ref) would set the timer to the last annotation
         # in the event, and would print the fact that it did, which we don't
@@ -1871,21 +1903,19 @@ class AnnotateShell(cmd.Cmd):
         if event_ref is None:
             event_ref = self.curr_event_ref
 
-        #!!!!!!!!!!!!!!!
-
-    
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
         # Windows, where the editor might not be able to open the
         # file if it is still open by this program, so we keep it after
         # closing:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file_name = tmp_file.name
+        with tempfile.namedtemporaryfile("w", delete=false) as note_file:
+            # the current note contents must be written to the file:
+            note_file.write(self.all_annotations[event_ref].note)
 
         # !! The list should be extended, for Windows, for instance with
         # "notepad.exe":
-        for editor in ["lkj", "llll"]:  # [os.environ.get("EDITOR", "nano"), "vim", "vi"]:
-            # We let the user handle any error from the editor (they are
+        for editor in [os.environ.get("editor", "nano"), "vim", "vi"]:
+            # we let the user handle any error from the editor (they are
             # displayed), but we handle the case of an editor that cannot
             # be found:
             try:
@@ -1898,7 +1928,11 @@ class AnnotateShell(cmd.Cmd):
             print("Internal error: no editor found.")
             return
 
-        # !!!!!!!!!
+        # we get the note:
+        with open(note_file.name) as note_file:
+            self.all_annotations[event_ref].note = note_file.read()
+
+        print("Note for event {} edited.".format(event_ref))
 
 if __name__ == "__main__":
 
