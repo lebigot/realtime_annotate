@@ -1742,6 +1742,8 @@ class AnnotateShell(cmd.Cmd):
         """
         Delete the given event.
         """
+        # If the deleted event is the current event, then the current
+        # event is reset to None.
 
         if event_ref not in self.all_annotations:  # DefaultDict handling
             print('Error: unknown event "{}".'.format(event_ref))
@@ -1755,6 +1757,8 @@ class AnnotateShell(cmd.Cmd):
             return
 
         del self.all_annotations[event_ref]
+        if self.curr_event_ref == event_ref:
+            self.curr_event_ref = None
         print('Event deleted.')
 
     complete_del_event = complete_set_event
@@ -1911,6 +1915,8 @@ class AnnotateShell(cmd.Cmd):
         if event_ref is None:
             event_ref = self.curr_event_ref
             if event_ref is None:
+                print("Error: please first set the current",
+                      "event with set_event.")
 
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
