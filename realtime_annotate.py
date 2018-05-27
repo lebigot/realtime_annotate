@@ -40,6 +40,8 @@ import glob
 import json
 import re
 import tempfile
+import subprocess
+import os
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
@@ -1392,7 +1394,7 @@ class AnnotateShell(cmd.Cmd):
             "previous version.\n\n"
             "If no previous version was available, a new file is created.")
 
-    def do_save(self, _):
+    def do_save(self, _=None):
         """
         Do what help_save() prints.
 
@@ -1461,7 +1463,7 @@ class AnnotateShell(cmd.Cmd):
         # written over later:
         self.lock_annotations_path_or_exit()
 
-    def do_exit(self, arg=_):
+    def do_exit(self, _=None):
         """
         Exit this program and optionally save the annotations.
         """
@@ -1611,7 +1613,7 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("No annotated event found.")
 
-    def do_list_keys(self, _):
+    def do_list_keys(self, _=None):
         """
         List the key assignments for annotations (loaded by load_keys and
         saved in the annotation file).
@@ -1623,7 +1625,7 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("No defined annotation keys.")
 
-    def do_list_key_history(self, _):
+    def do_list_key_history(self, _=None):
         """
         List the history of all key assignments found in the annotation
         file (in alphabetical order, irrespective of the case).
@@ -1806,7 +1808,7 @@ class AnnotateShell(cmd.Cmd):
             for bkmk_name in sorted(self.bookmarks)
             if bkmk_name.startswith(text)]
 
-    def do_list_bookmarks(self, _):
+    def do_list_bookmarks(self, _=None):
         """
         List the bookmarks.
         """
@@ -1858,8 +1860,37 @@ class AnnotateShell(cmd.Cmd):
 
     complete_del_bookmark = complete_load_bookmark
 
-    def do_edit_notes(self, _):
-        
+    def do_edit_note(self, _=None):
+        """
+        Edit the note associated with the current event.
+        """
+    
+        # The note is temporarily put in a file.
+        # The temporary file has delete=False just as a precaution for
+        # Windows, where the editor might not be able to open the
+        # file if it is still open by this program, so we keep it after
+        # closing:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file_name = tmp_file.name
+
+        # !! The list should be extended, for Windows, for instance with
+        # "notepad.exe":
+        for editor in ["lkj", "llll"]:  # [os.environ.get("EDITOR", "nano"), "vim", "vi"]:
+            # We let the user handle any error from the editor (they are
+            # displayed), but we handle the case of an editor that cannot
+            # be found:
+            try:
+                subprocess.run([editor, tmp_file_Name])
+            except FileNotFoundError:
+                pass
+            else:
+                break
+        else:
+            print("Internal error: no editor found.")
+            return
+
+        # !!!!!!!!!
+
 if __name__ == "__main__":
 
     import argparse
