@@ -1567,7 +1567,7 @@ class AnnotateShell(cmd.Cmd):
 
         if self.curr_event_ref is None:
             print("Error: please select an event to be annotated",
-                  " with set_event.")
+                  "with set_event.")
             return
 
         try:
@@ -1860,10 +1860,19 @@ class AnnotateShell(cmd.Cmd):
 
     complete_del_bookmark = complete_load_bookmark
 
-    def do_edit_note(self, _=None):
+    def do_edit_note(self, event_ref=None):
         """
-        Edit the note associated with the current event.
+        Edit the note associated with an event.
+
+        If no event is specified, edits the note of the current event, if any.
+        Otherwise edits the note of the given event.
         """
+
+        if event_ref is None:
+            event_ref = self.curr_event_ref
+
+        #!!!!!!!!!!!!!!!
+
     
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
