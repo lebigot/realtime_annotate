@@ -1908,7 +1908,7 @@ class AnnotateShell(cmd.Cmd):
         # Windows, where the editor might not be able to open the
         # file if it is still open by this program, so we keep it after
         # closing:
-        with tempfile.namedtemporaryfile("w", delete=false) as note_file:
+        with tempfile.NamedTemporaryFile("w", delete=false) as note_file:
             # the current note contents must be written to the file:
             note_file.write(self.all_annotations[event_ref].note)
 
