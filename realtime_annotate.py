@@ -1793,6 +1793,19 @@ class AnnotateShell(cmd.Cmd):
         print('Bookmark "{}" set at event "{}" and timer {}.'
               .format(bookmark_name, *self.bookmarks[bookmark_name]))
 
+    # The completion of bookmark setting uses known bookmarks so that
+    # bookmarks can easily be replaced, or so that similar bookmark names
+    # can easily be created:
+    def complete_set_bookmark(self, text, line, begidx, endidx):
+        """
+        Complete bookmark name with the known names.
+        """
+
+        return [
+            bkmk_name
+            for bkmk_name in sorted(self.bookmarks)
+            if bkmk_name.startswith(text)]
+
     def do_list_bookmarks(self, arg=None):
         """
         List the bookmarks.
@@ -1827,15 +1840,7 @@ class AnnotateShell(cmd.Cmd):
         # want here because we set the timer to a specific value.
         self.do_set_event()
 
-    def complete_load_bookmark(self, text, line, begidx, endidx):
-        """
-        Complete bookmark name with the known names.
-        """
-
-        return [
-            bkmk_name
-            for bkmk_name in sorted(self.bookmarks)
-            if bkmk_name.startswith(text)]
+    complete_load_bookmark = complete_set_bookmark
 
     def do_del_bookmark(self, bookmark_name):
         """
