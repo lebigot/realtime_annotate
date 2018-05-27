@@ -1863,11 +1863,6 @@ class AnnotateShell(cmd.Cmd):
             print('Error: please give an existing bookmark name.')
             return
 
-        # !!!!!!!! It is possible that the new current event does not
-        # exist because it was deleted. How to handle this gracefully?
-        # "annotate" creates the event. But what about the more general
-        # situation? Events are automatically created through a defaultdict.
-
         (self.curr_event_ref, self.curr_event_time) = bookmark
         # do_set_event(event_ref) would set the timer to the last annotation
         # in the event, and would print the fact that it did, which we don't
@@ -1949,7 +1944,7 @@ if __name__ == "__main__":
         player, etc.).
 
         The module must be in the Python module path (working
-        directory, directory of this program, etc.)  The module must
+        directory, directory of this program, etc.). The module must
         provide a start() and a stop() function (that take no
         argument), and a function set_time(hours, minutes, seconds).
         start() is called when the annotation process starts, stop()
