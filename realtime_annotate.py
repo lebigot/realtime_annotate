@@ -1201,6 +1201,20 @@ def to_v2_1_data(file_contents):
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
+
+    Important attributes:
+
+    - annoations_path: path to the annotations file that this shell
+    manipulates.
+
+    - curr_event_ref: reference (name) of the currently selected
+    event, or None if no event has been selected yet. This event always
+    exists in all_annotations. 
+    
+    - key_assignments: mapping of each keyboard key to the index of its meaning
+    in the key meanings history.
+
+    - all_annotations: mapping from each event reference to its EventData.
     """
     # IMPORTANT: do_*() and complete_*() methods are called
     # automatically through cmd.Cmd.
@@ -1227,8 +1241,6 @@ class AnnotateShell(cmd.Cmd):
 
         self.annotations_path = annotations_path
 
-        # Current event to be annotated. This is a key of self.all_annotations,
-        # if not None:
         self.curr_event_ref = None
 
         # Some attributes are defined and then possibly updated: this allows
@@ -1237,10 +1249,7 @@ class AnnotateShell(cmd.Cmd):
         # created (as empty data with a specific type) from a new annotation
         # file.
 
-        # Mapping of each keyboard key to the index of its meaning in the key
-        # history:
         self.key_assignments = collections.OrderedDict()
-        # Annotations associated to each event reference:
         self.all_annotations = collections.defaultdict(EventData)
         self.bookmarks = {}
 
@@ -1901,6 +1910,7 @@ class AnnotateShell(cmd.Cmd):
 
         if event_ref is None:
             event_ref = self.curr_event_ref
+            if event_ref is None:
 
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
