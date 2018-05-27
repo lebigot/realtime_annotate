@@ -1917,6 +1917,7 @@ class AnnotateShell(cmd.Cmd):
             if event_ref is None:
                 print("Error: please first set the current",
                       "event with set_event.")
+                return
 
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
