@@ -292,7 +292,7 @@ class EventData:
 
     - note: string with the note associated with the event.
     """
-    def __init__(self, list_=None, cursor=0):
+    def __init__(self, list_=None, cursor=0, note=""):
         """
         list_ -- list of TimestampedAnnotations.
 
@@ -300,7 +300,7 @@ class EventData:
         """
         self.list_ = [] if list_ is None else list_
         self.cursor = cursor
-        self.note = ""  # Note associated to the event
+        self.note = note  # Note associated to the event
 
     def __len__(self):
         return len(self.list_)
