@@ -1249,12 +1249,12 @@ class AnnotateShell(cmd.Cmd):
 
     - curr_event_ref: reference (name) of the currently selected
     event, or None if no event has been selected yet. This event always
-    exists in all_annotations. 
+    exists in all_event_data. 
     
     - key_assignments: mapping of each keyboard key to the index of its meaning
     in the key meanings history.
 
-    - all_annotations: mapping from each event reference to its EventData.
+    - all_event_data: mapping from each event reference to its EventData.
     """
     # IMPORTANT: do_*() and complete_*() methods are called
     # automatically through cmd.Cmd.
@@ -1290,7 +1290,7 @@ class AnnotateShell(cmd.Cmd):
         # file.
 
         self.key_assignments = collections.OrderedDict()
-        self.all_annotations = collections.defaultdict(EventData)
+        self.all_event_data = collections.defaultdict(EventData)
         self.bookmarks = {}
 
         if annotations_path.exists():  # Existing annotations
@@ -1337,7 +1337,7 @@ class AnnotateShell(cmd.Cmd):
 
             # Mapping from each event to its annotations, which are stored
             # as an EventData:
-            self.all_annotations.update({
+            self.all_event_data.update({
                 event_ref: EventData.from_builtins_fmt(event_data)
                 for (event_ref, event_data)
                 in file_contents["annotations"].items()})
@@ -1513,7 +1513,7 @@ class AnnotateShell(cmd.Cmd):
             # to an event):
             "format_version": [2, 2],
             "meaning_history": self.meaning_history,
-            "annotations": self.all_annotations,
+            "annotations": self.all_event_data,
             # Order preservation:
             "key_assignments": list(self.key_assignments.items()),
             "bookmarks": self.bookmarks
@@ -1654,7 +1654,7 @@ class AnnotateShell(cmd.Cmd):
             # The real-time loop displays information in a curses window:
             self.curr_event_time = curses.wrapper(
                 real_time_loop, self.curr_event_ref, self.curr_event_time,
-                self.all_annotations[self.curr_event_ref],
+                self.all_event_data[self.curr_event_ref],
                 self.meaning_history,
                 self.key_assignments)
 
@@ -1674,7 +1674,7 @@ class AnnotateShell(cmd.Cmd):
         regular expression (which is searched anywhere in the name).
         """
 
-        if self.all_annotations:
+        if self.all_event_data:
 
             try:
                 matching_name = re.compile(event_regex).search
@@ -1686,9 +1686,9 @@ class AnnotateShell(cmd.Cmd):
             print("Annotated events (sorted alphabetically,"
                   " followed by the number of annotations\n",
                   'and "N+" if there is an attached note):', sep="")
-            for event_ref in sorted(self.all_annotations):
+            for event_ref in sorted(self.all_event_data):
                 if matching_name(event_ref):
-                    event_data = self.all_annotations[event_ref]
+                    event_data = self.all_event_data[event_ref]
                     print("{} {} [{}{}]".format(
                         "*" if event_ref == self.curr_event_ref else "-",
                         event_ref, 
@@ -1748,7 +1748,7 @@ class AnnotateShell(cmd.Cmd):
         self.curr_event_ref = event_ref
 
         # Annotation list for the current event:
-        annotations = self.all_annotations[event_ref]
+        annotations = self.all_event_data[event_ref]
         print("Current event set to {}.".format(event_ref))
         if has_text(annotations.note):
             print("Found an associated note.")
@@ -1781,7 +1781,7 @@ class AnnotateShell(cmd.Cmd):
 
         return [
             event_ref
-            for event_ref in sorted(self.all_annotations)
+            for event_ref in sorted(self.all_event_data)
             if event_ref.startswith(text)]
 
     def do_del_event(self, event_ref):
@@ -1791,18 +1791,18 @@ class AnnotateShell(cmd.Cmd):
         # If the deleted event is the current event, then the current
         # event is reset to None.
 
-        if event_ref not in self.all_annotations:  # DefaultDict handling
+        if event_ref not in self.all_event_data:  # DefaultDict handling
             print('Error: unknown event "{}".'.format(event_ref))
             return
 
-        if self.all_annotations[event_ref] and input(
+        if self.all_event_data[event_ref] and input(
             'Event "{}" has annotations: really delete (y/n)? [n] '
             .format(event_ref)) != "y":
             
             print('Aborting.')
             return
 
-        del self.all_annotations[event_ref]
+        del self.all_event_data[event_ref]
         if self.curr_event_ref == event_ref:
             self.curr_event_ref = None
         print('Event deleted.')
@@ -1827,14 +1827,14 @@ class AnnotateShell(cmd.Cmd):
             return
 
         # Existing events must not be clobbered:
-        if new_name in self.all_annotations:
+        if new_name in self.all_event_data:
             print('Problem: event "{}" exists. You can delete it if needed.'
                   ' Renaming aborted.'.format(new_name))
             return
 
         try:
             # Renaming annotations:
-            self.all_annotations[new_name] = self.all_annotations.pop(
+            self.all_event_data[new_name] = self.all_event_data.pop(
                 current_name)
         except KeyError:
             print('Error: event "{}" not found.'.format(current_name))
@@ -1968,7 +1968,7 @@ class AnnotateShell(cmd.Cmd):
         # closing:
         with tempfile.NamedTemporaryFile("w", delete=False) as note_file:
             # the current note contents must be written to the file:
-            note_file.write(self.all_annotations[event_ref].note)
+            note_file.write(self.all_event_data[event_ref].note)
 
         # !! The list should be extended, for Windows, for instance with
         # "notepad.exe":
@@ -1988,7 +1988,7 @@ class AnnotateShell(cmd.Cmd):
 
         # we get the note:
         with open(note_file.name) as note_file:
-            self.all_annotations[event_ref].note = note_file.read()
+            self.all_event_data[event_ref].note = note_file.read()
 
         print('Notes for event "{}" edited.'.format(event_ref))
 
@@ -2004,9 +2004,9 @@ class AnnotateShell(cmd.Cmd):
         
         Otherwise prints the notes on the given event.
         """
-        print(self.all_annotations[event_ref].note, end="")
+        print(self.all_event_data[event_ref].note, end="")
 
-        # !!!!!!!! rename all_annotations to all_event_data.
+        # !!!!!!!! rename all_event_data to all_event_data.
 
     def complete_print_notes(self, text, line, begidx, endidx):
         """
@@ -2018,7 +2018,7 @@ class AnnotateShell(cmd.Cmd):
             event_ref
             for event_ref in self.complete_set_event(
                 text, line, begidx, endidx)
-            if has_text(self.all_annotations[event_ref].note)]
+            if has_text(self.all_event_data[event_ref].note)]
 
 if __name__ == "__main__":
 
