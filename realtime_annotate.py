@@ -2006,8 +2006,6 @@ class AnnotateShell(cmd.Cmd):
         """
         print(self.all_event_data[event_ref].note, end="")
 
-        # !!!!!!!! rename all_event_data to all_event_data.
-
     def complete_print_notes(self, text, line, begidx, endidx):
         """
         Completion for the print_notes command.
