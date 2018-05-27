@@ -267,7 +267,7 @@ class TerminalNotHighEnough(Exception):
     Raised when the terminal is not high enough for a proper display.
     """
 
-class AnnotationListWithCursor:
+class EventData:
     """
     List of annotations (for a single reference) sorted by timestamp,
     with a live cursor between annotations.
@@ -276,7 +276,7 @@ class AnnotationListWithCursor:
 
     - list_: list of TimestampedAnnotations, sorted by increasing
       timestamps. List-like operations on this list can be performed
-      directly on the AnnotationListWithCursor: len(), subscripting, and
+      directly on the EventData: len(), subscripting, and
       iteration.
 
     - cursor: index between annotations (0 = before the first
@@ -364,7 +364,7 @@ class AnnotationListWithCursor:
 
     def to_builtins_fmt(self):
         """
-        Return a version of the AnnotationListWithCursor that only uses built-in
+        Return a version of the EventData that only uses built-in
         Python types, and which is suitable for lossless serialization
         through json.
 
@@ -430,7 +430,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
     start_time -- starting annotation time (Time object).
 
-    annotations -- AnnotationListWithCursor to be updated.
+    annotations -- EventData to be updated.
 
     meaning_history -- history that contains the text of all the
     possible annotations in curr_event_ref, as a mapping from a user
@@ -777,7 +777,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         timer and synchronizes the scheduler counter with it, along
         with the external player play head time.
 
-        annotations -- AnnotationListWithCursor which is navigated through the
+        annotations -- EventData which is navigated through the
         key. Its cursor must be where key_time would put it with
         cursor_at_time(), i.e.  .prev_annotation().time <= key_time <
         .next_annotation().time.
@@ -1225,7 +1225,7 @@ class AnnotateShell(cmd.Cmd):
         # history:
         self.key_assignments = collections.OrderedDict()
         # Annotations associated to each event reference:
-        self.all_annotations = collections.defaultdict(AnnotationListWithCursor)
+        self.all_annotations = collections.defaultdict(EventData)
         self.bookmarks = {}
 
         if annotations_path.exists():  # Existing annotations
@@ -1259,9 +1259,9 @@ class AnnotateShell(cmd.Cmd):
             self.key_assignments.update(file_contents["key_assignments"])
 
             # Mapping from each event to its annotations, which are stored
-            # as an AnnotationListWithCursor:
+            # as an EventData:
             self.all_annotations.update({
-                event_ref: AnnotationListWithCursor.from_builtins_fmt(
+                event_ref: EventData.from_builtins_fmt(
                     annot_with_cursor)
                 for (event_ref, annot_with_cursor)
                 in file_contents["annotations"].items()})
@@ -1392,7 +1392,7 @@ class AnnotateShell(cmd.Cmd):
             "previous version.\n\n"
             "If no previous version was available, a new file is created.")
 
-    def do_save(self, arg=None):
+    def do_save(self, _):
         """
         Do what help_save() prints.
 
@@ -1421,7 +1421,7 @@ class AnnotateShell(cmd.Cmd):
             """
             if isinstance(obj, Time):
                 return obj.to_HMS()
-            if isinstance(obj, AnnotationListWithCursor):
+            if isinstance(obj, EventData):
                 return obj.to_builtins_fmt()
             # Non-serializable objects would be serialized as None, without
             # the warning below:
@@ -1461,7 +1461,7 @@ class AnnotateShell(cmd.Cmd):
         # written over later:
         self.lock_annotations_path_or_exit()
 
-    def do_exit(self, arg=None):
+    def do_exit(self, arg=_):
         """
         Exit this program and optionally save the annotations.
         """
@@ -1611,7 +1611,7 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("No annotated event found.")
 
-    def do_list_keys(self, arg=None):
+    def do_list_keys(self, _):
         """
         List the key assignments for annotations (loaded by load_keys and
         saved in the annotation file).
@@ -1623,7 +1623,7 @@ class AnnotateShell(cmd.Cmd):
         else:
             print("No defined annotation keys.")
 
-    def do_list_key_history(self, arg=None):
+    def do_list_key_history(self, _):
         """
         List the history of all key assignments found in the annotation
         file (in alphabetical order, irrespective of the case).
@@ -1672,10 +1672,10 @@ class AnnotateShell(cmd.Cmd):
         # "just" before when the user last stopped:
         #
         # !!!! It would be nice to save the timer's time instead of
-        # the cursor. However, an AnnotationListWithCursor does not have the
+        # the cursor. However, an EventData does not have the
         # concept of current time. This means that the current time
         # for each event should be saved and stored separately. This
-        # could be done, instead of storing the AnnotationListWithCursor cursor
+        # could be done, instead of storing the EventData cursor
         # into the annotation file.
         if prev_annotation is not None:
             self.curr_event_time = prev_annotation.time
@@ -1806,7 +1806,7 @@ class AnnotateShell(cmd.Cmd):
             for bkmk_name in sorted(self.bookmarks)
             if bkmk_name.startswith(text)]
 
-    def do_list_bookmarks(self, arg=None):
+    def do_list_bookmarks(self, _):
         """
         List the bookmarks.
         """
@@ -1858,6 +1858,8 @@ class AnnotateShell(cmd.Cmd):
 
     complete_del_bookmark = complete_load_bookmark
 
+    def do_edit_notes(self, _):
+        
 if __name__ == "__main__":
 
     import argparse
