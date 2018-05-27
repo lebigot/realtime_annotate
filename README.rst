@@ -7,13 +7,14 @@ Overview
 
 .. Benefits and description of the program for users, in one sentence:
 
-``realtime_annotate.py`` is a light-weight program that lets users focus
-on listening to a piece of music, watching a video, etc., and **make
-pre-defined annotations very efficiently**. **Time stamps** are automatically
-recorded. The program can also automatically **synchronize an external
-player** (music or video player, etc.) while taking annotations (pause,
-rewind, etc.). A system of **bookmarks** is provided, for keeping a list
-of important locations.
+``realtime_annotate.py`` is a light-weight program that lets users focus on
+listening to a piece of music, watching a video, etc., and **make pre-defined
+annotations very efficiently**. Each annotation has a **time stamp** which is
+automatically recorded. The program can also automatically **synchronize an
+external player** (music or video player, etc.) while taking annotations
+(pause, rewind, navigation between annotation time stemps, etc.). A system of
+**bookmarks** is provided, for keeping a list of important locations. **Notes**
+can also be associated with each event (piece of music, etc.).
 
 .. How are the benefits obtained?
 
@@ -94,6 +95,8 @@ interrupt the annotation process, set a bookmark, and quit the program: the
 bookmark can then be used later for resuming the annotation of the
 music piece.
 
+The **notes** associated with an event are free text. This text is saved
+along with all the rest of the data in the annotations files.
 
 .. Concrete implementation details and features:
 
@@ -237,6 +240,16 @@ progress**" bookmark: ``set_bookmark WIP``. The event and time stamp can then
 later automatically be selected with ``load_bookmark WIP`` and the annotation
 work can resume with ``annotate``.
 
+Managing per-event notes
+========================
+
+The **notes** associated with an event are edited with the ``edit_notes``
+command, which invokes the default editor (as set by the environment
+variable ``$EDITOR``, in Unix/macOS), or another editor if no default
+is set.
+
+They can be printed with the ``print_notes`` command.
+
 .. _below:
 
 Synchronization with an external player
@@ -284,6 +297,11 @@ in 0–9), then the array contains a second element with this value.
 
 Notable updates
 ===============
+
+Version 1.6 (2018-05-28)
+------------------------
+
+A system of per-event notes is now available.
 
 Version 1.5 (2018-05-21)
 ------------------------
