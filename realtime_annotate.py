@@ -42,6 +42,7 @@ import re
 import tempfile
 import subprocess
 import os
+import functools
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
@@ -54,6 +55,16 @@ else:
     # There is no need to complete on "-", for instance (the shell is
     # not a programming shell):
     readline.set_completer_delims(" ")
+
+def has_text(text):
+    """
+    Return False if the text is empty or has only spaces.
+    
+    True is returned otherwise.
+    """
+    # This is faster than "not text.rstrip()" because no new string is
+    # built.
+    return text and not text.isspace()
 
 ## Definition of a file locking function lock_file():
 
@@ -290,7 +301,8 @@ class EventData:
     the two annotations (their timestamp included, since they can have
     the same timestamp).
 
-    - note: string with the note associated with the event.
+    - note: string with the note associated with the event. Trailing whitespace
+    is automatically removed.
     """
     def __init__(self, list_=None, cursor=0, note=""):
         """
@@ -300,7 +312,7 @@ class EventData:
         """
         self.list_ = [] if list_ is None else list_
         self.cursor = cursor
-        self.note = note  # Note associated to the event
+        self.note = note  # Note associated with the event
 
     def __len__(self):
         return len(self.list_)
@@ -1198,6 +1210,34 @@ def to_v2_1_data(file_contents):
 
     file_contents["format_version"] = [2, 1]
 
+def require_event(cmd_func):
+    """
+    Make sure that an event reference is given to function cmd_func.
+
+    If an event reference is given or if otherwise there is a current
+    event, then the function is called normally with this event,
+    otherwise the decorated function prints an error message and returns
+    immediately.
+    
+    An event reference string is considered given if it's not
+    empty, or otherwise if self.curr_event_ref is not None, where
+    self is the first argument to the function.
+
+    cmd_func -- function that takes (self, event_ref), where self
+    has a curr_event_ref (event reference) attribute, and where
+    event_ref is a string with an arbitrary event reference.
+    """
+    functools.wraps(cmd_func)
+    def cmd_func_check_event(self, event_ref):
+        if not event_ref:
+            event_ref = self.curr_event_ref
+            if event_ref is None:
+                print("Error: please first select an",
+                      "event with set_event.")
+                return
+        return cmd_func(self, event_ref)
+    return cmd_func_check_event
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -1644,12 +1684,16 @@ class AnnotateShell(cmd.Cmd):
                 return
 
             print("Annotated events (sorted alphabetically,"
-                  " followed by the number of annotations):")
+                  " followed by the number of annotations\n",
+                  'and "N+" if there is an attached note):', sep="")
             for event_ref in sorted(self.all_annotations):
                 if matching_name(event_ref):
-                    print("{} {} [{}]".format(
+                    event_data = self.all_annotations[event_ref]
+                    print("{} {} [{}{}]".format(
                         "*" if event_ref == self.curr_event_ref else "-",
-                        event_ref, len(self.all_annotations[event_ref])))
+                        event_ref, 
+                        "N+" if has_text(event_data.note) else "",
+                        len(event_data)))
         else:
             print("No annotated event found.")
 
@@ -1706,6 +1750,8 @@ class AnnotateShell(cmd.Cmd):
         # Annotation list for the current event:
         annotations = self.all_annotations[event_ref]
         print("Current event set to {}.".format(event_ref))
+        if has_text(annotations.note):
+            print("Found an associated note.")
         print("{} annotations found.".format(len(annotations)))
 
         prev_annotation = annotations.prev_annotation()
@@ -1904,20 +1950,16 @@ class AnnotateShell(cmd.Cmd):
 
     complete_del_bookmark = complete_load_bookmark
 
-    def do_edit_note(self, event_ref=""):
+    @require_event
+    def do_edit_notes(self, event_ref=""):
         """
-        Edit the note associated with an event.
+        Edit the notes associated with an event.
 
-        If no event is specified, edits the note of the current event, if any.
-        Otherwise edits the note of the given event.
+        If no event is specified, edits the notes on the current event,
+        if any.
+        
+        Otherwise edits the notes on the given event.
         """
-
-        if not event_ref:
-            event_ref = self.curr_event_ref
-            if event_ref is None:
-                print("Error: please first set the current",
-                      "event with set_event.")
-                return
 
         # The note is temporarily put in a file.
         # The temporary file has delete=False just as a precaution for
@@ -1948,7 +1990,35 @@ class AnnotateShell(cmd.Cmd):
         with open(note_file.name) as note_file:
             self.all_annotations[event_ref].note = note_file.read()
 
-        print('Note for event "{}" edited.'.format(event_ref))
+        print('Notes for event "{}" edited.'.format(event_ref))
+
+    complete_edit_notes = complete_set_event
+
+    @require_event
+    def do_print_notes(self, event_ref=""):
+        """
+        Print the notes associated with an event.
+
+        If no event is specified, prints the notes on the current event,
+        if any.
+        
+        Otherwise prints the notes on the given event.
+        """
+        print(self.all_annotations[event_ref].note, end="")
+
+        # !!!!!!!! rename all_annotations to all_event_data.
+
+    def complete_print_notes(self, text, line, begidx, endidx):
+        """
+        Completion for the print_notes command.
+
+        Only returns events with notes (with non-whitespace text).
+        """
+        return [
+            event_ref
+            for event_ref in sorted(self.all_annotations)
+            if event_ref.startswith(text)
+            and has_text(self.all_annotations[event_ref].note)]
 
 if __name__ == "__main__":
 

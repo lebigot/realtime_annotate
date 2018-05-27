@@ -32,7 +32,7 @@ print("""\
 MIDI synthetizer support enabled: make sure that your synthetizer listens
 to MMC messages (in Logic Pro: menu File > Project Settings > Synchronization >
 MIDI > Listen to MMC Input).
-*******************************************************************************
+*******************************************************************************\
 """)
 
 # Play head setting is based on the following frame rate. It should
