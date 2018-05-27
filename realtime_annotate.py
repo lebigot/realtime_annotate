@@ -372,6 +372,8 @@ class EventData:
         del self.list_[self.cursor]
 
     def to_builtins_fmt(self):
+        # !!! This function should be updated anytime the annotation saving
+        # in AnnotateShell.do_save() is updated.
         """
         Return a version of the EventData that only uses built-in
         Python types, and which is suitable for lossless serialization
@@ -383,13 +385,14 @@ class EventData:
         return {
             "cursor": self.cursor,
             "annotation_list": [timed_annotation.to_builtins_fmt()
-                                for timed_annotation in self]
+                                for timed_annotation in self],
+            "note": self.note
         }
 
     @classmethod
     def from_builtins_fmt(cls, event_data):
         # !!! This function should be updated anytime the annotation saving
-        # in Shell.do_save() is updated.
+        # in AnnotateShell.do_save() is updated.
         """
         Reverse of to_builtins_fmt().
 
@@ -1193,6 +1196,8 @@ def to_v2_1_data(file_contents):
         (meaning_key[1], 0)  # Meaning #0 is the current meaning
         for meaning_key in old_key_assignments])
 
+    file_contents["format_version"] = [2, 1]
+
 class AnnotateShell(cmd.Cmd):
     """
     Shell for launching a real-time annotation recording loop.
@@ -1284,9 +1289,8 @@ class AnnotateShell(cmd.Cmd):
             # Mapping from each event to its annotations, which are stored
             # as an EventData:
             self.all_annotations.update({
-                event_ref: EventData.from_builtins_fmt(
-                    annot_with_cursor)
-                for (event_ref, annot_with_cursor)
+                event_ref: EventData.from_builtins_fmt(event_data)
+                for (event_ref, event_data)
                 in file_contents["annotations"].items()})
 
             try:
