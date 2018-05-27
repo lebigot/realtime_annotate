@@ -2016,9 +2016,9 @@ class AnnotateShell(cmd.Cmd):
         """
         return [
             event_ref
-            for event_ref in sorted(self.all_annotations)
-            if event_ref.startswith(text)
-            and has_text(self.all_annotations[event_ref].note)]
+            for event_ref in self.complete_set_event(
+                text, line, begidx, endidx)
+            if has_text(self.all_annotations[event_ref].note)]
 
 if __name__ == "__main__":
 
