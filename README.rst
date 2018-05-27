@@ -275,7 +275,8 @@ structure should be mostly self-explanatory.
 Annotations are found in the ``"annotations"`` JSON entry, separately
 for each event. Each event simply contains its list of annotations
 (``"annotation_list"``), along with the position in the annotation list
-where the user left off (``"cursor"``).
+where the user left off (``"cursor"``), and the note associated with
+the event (``"note"``).
 
 Each annotation is a pair containing a time stamp and the associated
 annotation contents.
