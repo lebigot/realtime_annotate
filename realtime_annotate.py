@@ -1271,7 +1271,7 @@ class AnnotateShell(cmd.Cmd):
 
             if file_contents["format_version"] < [2, 2]:
                 # Format 2.2 introduced event notes:
-                for event_data in file_contents["annotations"]:
+                for event_data in file_contents["annotations"].values():
                     event_data["note"] = ""
 
             # Internal representation of the necessary parts of the
