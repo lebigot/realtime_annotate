@@ -1904,7 +1904,7 @@ class AnnotateShell(cmd.Cmd):
 
     complete_del_bookmark = complete_load_bookmark
 
-    def do_edit_note(self, event_ref=None):
+    def do_edit_note(self, event_ref=""):
         """
         Edit the note associated with an event.
 
@@ -1912,7 +1912,7 @@ class AnnotateShell(cmd.Cmd):
         Otherwise edits the note of the given event.
         """
 
-        if event_ref is None:
+        if not event_ref:
             event_ref = self.curr_event_ref
             if event_ref is None:
                 print("Error: please first set the current",
@@ -1924,7 +1924,7 @@ class AnnotateShell(cmd.Cmd):
         # Windows, where the editor might not be able to open the
         # file if it is still open by this program, so we keep it after
         # closing:
-        with tempfile.NamedTemporaryFile("w", delete=false) as note_file:
+        with tempfile.NamedTemporaryFile("w", delete=False) as note_file:
             # the current note contents must be written to the file:
             note_file.write(self.all_annotations[event_ref].note)
 
@@ -1935,7 +1935,7 @@ class AnnotateShell(cmd.Cmd):
             # displayed), but we handle the case of an editor that cannot
             # be found:
             try:
-                subprocess.run([editor, tmp_file_Name])
+                subprocess.run([editor, note_file.name])
             except FileNotFoundError:
                 pass
             else:
@@ -1948,7 +1948,7 @@ class AnnotateShell(cmd.Cmd):
         with open(note_file.name) as note_file:
             self.all_annotations[event_ref].note = note_file.read()
 
-        print("Note for event {} edited.".format(event_ref))
+        print('Note for event "{}" edited.'.format(event_ref))
 
 if __name__ == "__main__":
 
