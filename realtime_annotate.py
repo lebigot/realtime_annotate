@@ -1180,9 +1180,6 @@ def to_v2_1_data(file_contents):
     """
     Update the contents read from an pre-v2 annotation file by
     converting it to the v2.1 form of the contents.
-
-    The "format_version" entry is not set, though (as the version is
-    known to be the latest version).
     """
 
     # key_assignments is of the form: [ [description_string, key],
