@@ -289,6 +289,9 @@ class EventData:
     - a live insertion cursor between annotations,
     - text notes associated with the event.
 
+    An event is considered true if it contains either annotations or a
+    non-empty note.
+
     Main attributes:
 
     - list_: list of TimestampedAnnotations, sorted by increasing
@@ -322,6 +325,12 @@ class EventData:
         Return the annotations from the given slice.
         """
         return self.list_[slice_]
+
+    def __bool__(self):
+        """
+        Return True iff there are annotations or the note is not empty.
+        """
+        return bool(self.list_) or bool(self.note)
 
     def __iter__(self):
         return iter(self.list_)
@@ -1208,6 +1217,8 @@ def to_v2_1_data(file_contents):
     file_contents["format_version"] = [2, 1]
 
 def require_event(cmd_func):
+    #!!!!!!!! Shouldn't I make sure that the event exists? It looks like
+    # the function using require_event could use it.
     """
     Make sure that an event reference is given to function cmd_func.
 
@@ -1792,7 +1803,7 @@ class AnnotateShell(cmd.Cmd):
     @require_event
     def do_del_event(self, event_ref):
         """
-        Delete the given event.
+        Delete the given event, or the current event if none is given.
         """
         # If the deleted event is the current event, then the current
         # event is reset to None.
@@ -1802,7 +1813,7 @@ class AnnotateShell(cmd.Cmd):
             return
 
         if self.all_event_data[event_ref] and input(
-            'Event "{}" has annotations: really delete (y/n)? [n] '
+            'Event "{}" has annotations or notes: really delete (y/n)? [n] '
             .format(event_ref)) != "y":
             
             print('Aborting.')
