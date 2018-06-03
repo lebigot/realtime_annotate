@@ -1694,7 +1694,7 @@ class AnnotateShell(cmd.Cmd):
             for event_ref in sorted(self.all_event_data):
                 if matching_name(event_ref):
                     event_data = self.all_event_data[event_ref]
-                    print("{} {} [{}{}]".format(
+                    print("{} {} / {}{}".format(
                         "*" if event_ref == self.curr_event_ref else "-",
                         event_ref, 
                         "N+" if has_text(event_data.note) else "",
