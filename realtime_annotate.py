@@ -1978,7 +1978,8 @@ class AnnotateShell(cmd.Cmd):
         If no event is specified, edits the notes on the current event,
         if any.
         
-        Otherwise edits the notes on the given event.
+        Otherwise edits the notes on the given event (after creating it
+        if needed).
         """
 
         # The note is temporarily put in a file.
