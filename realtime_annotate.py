@@ -1340,6 +1340,14 @@ class AnnotateShell(cmd.Cmd):
                 in file_contents["annotations"].items()})
 
             try:
+                # !!!!!!!! The current logic of the file is to
+                # transform the data early to the new format, not
+                # to handle it in many places in the code. I should
+                # RECOVER files from all the existing formats (pre-v2
+                # [done], 2.0, 2.1, 2.2 probably) AND put the format
+                # udpate logic above right after the JSON parsing. USEFUL
+                # question: how to get the history of changes of a single
+                # line?
                 self.bookmarks.update(file_contents["bookmarks"])
             except KeyError:  # Bookmarks introduced in the v2.1 format
                 pass
