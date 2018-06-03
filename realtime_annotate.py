@@ -1224,7 +1224,7 @@ def require_event(cmd_func):
     has a curr_event_ref (event reference) attribute, and where
     event_ref is a string with an arbitrary event reference.
     """
-    functools.wraps(cmd_func)
+    @functools.wraps(cmd_func)
     def cmd_func_check_event(self, event_ref):
         if not event_ref:
             event_ref = self.curr_event_ref
