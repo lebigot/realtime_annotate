@@ -1789,6 +1789,7 @@ class AnnotateShell(cmd.Cmd):
             for event_ref in sorted(self.all_event_data)
             if event_ref.startswith(text)]
 
+    @require_event
     def do_del_event(self, event_ref):
         """
         Delete the given event.
