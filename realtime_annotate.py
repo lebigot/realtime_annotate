@@ -1218,7 +1218,10 @@ def to_v2_1_data(file_contents):
 
 def require_event(cmd_func):
     #!!!!!!!! Shouldn't I make sure that the event exists? It looks like
-    # the function using require_event could use it.
+    # the function using require_event could use it. I SHOULD clarify
+    # the function of this routine: make sure an event is produced
+    # in some way OR require an existing event? edit_notes can usefully
+    # use a new event, WHICH must be documented.
     """
     Make sure that an event reference is given to function cmd_func.
 
