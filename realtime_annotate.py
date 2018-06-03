@@ -1243,7 +1243,7 @@ def require_event(cmd_func):
         if not event_ref:
             event_ref = self.curr_event_ref
             if event_ref is None:
-                print("Error: please first select an",
+                print("Error: please specify an event or first select an",
                       "event with set_event.")
                 return
         return cmd_func(self, event_ref)
