@@ -2025,6 +2025,8 @@ class AnnotateShell(cmd.Cmd):
         
         Otherwise prints the notes on the given event.
         """
+        # !!!!!!!!! There should be a message if the notes are empty.
+        # Maybe we should require an existing event here?
         print(self.all_event_data[event_ref].note, end="")
 
     def complete_print_notes(self, text, line, begidx, endidx):
