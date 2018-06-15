@@ -60,7 +60,7 @@ def has_text(text):
     """
     Return False if the text is empty or has only spaces.
     
-    True is returned otherwise.
+    A true value is returned otherwise.
     """
     # This is faster than "not text.rstrip()" because no new string is
     # built.
