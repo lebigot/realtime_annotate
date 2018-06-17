@@ -275,6 +275,8 @@ A simple way of manipulating annotation files is to use the exposed
 ``Annotations`` class, which can both read and write annotation files (see its
 documentation, for instance with ``pydoc realtime_annotate.Annotations``).
 
+This can be useful for handling annotations with another program.
+
 JSON format
 -----------
 
@@ -323,6 +325,12 @@ as everywhere else in the JSON annotation file).
 
 Notable updates
 ===============
+
+Version 1.6.1 (2018-06-17)
+--------------------------
+
+Annotation files can now be read and written with the help of a new
+``Annotations`` class.
 
 Version 1.6 (2018-05-28)
 ------------------------
