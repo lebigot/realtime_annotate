@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+!/usr/bin/env python3
 
 # Some comments are prefixed by a number of "!" marks: they indicate
 # some notable comments (more exclamation marks indicate more
@@ -1249,7 +1249,7 @@ def require_event(cmd_func):
         return cmd_func(self, event_ref)
     return cmd_func_check_event
 
-class AnnotationFile:
+class Annotations:
     """
     Internal representation of an annotation file.
 
@@ -1352,7 +1352,7 @@ class AnnotationFile:
                 location[1] = Time.from_HMS(location[1])
 
 
-class AnnotateShell(cmd.Cmd, AnnotationFile):
+class AnnotateShell(cmd.Cmd, Annotations):
     """
     Shell for launching a real-time annotation recording loop.
 
@@ -1406,13 +1406,13 @@ class AnnotateShell(cmd.Cmd, AnnotationFile):
             # user.
             self.lock_annotations_path_or_exit()
             
-            AnnotationFile.__init__(self, annotations_path)
+            Annotations.__init__(self, annotations_path)
             self.do_list_events()
             print()
             self.do_list_bookmarks()
 
         else:  # A new file must to be created
-            AnnotationFile.__init__(self)
+            Annotations.__init__(self)
             # !!!!!!!! A better name would be save_and_lock(), as it
             # does lock too:
             self.do_save()
