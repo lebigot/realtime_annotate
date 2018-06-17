@@ -1271,7 +1271,9 @@ class Annotations:
 
     def __init__(self, annotations_path=None):
         """
-        Create annotations or read them from a file.
+        Create annotations or read them from a (JSON) file.
+
+        All versions of the file are supported.
 
         annotations_path -- pathlib.Path to a valid JSON annotation file,
         or None (in which case empty annotations are created).
@@ -1351,6 +1353,65 @@ class Annotations:
                 # location = [event reference, time]:
                 location[1] = Time.from_HMS(location[1])
 
+    def save(self, path):
+        """
+        Save the annotations to the given path.
+
+        If a file already exists at the given path, it is backed up
+        first, and the name of the backup file is returned.
+        """
+
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        annotations_file = tempfile.NamedTemporaryFile('w', delete=False)
+
+        # The internal, more convenient data structure (with
+        # TimestampedAnnotation objects, etc.), is converted into
+        # a simple structure for the JSON output.
+
+        def encode(obj):
+            """
+            Encode obj into a JSON-encodable object.
+
+            obj -- object that can't be serialized by the json module.
+            """
+            if isinstance(obj, Time):
+                return obj.to_HMS()
+            if isinstance(obj, EventData):
+                return obj.to_builtins_fmt()
+            # Non-serializable objects would be serialized as None, without
+            # the warning below:
+            sys.exit("Internal error: serialization of {} required."
+                     .format(type(obj)))
+
+        json.dump({
+            # !!! The version must be bumped each time more data is
+            # added to what is saved, in particular (e.g. addition of a note
+            # to an event):
+            "format_version": [2, 2],
+            "meaning_history": self.meaning_history,
+            "annotations": self.all_event_data,
+            # Order preservation:
+            "key_assignments": list(self.key_assignments.items()),
+            "bookmarks": self.bookmarks
+            },
+            annotations_file,
+            default=encode, indent=2)
+
+        annotations_file.close()
+
+        if path.exists():
+            # The old annotations are backed up:
+            backup_path = path.with_suffix(".json.bak")
+            path.rename(backup_path)
+        else:
+            backup_path = None
+
+        # The new annotations file is moved in place:
+        shutil.move(annotations_file.name, path)
+
+        return backup_path
 
 class AnnotateShell(cmd.Cmd, Annotations):
     """
@@ -1531,54 +1592,12 @@ class AnnotateShell(cmd.Cmd, Annotations):
         # current annotation file and then overwriting it, as this
         # could yield a corrupt annotation file.
 
-        annotations_file = tempfile.NamedTemporaryFile('w', delete=False)
+        backup_path = self.save(self.annotations_path)  # Annotations method
 
-        # The internal, more convenient data structure (with
-        # TimestampedAnnotation objects, etc.), is converted into
-        # a simple structure for the JSON output.
-
-        def encode(obj):
-            """
-            Encode obj into a JSON-encodable object.
-
-            obj -- object that can't be serialized by the json module.
-            """
-            if isinstance(obj, Time):
-                return obj.to_HMS()
-            if isinstance(obj, EventData):
-                return obj.to_builtins_fmt()
-            # Non-serializable objects would be serialized as None, without
-            # the warning below:
-            sys.exit("Internal error: serialization of {} required."
-                     .format(type(obj)))
-
-        json.dump({
-            # !!! The version must be bumped each time more data is
-            # added to what is saved, in particular (e.g. addition of a note
-            # to an event):
-            "format_version": [2, 2],
-            "meaning_history": self.meaning_history,
-            "annotations": self.all_event_data,
-            # Order preservation:
-            "key_assignments": list(self.key_assignments.items()),
-            "bookmarks": self.bookmarks
-            },
-            annotations_file,
-            default=encode, indent=2)
-
-        annotations_file.close()
-
-        if self.annotations_path.exists():
-            # The old annotations are backed up:
-            backup_path = self.annotations_path.with_suffix(".json.bak")
-            self.annotations_path.rename(backup_path)
-            print("Previous annotations moved to {}.".format(backup_path))
-        else:
-            # A new file must be created:
+        if backup_path is None:
             print("New annotation file created.")
-
-        # The new annotations file is moved in place:
-        shutil.move(annotations_file.name, self.annotations_path)
+        else:
+            print("Previous annotations moved to {}.".format(backup_path))
 
         print("Annotations (and key assignments) saved to {}."
               .format(self.annotations_path))
