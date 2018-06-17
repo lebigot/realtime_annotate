@@ -111,14 +111,14 @@ completion** of commands and arguments, through the tabulation key.
 Platforms and installation
 ==========================
 
-The program runs directly with Python 3.4+. It currently runs on Unix
-(including macOS).
+The main (and only required) program is `realtime_annotate.py`. It runs
+directly with Python 3.4+. It currently runs on Unix (including macOS).
 
 Downloading `realtime_annotate.py <realtime_annotate.py>`_ is
 sufficient for installing this program. It only uses standard modules
 (of Python 3.4+)—they are generally installed along with Python.
 
-Two example files are provided:
+Three example files are provided:
 
 - a key assignment configuration: `music_annotations.txt
   <music_annotations.txt>`_,
@@ -126,6 +126,10 @@ Two example files are provided:
 - an optional external player that synchronizes MIDI players
   with the annotation timer: `midi_player.py <midi_player.py>`_.
 
+- a Python 3.6+ program that gives an example of manipulation of the
+  annotations file (it doubles the interval between the time stamps of a given
+  event and an offset time stamp): `double_timestamps.py
+  <double_timestamps.py>`_.
 
 Usage
 =====

@@ -183,7 +183,7 @@ class Time(datetime.timedelta):
         """
         Subtraction.
 
-        Returns a Time object.
+        Returns an object of the same class (as self).
 
         other -- datetime.timedelta.
         """
@@ -194,6 +194,10 @@ class Time(datetime.timedelta):
 
     def __add__(self, other):
         """
+        Addition.
+
+        Return an object of the same class (as self).
+
         other -- object to which a datetime.timedelta can be added.
         """
         # ! A datetime.timedelta apparently does not return an element
