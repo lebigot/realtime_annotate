@@ -305,7 +305,12 @@ If the annotation has an *attached numerical value* (number in 0–9), then the
 array contains a second element with this value.
 
 The key assignments currently defined by the user are stored in the
-``"key_assignments"`` JSON entry), as pairs (key, index in the meaning history).
+``"key_assignments"`` JSON entry, as pairs (key, index in the meaning history).
+
+Finally, a ``"bookmarks"`` entry contains bookmarks. The name of each bookmark
+is its key, while the location of the bookmark is stored as a list containing
+first the event name, then a time stamp triplet (with the same convention
+as everywhere else in the JSON annotation file).
 
 Notable updates
 ===============
