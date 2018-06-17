@@ -132,7 +132,9 @@ class Time(datetime.timedelta):
     # be done with datetime.time objects (which cannot be added to a
     # timedelta).
     """
-    Timestamp compatible with a datetime.timedelta.
+    Timestamps that can be added and subtracted.
+    
+    They are also compatible with datetime.timedelta objects.
     """
 
     def to_HMS(self):
@@ -168,6 +170,8 @@ class Time(datetime.timedelta):
         """
         return "{:02}:{:02}:{:04.1f}".format(*self.to_HMS())
 
+    __repr__ = __str__
+
     def __sub__(self, other):
         """
         Subtraction.
@@ -176,6 +180,9 @@ class Time(datetime.timedelta):
 
         other -- datetime.timedelta.
         """
+        # ! We do not rely on __sub__() from datetime.timedelta because
+        # it forces the result to be a datetime.timedelta (where we
+        # want a Time object):
         return self + (-other)
 
     def __add__(self, other):
@@ -186,7 +193,7 @@ class Time(datetime.timedelta):
         # of the type of self, so this is done manually here:
         new_time = other+self  # The order is important!
         # ! The class of the object cannot be changed, because it is a
-        # built-in type:
+        # built-in type, so we build a new object:
         return Time(new_time.days, new_time.seconds, new_time.microseconds)
 
 
