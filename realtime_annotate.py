@@ -1,4 +1,4 @@
-!/usr/bin/env python3
+#!/usr/bin/env python3
 
 # Some comments are prefixed by a number of "!" marks: they indicate
 # some notable comments (more exclamation marks indicate more
@@ -394,7 +394,7 @@ class EventData:
 
     def to_builtins_fmt(self):
         # !!! This function should be updated anytime the annotation saving
-        # in AnnotateShell.do_save() is updated.
+        # in Annotations.save() is updated.
         """
         Return a version of the EventData that only uses built-in
         Python types, and which is suitable for lossless serialization
@@ -413,7 +413,7 @@ class EventData:
     @classmethod
     def from_builtins_fmt(cls, event_data):
         # !!! This function should be updated anytime the annotation saving
-        # in AnnotateShell.do_save() is updated.
+        # in Annotations.save() is updated.
         """
         Reverse of to_builtins_fmt().
 
@@ -1413,9 +1413,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
 
         else:  # A new file must to be created
             Annotations.__init__(self)
-            # !!!!!!!! A better name would be save_and_lock(), as it
-            # does lock too:
-            self.do_save()
+            self.save_and_lock()
 
         print()
 
@@ -1428,7 +1426,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
             print()
             if input("Do you want to save the annotations and key"
                      " assignments (y/n)? [y] ") != "n":
-                self.do_save()
+                self.save_and_lock()
         atexit.register(save_if_needed)
 
     def cmdloop_no_interrupt(self):
@@ -1515,14 +1513,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
     def emptyline(self):
         pass  # No repetition of the last command
 
-    def help_save(self):
-        """User documentation for the "save" command."""
-        print(
-            "Save the current annotations to file after making a copy of any\n"
-            "previous version.\n\n"
-            "If no previous version was available, a new file is created.")
-
-    def do_save(self, _=None):
+    def save_and_lock(self, _=None):
         # !!! This function must be updated each time the internal data
         # changes in a way that can be reflected in the saved data (e.g.
         # when adding some new data to an event).
@@ -1596,6 +1587,15 @@ class AnnotateShell(cmd.Cmd, Annotations):
         # gets a lock on the new annotations file, because it will typically be
         # written over later:
         self.lock_annotations_path_or_exit()
+
+    def help_save(self):
+        """User documentation for the "save" command."""
+        print(
+            "Save the current annotations to file after making a copy of any\n"
+            "previous version.\n\n"
+            "If no previous version was available, a new file is created.")
+
+    do_save = save_and_lock
 
     def do_exit(self, _=None):
         """
