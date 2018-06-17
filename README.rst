@@ -268,18 +268,26 @@ a player controller module.
 
 .. _simple format:
 
-Annotation file format
-======================
+Manipulating annotation files
+=============================
 
-The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
-structure should be mostly self-explanatory.
+A simple way of manipulating annotation files is to use the exposed
+``Annotations`` class, which can both read and write annotation files (see its
+documentation, for instance with ``pydoc realtime_annotate.Annotations``).
 
-A key characteristics of the annotations is that a given keyboard key can
-*change meaning* (when the user decides to change it). Thus, each annotation
-contents is stored as a pair (key, index in the history of meanings), with the
-index starting at zero for the first meaning (this pair is followed by an
-optional annotation value). The history of annotation meanings is stored under
-the ``"meaning_history"`` key.
+JSON format
+-----------
+
+Alternatively, the annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
+structure can be parsed with other tools. Its structure should be mostly
+self-explanatory.
+
+A key characteristics of the annotations saved in a file is that a given
+keyboard key can *change meaning* (when the user decides to change it). Thus,
+each annotation contents is stored as a pair (key, index in the history of
+meanings), with the index starting at zero for the first meaning (this pair is
+followed by an optional annotation value). The history of annotation meanings
+is stored under the ``"meaning_history"`` key.
 
 Annotations are found in the ``"annotations"`` JSON entry, separately for each
 event. Each event simply contains its list of annotations
@@ -311,6 +319,7 @@ Finally, a ``"bookmarks"`` entry contains bookmarks. The name of each bookmark
 is its key, while the location of the bookmark is stored as a list containing
 first the event name, then a time stamp triplet (with the same convention
 as everywhere else in the JSON annotation file).
+
 
 Notable updates
 ===============

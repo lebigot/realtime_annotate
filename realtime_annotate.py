@@ -1275,9 +1275,11 @@ class Annotations:
 
         All versions of the file are supported.
 
-        annotations_path -- pathlib.Path to a valid JSON annotation file,
+        annotations_path --  path to a valid JSON annotation file,
         or None (in which case empty annotations are created).
         """
+
+        annotations_path = pathlib.Path(annotations_path)
 
         # Some attributes are defined and then possibly updated: this allows
         # the type or value of these attributes to be automatically correct
