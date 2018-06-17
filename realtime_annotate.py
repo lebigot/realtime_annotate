@@ -1249,23 +1249,124 @@ def require_event(cmd_func):
         return cmd_func(self, event_ref)
     return cmd_func_check_event
 
-class AnnotateShell(cmd.Cmd):
+class AnnotationFile:
     """
-    Shell for launching a real-time annotation recording loop.
+    Internal representation of an annotation file.
 
-    Important attributes:
-
-    - annoations_path: path to the annotations file that this shell
-    manipulates.
+    Attributes:
 
     - curr_event_ref: reference (name) of the currently selected
     event, or None if no event has been selected yet. This event always
     exists in all_event_data. 
     
-    - key_assignments: mapping of each keyboard key to the index of its meaning
-    in the key meanings history.
+    - key_assignments: ordered mapping of each keyboard key to the index of its
+      meaning in the key meanings history.
 
-    - all_event_data: mapping from each event reference to its EventData.
+    - meaning_history: mapping from keyboard keys to the historical list
+    of associated meanings.
+
+    - all_event_data: collections.defaultdict from each event reference to its
+      EventData. 
+    """
+
+    def __init__(self, annotations_path=None):
+        """
+        Create annotations or read them from a file.
+
+        annotations_path -- pathlib.Path to a valid JSON annotation file,
+        or None (in which case empty annotations are created).
+        """
+
+        # Some attributes are defined and then possibly updated: this allows
+        # the type or value of these attributes to be automatically correct
+        # whether the attributes are read from an existing annotations file or
+        # created (as empty data with a specific type) from a new annotation
+        # file.
+
+        self.key_assignments = collections.OrderedDict()
+        self.all_event_data = collections.defaultdict(EventData)
+        self.bookmarks = {}
+
+        if annotations_path is None:
+            self.meaning_history = {}  # No key meanings
+            return
+
+        # Case of an existing annotations file:
+        with annotations_path.open() as annotations_file:
+            # Using object_hook in order to immediately transform JSON
+            # structures into the internal data format would not be robust:
+            # this could break when the file format gets updated, because
+            # the transformations are generally format-specific.
+            file_contents = json.load(annotations_file)
+
+        ## Format update. The update is done at (parsed) JSON level so
+        ## as to not handle format updates in many places in the code
+        ## (e.g., the data associated to an event could handle a missing
+        ## event note from a format before 2.2, etc.). Also, in the longer
+        ## term, older formats could be made obsolete, and only the
+        ## format update here could be removed from the code:
+
+        # If we have a file in the pre-v2 format, it is converted
+        # to the current version of the JSON data:
+        if "format_version" not in file_contents:
+            to_v2_1_data(file_contents)
+
+        if file_contents["format_version"] < [2, 2]:
+            # Format 2.2 introduced event notes:
+            for event_data in file_contents["annotations"].values():
+                event_data["note"] = ""
+
+        # Internal representation of the necessary parts of the
+        # file contents:
+
+        self.meaning_history = file_contents["meaning_history"]
+
+        self.key_assignments.update(file_contents["key_assignments"])
+
+        # Mapping from each event to its annotations, which are stored
+        # as an EventData:
+        self.all_event_data.update({
+            event_ref: EventData.from_builtins_fmt(event_data)
+            for (event_ref, event_data)
+            in file_contents["annotations"].items()})
+
+        try:
+            # !!!!!!!! The current logic of the file is to
+            # transform the data early to the new format, not
+            # to handle it in many places in the code. I should
+            # RECOVER files from all the existing formats (pre-v2
+            # [done], 2.0, 2.1, 2.2 probably) AND put the format
+            # udpate logic above right after the JSON parsing. USEFUL
+            # question: how to get in git the history of changes of a single
+            # line so that I can see when I changed the format and
+            # can reproduce test files for each previous version?
+            # There are probably not too many users of this program
+            # to warrant such a procedure, though.
+            self.bookmarks.update(file_contents["bookmarks"])
+        except KeyError:  # Bookmarks introduced in the v2.1 format
+            pass
+        else:
+            # Conversion of times to the internal format:
+            for location in self.bookmarks.values():
+                # location = [event reference, time]:
+                location[1] = Time.from_HMS(location[1])
+
+
+class AnnotateShell(cmd.Cmd, AnnotationFile):
+    """
+    Shell for launching a real-time annotation recording loop.
+
+    The annotation shell is considered to be an annotation file that
+    can be interacted with (through an interactive shell), hence the
+    inheritance.
+
+    Important attribute specific to this class:
+
+    annotations_path -- pathlib.Path to the file with the annotations that
+    is interacted with in the shell.
+
+    curr_event_ref -- reference of the event currently selected (or None
+    if no event is currently selected).
     """
     # IMPORTANT: do_*() and complete_*() methods are called
     # automatically through cmd.Cmd.
@@ -1288,24 +1389,14 @@ class AnnotateShell(cmd.Cmd):
 
         print()
 
-        super().__init__()
-
-        self.annotations_path = annotations_path
+        cmd.Cmd.__init__(self)
 
         self.curr_event_ref = None
 
-        # Some attributes are defined and then possibly updated: this allows
-        # the type or value of these attributes to be automatically correct
-        # whether the attributes are read from an existing annotations file or
-        # created (as empty data with a specific type) from a new annotation
-        # file.
-
-        self.key_assignments = collections.OrderedDict()
-        self.all_event_data = collections.defaultdict(EventData)
-        self.bookmarks = {}
+        self.annotations_path = annotations_path
 
         if annotations_path.exists():  # Existing annotations
-
+            
             # A lock is acquired before any change is made to the in-memory
             # annotation data, so that subsequent writes of the data to disk are
             # not replaced by the annotations from another instance of this
@@ -1315,71 +1406,15 @@ class AnnotateShell(cmd.Cmd):
             # user.
             self.lock_annotations_path_or_exit()
             
-            with annotations_path.open() as annotations_file:
-                # Using object_hook in order to immediately transform JSON
-                # structures into the internal data format would not be robust:
-                # this could break when the file format gets updated, because
-                # the transformations are generally format-specific.
-                file_contents = json.load(annotations_file)
-
-            ## Format update. The update is done at (parsed) JSON level so
-            ## as to not handle format updates in many places in the code
-            ## (e.g., the data associated to an event could handle a missing
-            ## event note from a format before 2.2, etc.). Also, in the longer
-            ## term, older formats could be made obsolete, and only the
-            ## format update here could be removed from the code:
-
-            # If we have a file in the pre-v2 format, it is converted
-            # to the current version of the JSON data:
-            if "format_version" not in file_contents:
-                to_v2_1_data(file_contents)
-
-            if file_contents["format_version"] < [2, 2]:
-                # Format 2.2 introduced event notes:
-                for event_data in file_contents["annotations"].values():
-                    event_data["note"] = ""
-
-            # Internal representation of the necessary parts of the
-            # file contents:
-
-            self.meaning_history = file_contents["meaning_history"]
-
-            self.key_assignments.update(file_contents["key_assignments"])
-
-            # Mapping from each event to its annotations, which are stored
-            # as an EventData:
-            self.all_event_data.update({
-                event_ref: EventData.from_builtins_fmt(event_data)
-                for (event_ref, event_data)
-                in file_contents["annotations"].items()})
-
-            try:
-                # !!!!!!!! The current logic of the file is to
-                # transform the data early to the new format, not
-                # to handle it in many places in the code. I should
-                # RECOVER files from all the existing formats (pre-v2
-                # [done], 2.0, 2.1, 2.2 probably) AND put the format
-                # udpate logic above right after the JSON parsing. USEFUL
-                # question: how to get the history of changes of a single
-                # line?
-                self.bookmarks.update(file_contents["bookmarks"])
-            except KeyError:  # Bookmarks introduced in the v2.1 format
-                pass
-            else:
-                # Conversion of times to the internal format:
-                for location in self.bookmarks.values():
-                    # location = [event reference, time]:
-                    location[1] = Time.from_HMS(location[1])
-
+            AnnotationFile.__init__(self, annotations_path)
             self.do_list_events()
             print()
             self.do_list_bookmarks()
 
         else:  # A new file must to be created
-            self.meaning_history = {}  # No key meanings
-            # It is useful to lock the annotation file, or two instances
-            # of this program could run on the same new path and later
-            # clobber it:
+            AnnotationFile.__init__(self)
+            # !!!!!!!! A better name would be save_and_lock(), as it
+            # does lock too:
             self.do_save()
 
         print()
