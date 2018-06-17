@@ -238,7 +238,9 @@ If the annotation workflow has to be interrupted for a longer period of time,
 it can be useful to store the current event and time stamp in a "**work in
 progress**" bookmark: ``set_bookmark WIP``. The event and time stamp can then
 later automatically be selected with ``load_bookmark WIP`` and the annotation
-work can resume with ``annotate``.
+work can resume with ``annotate``. This bookmarking system is general and
+**multiple bookmarks** (with a more general name than ``WIP``) can be stored,
+loaded and deleted after use.
 
 Managing per-event notes
 ========================
