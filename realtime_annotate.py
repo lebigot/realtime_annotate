@@ -164,6 +164,13 @@ class Time(datetime.timedelta):
         """
         return cls(**dict(zip(("hours", "minutes", "seconds"), HMS)))
 
+    @classmethod
+    def from_timedelta(cls, timedelta):
+        """
+        Return a object of this class from a datetime.timedelta object.
+        """
+        return cls(timedelta.days, timedelta.seconds, timedelta.microseconds)
+
     def __str__(self):
         """
         ...HH:MM:SS.d format.
@@ -187,14 +194,14 @@ class Time(datetime.timedelta):
 
     def __add__(self, other):
         """
-        other -- object that can be added to a datetime.timedelta.
+        other -- object to which a datetime.timedelta can be added.
         """
         # ! A datetime.timedelta apparently does not return an element
         # of the type of self, so this is done manually here:
         new_time = other+self  # The order is important!
         # ! The class of the object cannot be changed, because it is a
         # built-in type, so we build a new object:
-        return Time(new_time.days, new_time.seconds, new_time.microseconds)
+        return self.from_timedelta(new_time)
 
 
 class TimestampedAnnotation:
