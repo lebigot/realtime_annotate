@@ -274,11 +274,18 @@ Annotation file format
 The annotation file `JSON <http://en.wikipedia.org/wiki/Json>`_
 structure should be mostly self-explanatory.
 
-Annotations are found in the ``"annotations"`` JSON entry, separately
-for each event. Each event simply contains its list of annotations
-(``"annotation_list"``), along with the position in the annotation list
-where the user left off (``"cursor"``), and the note associated with
-the event (``"note"``).
+A key characteristics of the annotations is that a given keyboard key can
+*change meaning* (when the user decides to change it). Thus, each annotation
+contents is stored as a pair (key, index in the history of meanings), with the
+index starting at zero for the first meaning (this pair is followed by an
+optional annotation value). The history of annotation meanings is stored under
+the ``"meaning_history"`` key.
+
+Annotations are found in the ``"annotations"`` JSON entry, separately for each
+event. Each event simply contains its list of annotations
+(``"annotation_list"``), along with the position in the annotation list where
+the user left off (``"cursor"``, which is an index in the annotation list), and
+the note associated with the event (``"note"``).
 
 Each annotation is a pair containing a time stamp and the associated
 annotation contents.
@@ -291,12 +298,14 @@ for annotations made before time 0; the formula for converting a time
 stamp to a number remains valid: -1:59:0 means -1 hour + 59 minutes =
 -1 minute.
 
-Each **annotation contents** is stored as an array. This array first
-contains the *annotation key* and its index in the history of key
-assignments (e.g. ``["i", 2]``, which points to "interesting moment"
-in the history, which is stored in the ``"key_assignments"`` JSON
-entry).  If the annotation has an *attached numerical value* (number
-in 0–9), then the array contains a second element with this value.
+Each **annotation contents** is stored as an array. This array first contains
+the *annotation key* and its index in the history of key assignments (e.g.
+``["i", 2]``), where the history is stored under the ``"meaning_history"`` key.
+If the annotation has an *attached numerical value* (number in 0–9), then the
+array contains a second element with this value.
+
+The key assignments currently defined by the user are stored in the
+``"key_assignments"`` JSON entry), as pairs (key, index in the meaning history).
 
 Notable updates
 ===============
