@@ -111,10 +111,10 @@ completion** of commands and arguments, through the tabulation key.
 Platforms and installation
 ==========================
 
-The main (and only required) program is realtime_annotate.py. It runs
+The **main (and only required) program** is **realtime_annotate.py**. It runs
 directly with Python 3.4+. It currently runs on Unix (including macOS).
 
-**Downloading `realtime_annotate.py <realtime_annotate.py>`_ is sufficient**
+Downloading `realtime_annotate.py <realtime_annotate.py>`_ is sufficient
 for using it. It only uses standard modules (of Python 3.4+)—they are generally
 installed along with Python.
 
