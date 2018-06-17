@@ -120,16 +120,16 @@ installed along with Python.
 
 Three optional example files are provided:
 
-- an example key assignment configuration file: `music_annotations.txt
+- an example **key assignment configuration file**: `music_annotations.txt
   <music_annotations.txt>`_,
 
-- an optional external player that synchronizes MIDI players
-  with the annotation timer: `midi_player.py <midi_player.py>`_.
+- an optional external player that **synchronizes MIDI players
+  with the annotation timer**: `midi_player.py <midi_player.py>`_.
 
-- a Python 3.6+ program that gives an example of manipulation of an annotations
-  file (it doubles the interval between the time stamps of a given event and an
-  offset time stamp, which can for instance be used if the tempo of a music
-  piece is adjusted after taking time stamped annotations):
+- a Python 3.6+ program that gives an example of **manipulation of an
+  annotation file** (it doubles the interval between the time stamps of a given
+  event and an offset time stamp, which can for instance be used if the tempo
+  of a music piece is adjusted after taking time stamped annotations):
   `double_timestamps.py <double_timestamps.py>`_.
 
 Usage
