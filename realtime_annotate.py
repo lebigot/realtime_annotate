@@ -177,7 +177,11 @@ class Time(datetime.timedelta):
         """
         return "{:02}:{:02}:{:04.1f}".format(*self.to_HMS())
 
-    __repr__ = __str__
+    def __repr__(self):
+        """
+        ...HH:MM:S format.
+        """
+        return "{:02}:{:02}:{}".format(*self.to_HMS())
 
     def __sub__(self, other):
         """
@@ -318,9 +322,9 @@ class EventData:
       iteration.
 
     - cursor: index between annotations (0 = before the first
-    annotation, positive). The cursor corresponds to a time between
-    the two annotations (their timestamp included, since they can have
-    the same timestamp).
+      annotation, positive). The cursor corresponds to a time between
+      the two annotations (their timestamp included, since they can have
+      the same timestamp).
 
     - note: string with the note associated with the event. Trailing whitespace
     is automatically removed.
@@ -1283,7 +1287,7 @@ class Annotations:
     - meaning_history: mapping from keyboard keys to the historical list
     of associated meanings.
 
-    - all_event_data: collections.defaultdict from each event reference to its
+    - all_event_data: collections.defaultdict mapping from each event reference to its
       EventData. 
     """
 
