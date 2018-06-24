@@ -202,11 +202,13 @@ class Time(datetime.timedelta):
 
         Return an object of the same class (as self).
 
-        other -- object to which a datetime.timedelta can be added.  """
+        other -- object to which a datetime.timedelta can be added.
+        """
 
+        new_time = super().__add__(other)
         # ! A datetime.timedelta apparently does not return an element of the
         # type of self when adding to it, so this is done manually here:
-        new_time = datetime.timedelta.__add__(self, other)
+        #
         # ! The class of the object cannot be changed, because it is a built-in
         # or extension type, so we build a new object:
         return self.from_timedelta(new_time)
