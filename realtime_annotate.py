@@ -1658,10 +1658,13 @@ class AnnotateShell(cmd.Cmd, Annotations):
         """
         Set the current annotation timer to the given time.
 
+        The time must be given in the S, M:S or H:M:S format (S = seconds,
+        M = minutes, H = hours).
+
+        If no time is given, prints the current timer.
+
         If a player is used, then the timer is also set in the player,
         which typically sets the play head location.
-
-        time_ -- time string in S, M:S or H:M:S format.
         """
 
         try:
@@ -1829,7 +1832,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
         The current list of references can be obtained with
         list_events.
 
-        If no reference is given, the currently selected event is listed.
+        If no reference is given, the currently selected event is printed.
 
         The next annotations will be attached to this event.
         """
