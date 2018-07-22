@@ -160,7 +160,8 @@ class Time(datetime.timedelta):
         """
         Return an instance from a simple (hour, minute, seconds) sequence.
 
-        HMS -- (hour, minutes, seconds) sequence.
+        HMS -- (hour, minutes, seconds) iterable, with possibly missing
+        last elements.
         """
         return cls(**dict(zip(("hours", "minutes", "seconds"), HMS)))
 
@@ -1661,11 +1662,15 @@ class AnnotateShell(cmd.Cmd, Annotations):
         The time must be given in the S, M:S or H:M:S format (S = seconds,
         M = minutes, H = hours).
 
-        If no time is given, prints the current timer.
+        If no time is given, prints information about the current event.
 
         If a player is used, then the timer is also set in the player,
         which typically sets the play head location.
         """
+
+        if not time_:
+            self.do_set_event()
+            return
 
         try:
             # No need to have the program crash and exit for a small error:
@@ -1673,7 +1678,9 @@ class AnnotateShell(cmd.Cmd, Annotations):
         except ValueError:
             print("Incorrect time format. Use M:S or H:M:S.")
         else:
-            self.curr_event_time = Time.from_HMS(time_parts)
+            self.curr_event_time = Time.from_HMS(
+                # We add leading zero values if needed:
+                [0]*(3-len(time_parts))+time_parts)
 
             print("Annotation timer set to {}.".format(self.curr_event_time))
 
@@ -1832,7 +1839,8 @@ class AnnotateShell(cmd.Cmd, Annotations):
         The current list of references can be obtained with
         list_events.
 
-        If no reference is given, the currently selected event is printed.
+        If no reference is given, information about the currently selected
+        event is printed.
 
         The next annotations will be attached to this event.
         """
