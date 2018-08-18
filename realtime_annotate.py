@@ -824,7 +824,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         Beeps are emitted for impossible operations (like going to the
         previous annotation when there is none).
 
-        key -- KEY_RIGHT, KEY_LEFT or KEY_DOWN. KEY_RIGHT goes to the
+        key -- "KEY_RIGHT", "KEY_LEFT" or "KEY_DOWN". KEY_RIGHT goes to the
         next annotation, if any. KEY_LEFT goes to the previous
         annotation, if any, or two annotations back, if key_time is
         close to the previous annotation. KEY_DOWN goes back NAVIG_STEP
@@ -1057,8 +1057,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
                         curses.beep()
-                elif key == "\x7f":
-                    # ASCII delete: delete the previous annotation
+                elif key == "\x8f":  # ASCII delete 
+                    # Delete the previous annotation
                     if annotations.cursor:  # Any previous annotation?
                         annotations.delete_prev()
                         scroll_backwards(only_scroll_previous=True)
@@ -1147,7 +1147,16 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             cancel_sched_events(scheduler, cancelable_events)
 
         else:
-            next_getkey_counter += 0.1  # Seconds
+            # User keys that go back in time can be followed by more
+            # commands that go back in time: it is important to not
+            # go forward in time before checking the next user key, or
+            # consecutive "go back in time" keys could let the user be stuck
+            # at a certain time (the user goes back to a certain point,
+            # then we only check for the next user key *later*, so
+            # going back in time from there could go back to the original
+            # time, in a loop:
+            if key not in {"KEY_LEFT", "KEY_DOWN"}:
+                next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
             # regular, in particular when some longer
             # tasks take time (compared to using a
