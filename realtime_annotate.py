@@ -1057,7 +1057,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         stdscr.refresh()  # Instant feedback
                     else:  # No previous annotation
                         curses.beep()
-                elif key == "\x8f":  # ASCII delete 
+                elif key == "\x7f":  # ASCII delete 
                     # Delete the previous annotation
                     if annotations.cursor:  # Any previous annotation?
                         annotations.delete_prev()
