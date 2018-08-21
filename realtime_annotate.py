@@ -119,7 +119,7 @@ except ImportError:
         # No file locking available:
         lock_file = lambda file_path: None
 
-# Time interval between keyboard keys that are considered repeated:
+# Maximum time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
 # annotation process:
