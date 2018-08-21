@@ -839,7 +839,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         annotations -- EventData which is navigated through the
         key. Its cursor must be where key_time would put it with
-        cursor_at_time(), i.e.  .prev_annotation().time <= key_time <
+        cursor_at_time(), i.e. .prev_annotation().time <= key_time <
         .next_annotation().time.
         """
         # It is important to synchronize the times early: otherwise,
