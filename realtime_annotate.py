@@ -127,7 +127,7 @@ except ImportError:
 # Maximum time interval between keyboard keys that are considered repeated:
 REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
-# annotation process:
+# annotation process (with the keys):
 NAVIG_STEP = datetime.timedelta(seconds=2)
 
 class Time(datetime.timedelta):
@@ -378,6 +378,11 @@ class EventData:
         """
         self.cursor = bisect.bisect(
             [annotation.time for annotation in self.list_], timestamp)
+
+    def cursor_before_time(self, timestamp):
+        """
+        #!!!!!!!!!!!!! Will be called for the left arrow
+        """
 
     def next_annotation(self):
         """
@@ -848,7 +853,8 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         .next_annotation().time.
         """
 
-        logging.debug("navigate(%s, %s)", key, key_time)
+        logging.debug("")
+        logging.debug("navigate(key_time=%s)", key_time)
 
         # It is important to synchronize the times early: otherwise,
         # time scheduling is broken (like for instance the automatic
@@ -866,6 +872,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
         elif key == "KEY_LEFT":
 
+            logging.debug("KEY LEFT")
+
+            #!!!!! The concept here is not the previous annotation, 
+            # but the annotation before the current time key_time.
+
+            
+
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
 
@@ -876,7 +889,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 prev_annot_time = prev_annotation.time
 
                 logging.debug(
-                    "KEY_LEFT prev_annot_time = %s", prev_annot_time)
+                    "prev_annot_time = %s", prev_annot_time)
 
                 # !!!!!!!F Maybe a bug? What if there are more than 2
                 # annotations at the same time? Can they be skipped? And
@@ -888,6 +901,10 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # moves *two* annotations back. In effect, this skips
                 # the previous annotation and goes back to the one
                 # before (if any):
+
+                # !!!!!!!!!FQ Is the following used? Should I put it
+                # there? I guess yes: if keys arrive at a low frequency,
+                # some things cannot work?
                 if key_time-prev_annot_time < REPEAT_KEY_TIME:
 
                     if annotations.cursor > 1:
@@ -895,8 +912,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         # one: we go there:
                         time_sync(annotations[annotations.cursor-2].time)
                         logging.debug(
-                            "Syncing to %s",
+                            "time_sync(new_time=%s)",
                             annotations[annotations.cursor-2].time)
+                        logging.debug("scroll_backwards()")
                         scroll_backwards()
                     else:
                         # It is not possible to go before the first
@@ -905,11 +923,19 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         curses.beep()
 
                 else:
+                    # We were far from the previous annotation: only the
+                    # time changes (to the previous annotation); the last
+                    # displayed annotation is correct: there is no need to
+                    # scroll the annotations.
+                    logging.debug(
+                        "time_sync(new_time=%s)",
+                        prev_annot_time)
                     time_sync(prev_annot_time)
                     # It is important to update the Next annotation
                     # events, if any, since the user sees them in the
                     # annotation timer time, but they are scheduled in
                     # the old scheduler time:
+                    logging.debug("display_next_annotation()")
                     display_next_annotation()
 
         else:  # KEY_DOWN or KEY_UP
