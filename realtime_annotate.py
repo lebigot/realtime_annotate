@@ -43,6 +43,11 @@ import tempfile
 import subprocess
 import os
 import functools
+import logging
+
+logging.basicConfig(
+    filename='realtime_annotate.log',
+    filemode="w", level=logging.DEBUG)
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
@@ -842,6 +847,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         cursor_at_time(), i.e. .prev_annotation().time <= key_time <
         .next_annotation().time.
         """
+
+        logging.debug("navigate(%s, %s)", key, key_time)
+
         # It is important to synchronize the times early: otherwise,
         # time scheduling is broken (like for instance the automatic
         # scrolling of annotations). This is why the screen display is
@@ -867,6 +875,13 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
                 prev_annot_time = prev_annotation.time
 
+                logging.debug(
+                    "KEY_LEFT prev_annot_time = %s", prev_annot_time)
+
+                # !!!!!!!F Maybe a bug? What if there are more than 2
+                # annotations at the same time? Can they be skipped? And
+                # is this scheme working/triggered at all?
+                
                 # In order to allow the user to move beyond just the
                 # previous annotation, there is a small time window
                 # after each annotation during which going backwards
@@ -879,6 +894,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         # There is an annotation before the previous
                         # one: we go there:
                         time_sync(annotations[annotations.cursor-2].time)
+                        logging.debug(
+                            "Syncing to %s",
+                            annotations[annotations.cursor-2].time
                         scroll_backwards()
                     else:
                         # It is not possible to go before the first
