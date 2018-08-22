@@ -896,7 +896,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         time_sync(annotations[annotations.cursor-2].time)
                         logging.debug(
                             "Syncing to %s",
-                            annotations[annotations.cursor-2].time
+                            annotations[annotations.cursor-2].time)
                         scroll_backwards()
                     else:
                         # It is not possible to go before the first
