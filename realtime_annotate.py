@@ -18,7 +18,7 @@ the same times as the annotation process).
 (c) 2015–2018 by Eric O. LEBIGOT (EOL)
 """
 
-__version__ = "1.6.3"
+__version__ = "1.6.4"
 __author__ = "Eric O. LEBIGOT (EOL) <eric.lebigot@normalesup.org>"
 
 # !! The optional player driven by this program must be defined by
@@ -124,8 +124,12 @@ except ImportError:
         # No file locking available:
         lock_file = lambda file_path: None
 
-# Maximum time interval between keyboard keys that are considered repeated:
-REPEAT_KEY_TIME = datetime.timedelta(seconds=1)
+# Delay after the time of the last displayed annotation during which
+# the back arrow command is interpreted as meaning to go past the last
+# annotation time (this delay must be larger than the delay between repeated
+# keys that the program receives, or the user might never be able to navigate
+# backwards in time with the back arrow):
+BACK_ARROW_THRESHOLD = datetime.timedelta(seconds=1)
 # Time step when moving backward and forward in time during the
 # annotation process (with the keys):
 NAVIG_STEP = datetime.timedelta(seconds=2)
@@ -891,21 +895,22 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 logging.debug(
                     "prev_annot_time = %s", prev_annot_time)
 
-                # !!!!!!!F Maybe a bug? What if there are more than 2
-                # annotations at the same time? Can they be skipped? And
-                # is this scheme working/triggered at all?
-                
-                # In order to allow the user to move beyond just the
-                # previous annotation, there is a small time window
-                # after each annotation during which going backwards
-                # moves *two* annotations back. In effect, this skips
-                # the previous annotation and goes back to the one
-                # before (if any):
+                # The back arrow means two possible things:
+                #
+                # 1) If the timer is past the latest annotation by more than
+                # BACK_ARROW_THRESHOLD, then the back arrow key instructs the
+                # program to go back to the latest annotation time (and so
+                # the displayed list of past annotations doesn't change).
+                #
+                # 2) Otherwise, the back key means instead to go *past*
+                # the time of the last annotation (in which case the
+                # annotations found at the time of the last annotation
+                # disappear from the list of annotations).
 
-                # !!!!!!!!!FQ Is the following used? Should I put it
-                # there? I guess yes: if keys arrive at a low frequency,
-                # some things cannot work?
-                if key_time-prev_annot_time < REPEAT_KEY_TIME:
+                # !!!!!!!!!!!! This part should be fixed so as to handle
+                # moving past multiple annotations found at the same time:
+
+                if key_time-prev_annot_time < BACK_ARROW_THRESHOLD:
 
                     if annotations.cursor > 1:
                         # There is an annotation before the previous
