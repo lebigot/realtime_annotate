@@ -369,7 +369,7 @@ class EventData:
     def __iter__(self):
         return iter(self.list_)
 
-    def cursor_at_time(self, timestamp):
+    def set_cursor_at_time(self, timestamp):
         """
         Set the internal cursor so that an annotation at the given
         time would be inserted in timestamp order.
@@ -381,12 +381,34 @@ class EventData:
         that the given timestamp is between their timestamps.
         """
         self.cursor = bisect.bisect(
-            [annotation.time for annotation in self.list_], timestamp)
+            [annotation.time for annotation in self], timestamp)
 
-    def cursor_before_time(self, timestamp):
+    def cursor_skipping_prev_time(self):
         """
-        #!!!!!!!!!!!!! Will be called for the left arrow
+        Return the cursor for the (last) annotation just before the time
+        of prev_annotation().
+
+        If this does not exist, returns None.
+
+        This typically returns self.cursor-2, but it more generally
+        returns self.cursor - ( 1 + number of annotations at the last
+        annotation time before self.cursor), unless this is negative (in which
+        case None is returned).
         """
+        # Time of the previous annotation:
+        prev_annotation = self.prev_annotation()
+
+        if prev_annotation is None:
+            return None  # The cursor is at the first annotation
+
+        cursor_before_prev_time = bisect.bisect_left(
+            [annotation.time for annotation in self],
+            prev_annotation.time)
+
+        if cursor_before_prev_time < 1:
+            return None  # No annotation before prev_annotation.time
+        
+        return cursor_before_prev_time-1
 
     def next_annotation(self):
         """
@@ -413,7 +435,7 @@ class EventData:
         the list).
 
         The cursor must be located so that the insertion is done in
-        timestamp order. Using cursor_at_time(annotation.time) does this
+        timestamp order. Using set_cursor_at_time(annotation.time) does this
         (but this call is not required, as the cursor can be set by
         other means too, including outside of this class).
         """
@@ -554,7 +576,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         stdscr.addstr(y, x, text[:term_cols-1-x], attr)
 
     ## Annotations cursor:
-    annotations.cursor_at_time(start_time)
+    annotations.set_cursor_at_time(start_time)
 
     ####################
     # Information display at start:
@@ -830,7 +852,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # Instant feedback:
         stdscr.refresh()
 
-    def navigate(key, key_time, time_sync, annotations):
+    def navigate(key, key_time, time_sync, annotations: EventData):
         """
         Given a navigation key entered at the given time for the given
         annotations, update the annotation time and screen.
@@ -851,10 +873,9 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         timer and synchronizes the scheduler counter with it, along
         with the external player play head time.
 
-        annotations -- EventData which is navigated through the
-        key. Its cursor must be where key_time would put it with
-        cursor_at_time(), i.e. .prev_annotation().time <= key_time <
-        .next_annotation().time.
+        annotations -- EventData which is navigated through the key. Its cursor
+        must correspond to key_time (i.e. set_cursor_at_time(key_time) is
+        where the cursor is currently).
         """
 
         logging.debug("")
@@ -907,26 +928,33 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # annotations found at the time of the last annotation
                 # disappear from the list of annotations).
 
-                # !!!!!!!!!!!! This part should be fixed so as to handle
-                # moving past multiple annotations found at the same time:
+                # !!!!!!!! To be tested.
+
+                # !!!!! Also test removing the 0 latency when going
+                # back (AFTER guessing whether it should work).
 
                 if key_time-prev_annot_time < BACK_ARROW_THRESHOLD:
+                    # This is the case where the back arrow is understood
+                    # as a command to go back past the last annotation time
+                    # (instead of to the last annotation time):
+                    target_cursor = annotations.cursor_skipping_prev_time()
 
-                    if annotations.cursor > 1:
-                        # There is an annotation before the previous
-                        # one: we go there:
-                        time_sync(annotations[annotations.cursor-2].time)
+                    if target_cursor is None:
+                        # It is not possible to go before the last annotation
+                        # time, because there is no annotation before it:
+                        curses.beep()
+                    else:
+                        # When multiple annotations are found at the same
+                        # timestamp, the list of annotations must be scrolled
+                        # multiple times:
+                        for _ in range(annotations.cursor-target_cursor-1):
+                            logging.debug("scroll_backwards()")
+                            scroll_backwards()
+                        # The time is set to the now top annotation:
                         logging.debug(
                             "time_sync(new_time=%s)",
                             annotations[annotations.cursor-2].time)
-                        logging.debug("scroll_backwards()")
-                        scroll_backwards()
-                    else:
-                        # It is not possible to go before the first
-                        # annotation, with KEY_LEFT, since it jumps to
-                        # the previous annotation:
-                        curses.beep()
-
+                        time_sync(annotations[target_cursor].time)
                 else:
                     # We were far from the previous annotation: only the
                     # time changes (to the previous annotation); the last
