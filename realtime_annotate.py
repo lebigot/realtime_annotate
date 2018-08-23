@@ -1228,8 +1228,14 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
             # at a certain time (the user goes back to a certain point,
             # then we only check for the next user key *later*, so
             # going back in time from there could go back to the original
-            # time, in a loop:
-            if key not in {"KEY_LEFT", "KEY_DOWN"}:
+            # time, in a loop.
+            #
+            # It is also useful to quickly process movement keys, so
+            # that they don't accumulate faster than the program
+            # handles normal keys (or the user might release, say, a
+            # continuously pressed right key, and see the list of annotations
+            # keep moving by itself).
+            if key not in {"KEY_LEFT", "KEY_RIGHT",  "KEY_DOWN", "KEY_UP"}:
                 next_getkey_counter += 0.1  # Seconds
             # Using absolute counters makes the counter more
             # regular, in particular when some longer
