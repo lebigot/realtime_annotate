@@ -939,11 +939,15 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     # (instead of to the last annotation time):
                     target_cursor = annotations.cursor_skipping_prev_time()
 
+                    logging.debug("Cursor = %s", annotations.cursor)
+                    logging.debug("prev_annotation_time = %s", prev_annot_time)
+                    logging.debug("target_cursor = %s", target_cursor)
                     if target_cursor is None:
                         # It is not possible to go before the last annotation
                         # time, because there is no annotation before it:
                         curses.beep()
                     else:
+                        time_sync(annotations[target_cursor].time)
                         # When multiple annotations are found at the same
                         # timestamp, the list of annotations must be scrolled
                         # multiple times:
@@ -954,7 +958,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                         logging.debug(
                             "time_sync(new_time=%s)",
                             annotations[annotations.cursor-2].time)
-                        time_sync(annotations[target_cursor].time)
                 else:
                     # We were far from the previous annotation: only the
                     # time changes (to the previous annotation); the last
