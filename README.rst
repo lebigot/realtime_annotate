@@ -336,7 +336,7 @@ Version 1.6.4 (2018-08-23)
 --------------------------
 
 Annotations can now be navigated faster (with the left and right arrows),
-and this works even if multiple annotations fall at the same time.
+and this now works even if multiple annotations fall at the same time.
 
 Version 1.6.1 (2018-06-17)
 --------------------------
