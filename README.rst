@@ -270,9 +270,7 @@ player, etc.) with the annotation timer. This is done through writing a Python
 module that contains a few player control function (``start()``, ``stop()`` and
 ``set_time()``), and specifying it through the ``--player`` option (e.g.
 ``--player midi_player``).  A working `MIDI instrument controller
-<midi_player.py>`_ is provided; it can be used as an example.  See
-``realtime_annotate.py -h`` for details on how to write a player controller
-module.
+<midi_player.py>`_ is provided; it can be used as an example.
 
 .. _simple format:
 
