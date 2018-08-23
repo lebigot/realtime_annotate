@@ -1103,12 +1103,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
         # editing them (currently, the piece keeps playing and the
         # annotations scrolling, which is not completely comfortable).
 
-        # !!! Test with annotations that are at the exact same
-        # time. This probably works, because the scheduler handles
-        # events in priority order: two scrollings will be performed
-        # before checking if the user types the next key, so
-        # everything should work.
-
         # Current time in the annotation process:
         annotation_time = counter_to_time(next_getkey_counter)
         addstr_width(3, 19, str(annotation_time))
