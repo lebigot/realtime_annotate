@@ -46,8 +46,9 @@ import functools
 import logging
 
 logging.basicConfig(
-    filename='realtime_annotate.log',
-    filemode="w", level=logging.DEBUG)
+    # filename='realtime_annotate.log',
+    # filemode="w", 
+    level=logging.INFO)
 
 if sys.version_info < (3, 4):
     sys.exit("This program requires Python 3.4+, sorry.")
