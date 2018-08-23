@@ -928,11 +928,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                 # annotations found at the time of the last annotation
                 # disappear from the list of annotations).
 
-                # !!!!!!!! To be tested.
-
-                # !!!!! Also test removing the 0 latency when going
-                # back (AFTER guessing whether it should work).
-
                 if key_time-prev_annot_time < BACK_ARROW_THRESHOLD:
                     # This is the case where the back arrow is understood
                     # as a command to go back past the last annotation time
@@ -942,12 +937,12 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                     logging.debug("Cursor = %s", annotations.cursor)
                     logging.debug("prev_annotation_time = %s", prev_annot_time)
                     logging.debug("target_cursor = %s", target_cursor)
+
                     if target_cursor is None:
                         # It is not possible to go before the last annotation
                         # time, because there is no annotation before it:
                         curses.beep()
                     else:
-                        time_sync(annotations[target_cursor].time)
                         # When multiple annotations are found at the same
                         # timestamp, the list of annotations must be scrolled
                         # multiple times:
@@ -955,9 +950,7 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
                             logging.debug("scroll_backwards()")
                             scroll_backwards()
                         # The time is set to the now top annotation:
-                        logging.debug(
-                            "time_sync(new_time=%s)",
-                            annotations[annotations.cursor-2].time)
+                        time_sync(annotations[target_cursor].time)
                 else:
                     # We were far from the previous annotation: only the
                     # time changes (to the previous annotation); the last
