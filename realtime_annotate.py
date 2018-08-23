@@ -900,11 +900,6 @@ def real_time_loop(stdscr, curr_event_ref, start_time, annotations,
 
             logging.debug("KEY LEFT")
 
-            #!!!!! The concept here is not the previous annotation, 
-            # but the annotation before the current time key_time.
-
-            
-
             # Where is the previous annotation?
             prev_annotation = annotations.prev_annotation()
 
