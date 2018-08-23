@@ -127,7 +127,7 @@ Three optional example files are provided:
   with the annotation timer**: `midi_player.py <midi_player.py>`_.
 
 - a Python 3.4+ program that prints some **basic statistics** on an
-  annotation file: `annotations_stats.py <annotations_stats.py>_`.
+  annotation file: `annotations_stats.py <annotations_stats.py>`_.
   
 - a Python 3.6+ program that gives an example of **manipulation of an
   annotation file** (it doubles the interval between the time stamps of a given
