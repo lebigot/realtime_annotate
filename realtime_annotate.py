@@ -2002,7 +2002,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
         """
         Rename the given event.
 
-        Syntax: rename_event Current name -> New name
+        Syntax: rename_event <current name> -> <new name>
         """
 
         # An event renaming must be done in many places: the annotation list,
@@ -2049,7 +2049,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
         """
         Bookmark the currently selected event and timer.
 
-        Syntax: set_bookmark Bookmark name
+        Syntax: set_bookmark <bookmark name>
         """
 
         if not bookmark_name:
@@ -2106,7 +2106,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
 
         The time is automatically set through the set_time command.
        
-        Syntax: load_bookmark Bookmark name
+        Syntax: load_bookmark <bookmark name>
         """
         
         try:
@@ -2127,7 +2127,7 @@ class AnnotateShell(cmd.Cmd, Annotations):
         """
         Delete the bookmark with the given name.
 
-        Syntax: del_bookmark Bookmark name
+        Syntax: del_bookmark <bookmark name>
         """
         try:
             deleted_bkmk = self.bookmarks.pop(bookmark_name)
