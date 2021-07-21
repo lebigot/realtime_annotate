@@ -40,6 +40,11 @@ indicating a degree, e.g. "i9" could mean "extremely
 interesting"). Their meaning is pre-defined by the user before
 starting the `annotation process`_.
 
+The **text of the notes** associated with an event is fully
+customizable (one note type could be "Scene too dark", for example).
+This text is saved
+along with all the rest of the data in the annotations files.
+
 Annotations have a **time stamp**, which is *automatically added* by
 the program. In a practical application, a piece of music, etc. plays
 alongside the program. The annotation timer of the program can be set
@@ -94,9 +99,6 @@ Thus, when listening to a certain piece of, say, music, it is possible to
 interrupt the annotation process, set a bookmark, and quit the program: the
 bookmark can then be used later for resuming the annotation of the
 music piece.
-
-The **notes** associated with an event are free text. This text is saved
-along with all the rest of the data in the annotations files.
 
 .. Concrete implementation details and features:
 
@@ -179,8 +181,9 @@ load_keys``).
 Typical workflow
 ----------------
 
-A typical workflow starts by simply selecting an **event** to be
-annotated (command ``set_event``). A *new event* can be created by
+A typical workflow starts by simply selecting an **event** (piece
+of music, movie, etc.) to be annotated in real time
+(command ``set_event``). A *new event* can be created by
 simply giving a new event name (of the user's choice). *Existing
 events* are listed with ``list_events``.
 
