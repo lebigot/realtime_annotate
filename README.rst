@@ -13,8 +13,8 @@ annotations very efficiently**. Each annotation has a **time stamp** which is
 automatically recorded. The program can also automatically **synchronize an
 external player** (music or video player, etc.) while taking annotations
 (pause, rewind, navigation between annotation time stamps, etc.). A system of
-**bookmarks** is provided, for keeping a list of important locations. **Notes**
-can also be associated with each event (piece of music, etc.).
+**bookmarks** is provided, for keeping a list of important time stamps.
+**Notes** can also be associated with each event (piece of music, etc.).
 
 .. How are the benefits obtained?
 
