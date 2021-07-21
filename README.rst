@@ -176,7 +176,8 @@ Some keyboard keys must be bound to a meaning, before annotating
 events. This is done in a simple text file. For the format, see the
 `example <music_annotations.txt>`_ and the help
 (``realtime_annotate.py -h`` and the built-in ``help
-load_keys``).
+load_keys``). The command ``load_keys`` loads key definitions
+into the current annotation file.
 
 Typical workflow
 ----------------
